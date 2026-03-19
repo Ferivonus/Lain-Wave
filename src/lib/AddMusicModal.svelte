@@ -32,15 +32,20 @@
 
     $effect(() => {
         let unlistenFn: UnlistenFn;
-        const init = async () => {
+        
+        async function setupListener() {
             unlistenFn = await listen("download-progress", (event: any) => {
                 downloadInfo.pct = event.payload.percentage;
                 downloadInfo.speed = event.payload.speed;
                 downloadInfo.eta = event.payload.eta;
             });
+        }
+
+        setupListener();
+
+        return () => {
+            if (unlistenFn) unlistenFn();
         };
-        init();
-        return () => { if (unlistenFn) unlistenFn(); };
     });
 
     function kapat() {
