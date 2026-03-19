@@ -32,36 +32,45 @@
     function kapat() {
         if (yukleniyor) return;
         playerState.isEditModalOpen = false;
-        setTimeout(() => playerState.duzenlenecekSarki = null, 300);
+        // Animasyonun bitmesi için kısa bir bekleme
+        setTimeout(() => {
+            playerState.duzenlenecekSarki = null;
+        }, 300);
     }
 
     async function kaydet() {
+        // Doğrulama
         if (!formVerisi.isim.trim() || yukleniyor) return;
+        
         yukleniyor = true;
 
         try {
+            // Rust komutunu çağır
             const guncelSarki = await invoke<Sarki>('sarki_guncelle', {
                 id: formVerisi.id,
                 isim: formVerisi.isim.trim(),
                 sarkici: formVerisi.sarkici.trim(),
                 album: formVerisi.album.trim(),
                 tarz: formVerisi.tarz.trim() || null,
-                yil: formVerisi.yil ? parseInt(formVerisi.yil) : null
+                yil: formVerisi.yil ? parseInt(formVerisi.yil.toString()) : null
             });
 
-            const index = playerState.sarkiListesi.findIndex(s => s.id === formVerisi.id);
-            if (index !== -1) {
-                playerState.sarkiListesi[index] = guncelSarki;
-            }
+            // 1. Ana listeyi reaktif olarak güncelle (map kullanımı Svelte 5 için daha güvenlidir)
+            playerState.sarkiListesi = playerState.sarkiListesi.map(s => 
+                s.id === formVerisi.id ? guncelSarki : s
+            );
             
+            // 2. Eğer şu an çalan şarkı buysa onu da güncelle
             if (playerState.aktifSarki?.id === formVerisi.id) {
                 playerState.aktifSarki = guncelSarki;
             }
 
+            // 3. MODALI KAPAT (Buraya ulaştıysa işlem başarılıdır)
             kapat();
+            
         } catch (error) {
-            console.error("Güncelleme hatası:", error);
-            alert("Veriler kaydedilirken bir sorun oluştu.");
+            console.error("Rust Güncelleme Hatası:", error);
+            alert("Veriler kaydedilemedi. Rust konsolunu kontrol edin: " + error);
         } finally {
             yukleniyor = false;
         }
@@ -171,7 +180,6 @@
 {/if}
 
 <style>
-    /* Sayı girişi oklarını gizle ve appearance hatasını gider */
     input::-webkit-outer-spin-button,
     input::-webkit-inner-spin-button {
         -webkit-appearance: none;
