@@ -1,110 +1,188 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { invoke } from '@tauri-apps/api/core';
-    import { fade, fly } from 'svelte/transition';
+    import { fade, fly, scale } from 'svelte/transition';
+    import { playerState } from '../../store.svelte';
 
     let veriYolu = $state("Yükleniyor...");
-    let surum = "0.1.0-alpha";
-    let silmeOnayi = $state(false);
+    let surum = "2.1"; 
+
+    const temalar = [
+        { id: 'theme-modern', ad: 'Modern Dark', renkler: ['#6366f1', '#18181b'], desc: 'Profesyonel ve dengeli' },
+        { id: 'theme-cyberpunk', ad: 'Cyberpunk', renkler: ['#ff0055', '#00ff41'], desc: 'Neon ve yüksek enerji' },
+        { id: 'theme-lofi', ad: 'Lo-Fi Night', renkler: ['#ff9a9e', '#1e1b29'], desc: 'Sakin çalışma modu' },
+        { id: 'theme-ghibli', ad: 'Studio Ghibli', renkler: ['#8ba8a9', '#dce4e2'], desc: 'The Wind Rises estetiği', fav: true },
+        { id: 'theme-retro', ad: 'Retro 80s', renkler: ['#f97316', '#2b1055'], desc: 'Nostaljik arcade' },
+        { id: 'theme-ocean', ad: 'Deep Ocean', renkler: ['#00d2ff', '#010b13'], desc: 'Derin ve huzurlu', fav: true },
+        { id: 'theme-sakura', ad: 'Sakura Zen', renkler: ['#f472b6', '#120f10'], desc: 'Zarif dokunuşlar' },
+        { id: 'theme-oled', ad: 'OLED Eclipse', renkler: ['#ffffff', '#000000'], desc: 'Maksimum kontrast' }
+    ];
 
     onMount(async () => {
-        veriYolu = await invoke('get_app_data_dir');
+        try {
+            veriYolu = await invoke('get_app_data_dir');
+        } catch (e) {
+            veriYolu = "Dizin bulunamadı.";
+        }
     });
 
     async function klasoruAc() {
         await invoke('open_data_folder');
     }
 
+    function temaSec(temaId: string) {
+        playerState.currentTheme = temaId;
+        localStorage.setItem('lainwave_theme', temaId);
+    }
+
     async function verileriSifirla() {
-        if (confirm("DİKKAT: Tüm kütüphane, playlistler ve favoriler silinecek! Bu işlem geri alınamaz. Emin misiniz?")) {
-            // Burada basitlik adına json dosyalarını boşaltan bir Rust komutu çağrılabilir
-            // Şimdilik sadece uyarı veriyoruz
-            alert("Sıfırlama işlemi için lütfen veri klasöründeki .json dosyalarını manuel silin ve uygulamayı yeniden başlatın.");
+        const onay = confirm("DİKKAT: Tüm kütüphane ve ayarlar silinecek! Emin misiniz?");
+        if (onay && confirm("Veritabanı kalıcı olarak boşaltılacak. Onaylıyor musunuz?")) {
+            await klasoruAc();
+            alert("Lütfen açılan klasördeki .json dosyalarını manuel olarak silip uygulamayı yeniden başlatın.");
         }
     }
 </script>
 
-<div class="p-10 w-full min-h-full pb-32 flex flex-col relative max-w-5xl mx-auto">
+<div class="p-8 lg:p-12 w-full min-h-full pb-32 flex flex-col relative max-w-6xl mx-auto bg-transparent text-[var(--text-main)] transition-colors duration-500 overflow-y-auto custom-scrollbar">
     
-    <header class="mb-12" in:fly={{ y: -20, duration: 500 }}>
-        <h1 class="text-5xl font-black text-white italic tracking-tighter uppercase drop-shadow-lg">
-            Sistem Ayarları
-        </h1>
-        <div class="h-1 w-20 bg-pink-500 mt-2 rounded-full shadow-[0_0_15px_rgba(236,72,153,0.5)]"></div>
+    <header class="mb-12" in:fly={{ y: -20, duration: 600 }}>
+        <div class="flex items-center gap-3 mb-2">
+            <div class="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse"></div>
+            <span class="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--accent)]">System Configuration</span>
+        </div>
+        <h1 class="text-5xl lg:text-7xl font-black tracking-tighter uppercase italic leading-none drop-shadow-sm">Ayarlar</h1>
+        <p class="text-[var(--text-dim)] mt-4 font-bold text-sm uppercase tracking-widest opacity-60">Lain Wave Terminal v{surum}</p>
     </header>
 
-    <div class="grid gap-8">
+    <div class="grid gap-12">
         
-        <section class="bg-black/20 border border-white/5 rounded-3xl p-8 backdrop-blur-sm" in:fade={{ delay: 200 }}>
-            <div class="flex items-center gap-4 mb-6">
-                <div class="p-3 bg-blue-500/10 rounded-xl text-blue-400">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2z"></path></svg>
+        <section class="space-y-8" in:fade={{ delay: 200 }}>
+            <div class="flex items-end justify-between border-b border-[var(--border)] pb-4">
+                <div>
+                    <h2 class="text-2xl font-black uppercase italic tracking-tight">Görünüm</h2>
+                    <p class="text-[var(--text-dim)] text-xs font-bold uppercase tracking-widest mt-1">Sistem arayüzü ve renk paletleri</p>
                 </div>
-                <h2 class="text-xl font-bold text-white uppercase tracking-wider">Kütüphane Yönetimi</h2>
             </div>
 
-            <div class="space-y-6">
-                <div>
-                    <p class="text-white/40 text-xs font-bold uppercase mb-2 tracking-widest">Veri Saklama Konumu</p>
-                    <div class="flex items-center gap-4 bg-black/40 p-4 rounded-xl border border-white/5 group">
-                        <code class="text-pink-300 text-sm truncate flex-1 font-mono">{veriYolu}</code>
-                        <button 
-                            onclick={klasoruAc}
-                            class="bg-white/5 hover:bg-white/10 text-white text-xs font-bold py-2 px-4 rounded-lg transition-all border border-white/10"
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {#each temalar as tema}
+                    <button 
+                        type="button"
+                        onclick={() => temaSec(tema.id)}
+                        class="flex flex-col gap-4 group text-left relative transition-all duration-300 hover:-translate-y-1"
+                    >
+                        <div 
+                            class="aspect-[16/10] rounded-[var(--radius)] border-2 transition-all duration-500 relative overflow-hidden p-5 flex flex-col justify-between
+                            {playerState.currentTheme === tema.id 
+                                ? 'border-[var(--accent)] shadow-[0_15px_40px_rgba(0,0,0,0.4),0_0_20px_var(--accent-glow)]' 
+                                : 'border-[var(--border)] opacity-60 hover:opacity-100 bg-[var(--bg-card)]'}"
                         >
-                            KLASÖRÜ AÇ
+                            {#if tema.fav}
+                                <div class="absolute top-0 right-0 bg-[var(--accent)] text-white text-[8px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-tighter z-20 shadow-lg">
+                                    DEV CHOICE
+                                </div>
+                            {/if}
+
+                            <div class="relative z-10 space-y-2">
+                                <div class="flex gap-1.5">
+                                    <div class="w-2.5 h-2.5 rounded-full" style="background: {tema.renkler[0]}"></div>
+                                    <div class="w-8 h-2.5 rounded-full opacity-30" style="background: {tema.renkler[0]}"></div>
+                                </div>
+                            </div>
+
+                            <div class="absolute -bottom-4 -right-4 text-5xl font-black opacity-5 italic select-none group-hover:opacity-10 transition-opacity">
+                                {tema.ad.split(' ')[0]}
+                            </div>
+                            
+                            {#if playerState.currentTheme === tema.id}
+                                <div class="absolute inset-0 bg-[var(--accent)]/5 flex items-center justify-center backdrop-blur-[1px]" in:fade>
+                                    <div class="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center shadow-2xl scale-100" in:scale>
+                                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                    </div>
+                                </div>
+                            {/if}
+                        </div>
+
+                        <div class="px-1">
+                            <span class="text-sm font-black uppercase tracking-widest block group-hover:text-[var(--accent)] transition-colors">{tema.ad}</span>
+                            <span class="text-[10px] text-[var(--text-dim)] font-bold uppercase tracking-tighter opacity-70">{tema.desc}</span>
+                        </div>
+                    </button>
+                {/each}
+            </div>
+        </section>
+        
+        <section class="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] p-10 shadow-2xl relative overflow-hidden" in:fade={{ delay: 300 }}>
+            <div class="flex items-center gap-4 mb-10">
+                <div class="p-4 bg-[var(--accent-sec)]/10 rounded-2xl text-[var(--accent-sec)] shadow-inner">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"></path><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-black uppercase italic tracking-tight">Veri Yönetimi</h2>
+                    <p class="text-[var(--text-dim)] text-[10px] uppercase tracking-widest font-black opacity-60">Sistem dosyaları ve yedekleme</p>
+                </div>
+            </div>
+
+            <div class="grid gap-10">
+                <div class="space-y-5">
+                    <p class="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.3em]">Application Data Path</p>
+                    <div class="flex flex-col md:flex-row items-center gap-4 bg-[var(--bg-surface)] p-2 rounded-2xl border border-[var(--border)] group">
+                        <code class="text-[var(--accent)] text-xs truncate flex-1 font-mono px-4 py-3 select-all">{veriYolu}</code>
+                        <button 
+                            type="button"
+                            onclick={klasoruAc}
+                            class="w-full md:w-auto bg-[var(--text-main)] text-[var(--bg-main)] hover:bg-[var(--accent)] hover:text-white text-[10px] font-black py-4 px-10 rounded-xl transition-all active:scale-95 uppercase tracking-[0.2em] shadow-lg"
+                        >
+                            Klasörü Göster
                         </button>
                     </div>
                 </div>
 
-                <div class="pt-4 border-t border-white/5">
+                <div class="pt-8 border-t border-[var(--border)] flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div class="text-center md:text-left">
+                        <p class="text-sm font-black uppercase tracking-tight text-red-500/80">Tehlikeli Bölge</p>
+                        <p class="text-[10px] text-[var(--text-dim)] font-bold uppercase tracking-widest mt-1">Sıfırlama işlemi kütüphaneyi temizler</p>
+                    </div>
                     <button 
+                        type="button"
                         onclick={verileriSifirla}
-                        class="text-red-400 hover:text-red-300 text-sm font-bold flex items-center gap-2 transition-colors uppercase tracking-tighter"
+                        class="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white text-[10px] font-black py-3 px-8 rounded-xl transition-all uppercase tracking-widest border border-red-500/20 active:bg-red-600"
                     >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16"></path></svg>
-                        Tüm Verileri Temizle
+                        Sistemi Sıfırla
                     </button>
                 </div>
             </div>
         </section>
 
-        <section class="bg-black/20 border border-white/5 rounded-3xl p-8 backdrop-blur-sm" in:fade={{ delay: 300 }}>
-            <div class="flex items-center gap-4 mb-6">
-                <div class="p-3 bg-purple-500/10 rounded-xl text-purple-400">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v2m0 16v2m10-10h-2M4 10H2m16.24-7.76l-1.42 1.42M6.42 16.58l-1.42 1.42m12.24 0l1.42-1.42M6.42 5.42L5 4"></path></svg>
+        <footer class="flex flex-col items-center justify-center py-20 group" in:fade={{ delay: 400 }}>
+            <div class="w-16 h-16 bg-[var(--accent)] rounded-[var(--radius)] flex items-center justify-center mb-6 rotate-3 group-hover:rotate-0 transition-transform duration-700 shadow-2xl shadow-[var(--accent)]/20">
+                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+            </div>
+            <h3 class="text-3xl font-black tracking-[0.4em] uppercase italic drop-shadow-md">Lain Wave</h3>
+            
+            <div class="mt-8 flex flex-col items-center gap-2">
+                <p class="text-[11px] font-black text-[var(--accent)] uppercase tracking-[0.5em] animate-pulse">
+                    Fahrettin Baştürk tarafından yapıldı
+                </p>
+                <div class="flex items-center gap-3">
+                    <span class="h-px w-6 bg-[var(--text-dim)] opacity-20"></span>
+                    <p class="text-[9px] font-mono text-[var(--text-dim)] font-bold uppercase tracking-widest">Version {surum} Build</p>
+                    <span class="h-px w-6 bg-[var(--text-dim)] opacity-20"></span>
                 </div>
-                <h2 class="text-xl font-bold text-white uppercase tracking-wider">Görünüm</h2>
             </div>
-
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <button class="aspect-video rounded-xl bg-gradient-to-br from-pink-600 to-purple-900 border-2 border-pink-400 relative overflow-hidden group">
-                    <span class="absolute inset-0 flex items-center justify-center font-black text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity">LAIN DEFAULT</span>
-                </button>
-                <button class="aspect-video rounded-xl bg-zinc-900 border border-white/10 grayscale hover:grayscale-0 transition-all opacity-40 cursor-not-available">
-                    <span class="absolute inset-0 flex items-center justify-center font-bold text-[10px] text-white">COMING SOON</span>
-                </button>
-            </div>
-        </section>
-
-        <section class="flex flex-col items-center justify-center py-10 opacity-30 hover:opacity-100 transition-opacity duration-700" in:fade={{ delay: 400 }}>
-            <div class="w-16 h-16 bg-pink-500 rounded-2xl flex items-center justify-center mb-4 rotate-12">
-                <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
-            </div>
-            <p class="text-xl font-black italic tracking-widest text-white">LAIN WAVE AUDIO</p>
-            <p class="text-xs font-mono text-pink-400">VERSION {surum}</p>
-            <div class="mt-6 flex gap-6 text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">
-                <a href="https://tauri.app" target="_blank" class="hover:text-white transition-colors">Powered by Tauri</a>
-                <span>•</span>
-                <a href="https://svelte.dev" target="_blank" class="hover:text-white transition-colors">Built with Svelte</a>
-            </div>
-        </section>
+        </footer>
 
     </div>
 </div>
 
 <style>
-    section {
-        box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    button {
+        cursor: pointer;
+        outline: none;
     }
 </style>

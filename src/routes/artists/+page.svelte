@@ -1,18 +1,15 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { convertFileSrc } from '@tauri-apps/api/core';
-  import { fly, fade } from 'svelte/transition';
-  // Merkezi store fonksiyonumuzu alıyoruz
+  import { fly, fade, scale } from 'svelte/transition';
   import { playerState, initializePlayer } from '../../store.svelte';
 
-  // Sayfa açıldığında kütüphanenin boş olmadığından emin olalım
   onMount(async () => {
     if (playerState.sarkiListesi.length === 0) {
       await initializePlayer();
     }
   });
 
-  // Kütüphanedeki şarkılardan benzersiz sanatçı listesini oluştur
   let sanatciListesi = $derived.by(() => {
     const artistMap = new Map();
 
@@ -34,55 +31,59 @@
   });
 </script>
 
-<div class="p-10 w-full min-h-full pb-32 flex flex-col relative min-w-0">
+<div class="p-8 lg:p-12 w-full min-h-full pb-32 flex flex-col relative min-w-0 bg-transparent text-[var(--text-main)] transition-colors duration-500">
   
-  <header class="mb-12" in:fly={{ y: -20, duration: 500 }}>
-    <h1 class="text-5xl font-black text-white italic tracking-tighter uppercase drop-shadow-md">
+  <header class="mb-12" in:fly={{ y: -20, duration: 600 }}>
+    <h1 class="text-4xl lg:text-5xl font-black italic tracking-tighter uppercase leading-none">
       Sanatçılar
     </h1>
-    <p class="text-white/40 text-sm mt-2 font-medium uppercase tracking-[0.2em]">
-      Kütüphanende toplam {sanatciListesi.length} benzersiz sanatçı bulundu
+    <p class="text-[var(--text-dim)] text-[10px] lg:text-xs mt-3 font-bold uppercase tracking-[0.3em]">
+        Arşivinde {sanatciListesi.length} benzersiz sanatçı kimliği tanımlandı
     </p>
-    <div class="h-1 w-20 bg-pink-500 mt-4 rounded-full shadow-[0_0_15px_rgba(236,72,153,0.5)]"></div>
+    <div class="h-1 w-16 bg-[var(--accent)] mt-5 rounded-full"></div>
   </header>
 
   {#if sanatciListesi.length === 0}
-    <div class="flex-1 flex flex-col items-center justify-center opacity-20" in:fade>
-      <svg class="w-32 h-32 mb-4" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-5.5c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/>
-      </svg>
-      <p class="text-2xl font-black italic uppercase">Veri Analiz Ediliyor...</p>
+    <div class="flex-1 flex flex-col items-center justify-center opacity-30 py-20" in:fade>
+      <div class="w-20 h-20 border-2 border-t-[var(--accent)] border-[var(--border)] rounded-full animate-spin mb-6"></div>
+      <p class="text-xl font-bold uppercase tracking-[0.2em]">Veri Tabanı taranıyor...</p>
     </div>
   {:else}
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-8">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 lg:gap-8">
       {#each sanatciListesi as sanatci, i}
         <a 
           href="/artist/{encodeURIComponent(sanatci.isim)}"
-          class="group flex flex-col items-center text-center p-6 rounded-3xl hover:bg-white/5 transition-all duration-300 border border-transparent hover:border-white/10"
-          in:fly={{ y: 20, duration: 400, delay: i * 20 }}
+          class="group flex flex-col items-center text-center p-4 lg:p-6 rounded-[var(--radius)] hover:bg-[var(--bg-card)] border border-transparent hover:border-[var(--border)] transition-all duration-300 relative"
+          in:fly={{ y: 20, duration: 400, delay: i * 30 }}
         >
-          <div class="w-full aspect-square rounded-full overflow-hidden mb-6 shadow-2xl relative border-4 border-white/5 group-hover:border-pink-500/50 transition-all duration-500 group-hover:scale-105">
+          <div class="w-full aspect-square rounded-full overflow-hidden mb-6 shadow-xl relative border-4 border-[var(--border)] group-hover:border-[var(--accent)]/30 transition-all duration-500 group-hover:scale-105 bg-[var(--bg-surface)]">
             {#if sanatci.kapak}
-              <img src={convertFileSrc(sanatci.kapak)} alt={sanatci.isim} class="w-full h-full object-cover group-hover:rotate-3 transition-transform duration-700" />
+              <img 
+                src={convertFileSrc(sanatci.kapak)} 
+                alt={sanatci.isim} 
+                class="w-full h-full object-cover transition-transform duration-700 group-hover:rotate-2 group-hover:scale-110" 
+              />
             {:else}
-              <div class="w-full h-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-4xl font-black text-white/20 uppercase tracking-tighter italic">
+              <div class="w-full h-full flex items-center justify-center text-3xl font-black text-[var(--text-dim)]/20 uppercase italic">
                 {sanatci.isim[0]}
               </div>
             {/if}
             
-            <div class="absolute inset-0 bg-pink-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-               <svg class="w-12 h-12 text-white drop-shadow-lg scale-50 group-hover:scale-100 transition-transform duration-300" fill="currentColor" viewBox="0 0 24 24">
-                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6h2v6zm4 0h-2V7h2v10z"/>
-               </svg>
+            <div class="absolute inset-0 bg-[var(--accent)]/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+               <div class="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center shadow-2xl transform scale-50 group-hover:scale-100 transition-all duration-300">
+                  <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6h2v6zm4 0h-2V7h2v10z"/></svg>
+               </div>
             </div>
           </div>
 
-          <h3 class="text-white font-black text-lg truncate w-full mb-1 group-hover:text-pink-400 transition-colors uppercase italic tracking-tighter">
-            {sanatci.isim}
-          </h3>
-          <span class="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">
-            {sanatci.sarkiSayisi} PARÇA
-          </span>
+          <div class="min-w-0 w-full px-1">
+            <h3 class="text-[var(--text-main)] font-bold text-sm lg:text-base truncate mb-1 group-hover:text-[var(--accent)] transition-colors uppercase tracking-tight">
+              {sanatci.isim}
+            </h3>
+            <span class="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest opacity-60">
+              {sanatci.sarkiSayisi} Parça Kayıtlı
+            </span>
+          </div>
         </a>
       {/each}
     </div>
@@ -91,6 +92,12 @@
 
 <style>
   a:hover {
-    box-shadow: 0 20px 40px -20px rgba(0,0,0,0.5);
+    box-shadow: 0 15px 35px -10px rgba(0,0,0,0.3);
+  }
+
+  a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
+    background: var(--bg-card);
   }
 </style>

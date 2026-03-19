@@ -3,7 +3,6 @@
     import { fade, fly, scale } from 'svelte/transition';
     import { playerState, sarkiCal, initializePlayer } from '../../store.svelte';
 
-    // YENİ: Sayfa doğrudan açıldığında kütüphaneyi garantiye alalım
     onMount(async () => {
         if (playerState.sarkiListesi.length === 0) {
             await initializePlayer();
@@ -18,85 +17,132 @@
         return Array.from(tarzSeti);
     });
 
-    function istasyonuBaslat(tarz: string) {
+    const istasyonTanimlari = [
+        { id: "pop", isim: "Pop", ikon: "✨", color: "var(--accent)", keywords: ["pop"] },
+        { id: "rock", isim: "Rock", ikon: "🎸", color: "#ef4444", keywords: ["rock", "metal"] },
+        { id: "lofi", isim: "Lo-Fi", ikon: "☕", color: "#8b5cf6", keywords: ["lofi", "lo-fi", "chill"] },
+        { id: "cyber", isim: "Cyberpunk", ikon: "🤖", color: "#06b6d4", keywords: ["cyberpunk", "electronic", "synthwave", "synth"] },
+        { id: "acoustic", isim: "Acoustic", ikon: "🎸", color: "#f59e0b", keywords: ["acoustic", "akustik"] },
+        { id: "jazz", isim: "Jazz", ikon: "🎷", color: "#10b981", keywords: ["jazz", "blues"] },
+        { id: "hiphop", isim: "Hip-Hop", ikon: "🎤", color: "#6366f1", keywords: ["hip-hop", "rap", "hiphop"] },
+        { id: "classic", isim: "Classical", ikon: "🎻", color: "#71717a", keywords: ["classical", "klasik"] },
+        { id: "podcast", isim: "Podcast", ikon: "🎙️", color: "#ec4899", keywords: ["podcast", "oturum"] }
+    ];
+
+    let aktifIstasyonlar = $derived(
+        istasyonTanimlari.map(ist => {
+            const eslesmeVarMi = mevcutTarzlar.some(t => 
+                ist.keywords.some(k => t.toLowerCase().includes(k))
+            );
+            return { ...ist, aktifMi: eslesmeVarMi };
+        })
+    );
+
+    function istasyonuBaslat(istId: string) {
+        const tanim = istasyonTanimlari.find(i => i.id === istId);
+        if (!tanim) return;
+
         const uygunSarkilar = playerState.sarkiListesi.filter(s => 
-            s.tarz?.toLowerCase().includes(tarz.toLowerCase())
+            s.tarz && tanim.keywords.some(k => s.tarz!.toLowerCase().includes(k))
         );
+        
         if (uygunSarkilar.length > 0) {
             const rastgeleSarki = uygunSarkilar[Math.floor(Math.random() * uygunSarkilar.length)];
             sarkiCal(rastgeleSarki);
         }
     }
 
-    const istasyonlar = [
-        { id: "synth", isim: "Synthwave", renk: "from-pink-500 to-purple-600", ikon: "⚡" },
-        { id: "lofi", isim: "Lo-Fi", renk: "from-orange-400 to-yellow-600", ikon: "☕" },
-        { id: "cyber", isim: "Cyberpunk", renk: "from-cyan-500 to-blue-700", ikon: "🤖" },
-        { id: "chill", isim: "Relax", renk: "from-emerald-400 to-teal-600", ikon: "🌊" },
-    ];
+    let digerTarzlar = $derived(
+        mevcutTarzlar.filter(t => 
+            !istasyonTanimlari.some(ist => 
+                ist.keywords.some(k => t.toLowerCase().includes(k))
+            )
+        )
+    );
 </script>
 
-<div class="p-10 w-full min-h-full pb-32 flex flex-col relative overflow-hidden">
+<div class="p-8 lg:p-12 w-full min-h-full pb-32 flex flex-col relative overflow-hidden bg-transparent text-[var(--text-main)] transition-colors duration-500 overflow-y-auto custom-scrollbar">
     
-    <div class="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-pink-500/10 blur-[120px] rounded-full -z-10 animate-pulse"></div>
-    <div class="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-blue-500/10 blur-[100px] rounded-full -z-10"></div>
+    <div class="absolute top-[-5%] right-[-5%] w-[400px] h-[400px] bg-[var(--accent)] opacity-5 blur-[120px] rounded-full -z-10 animate-pulse-slow"></div>
+    <div class="absolute bottom-[-5%] left-[-5%] w-[300px] h-[300px] bg-[var(--accent-sec)] opacity-5 blur-[100px] rounded-full -z-10"></div>
 
     <header class="mb-12" in:fly={{ y: -20, duration: 600 }}>
-        <div class="flex items-center gap-4 mb-2">
-            <span class="flex h-3 w-3 relative">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+        <div class="flex items-center gap-3 mb-4">
+            <span class="flex h-2.5 w-2.5 relative">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent)] opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-[var(--accent)]"></span>
             </span>
-            <span class="text-xs font-black tracking-[0.4em] text-red-500 uppercase">Live Frequency</span>
+            <span class="text-[10px] font-black tracking-[0.4em] text-[var(--accent)] uppercase">Live Stream Connected</span>
         </div>
-        <h1 class="text-6xl font-black text-white italic tracking-tighter uppercase leading-none">
-            LAIN RADYO
+        <h1 class="text-4xl md:text-5xl font-black tracking-tight uppercase leading-none italic">
+            Lain Radyo
         </h1>
-        <p class="text-white/40 mt-4 max-w-md font-medium">Kütüphanendeki veriler analiz ediliyor... Ruh haline en uygun frekansı seç ve akışa bırak.</p>
+        <p class="text-[var(--text-dim)] mt-4 max-w-lg font-medium text-sm leading-relaxed">
+            Sistem kütüphaneni analiz etti. Tespit edilen frekanslar üzerinden otomatik yayın akışı başlatabilirsin.
+        </p>
     </header>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {#each istasyonlar as istasyon}
-            {@const aktifMi = mevcutTarzlar.some(t => t.toLowerCase().includes(istasyon.isim.toLowerCase()))}
-            
-            <button 
-                type="button"
-                class="relative aspect-square rounded-3xl overflow-hidden cursor-pointer group shadow-2xl transition-all duration-500 border-none p-0 text-left
-                {aktifMi ? 'hover:-translate-y-2' : 'opacity-40 grayscale cursor-not-allowed'}"
-                onclick={() => aktifMi && istasyonuBaslat(istasyon.isim)}
-                disabled={!aktifMi}
-                in:scale={{ duration: 400, start: 0.9, delay: 200 }}
-                aria-label="{istasyon.isim} istasyonunu başlat"
-            >
-                <div class="absolute inset-0 bg-gradient-to-br {istasyon.renk} opacity-80 group-hover:opacity-100 transition-opacity"></div>
-                <div class="absolute inset-0 bg-white/5 backdrop-blur-[2px] group-hover:backdrop-blur-none transition-all"></div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-6">
+        {#each aktifIstasyonlar as ist}
+<button 
+    type="button"
+    class="relative aspect-square rounded-[var(--radius)] overflow-hidden transition-all duration-500 border border-[var(--border)] p-0 text-left group shadow-lg
+    {ist.aktifMi ? 'hover:-translate-y-2 hover:border-[var(--accent)]/40 cursor-pointer' : 'opacity-20 grayscale cursor-not-allowed'}"
+    onclick={() => ist.aktifMi && istasyonuBaslat(ist.id)}
+    disabled={!ist.aktifMi}
+    in:scale={{ duration: 400, start: 0.9 }}
+>
+    <div class="absolute inset-0 bg-[var(--bg-card)] group-hover:bg-[var(--bg-card-hover)] transition-colors"></div>
+    
+    <div class="absolute -bottom-10 -right-10 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-20 transition-opacity" 
+         style="background: {ist.color}"></div>
 
-                <div class="absolute inset-0 p-8 flex flex-col justify-between z-10">
-                    <span class="text-5xl drop-shadow-2xl group-hover:scale-125 transition-transform duration-500">{istasyon.ikon}</span>
-                    <div>
-                        <h3 class="text-2xl font-black text-white uppercase italic tracking-tighter">{istasyon.isim}</h3>
-                        <p class="text-white/70 text-[10px] font-bold tracking-widest uppercase">
-                            {aktifMi ? 'İstasyon Aktif' : 'Şarkı Bulunamadı'}
-                        </p>
-                    </div>
-                </div>
+    <div class="absolute inset-0 p-6 flex flex-col justify-between z-10">
+        <div class="text-5xl transition-all duration-500 group-hover:scale-110 group-hover:-rotate-6 group-hover:-translate-x-2">
+            {ist.ikon}
+        </div>
+        
+        <div class="max-w-[70%]">
+            <h3 class="text-lg font-bold tracking-tight mb-1">{ist.isim}</h3>
+            <div class="flex items-center gap-2">
+                <div class="w-1.5 h-1.5 rounded-full {ist.aktifMi ? 'bg-[var(--accent)] animate-pulse' : 'bg-zinc-600'}"></div>
+                <p class="text-[var(--text-dim)] text-[9px] font-black uppercase tracking-widest">
+                    {ist.aktifMi ? 'SİNYAL OK' : 'YAYIN YOK'}
+                </p>
+            </div>
+        </div>
+    </div>
 
-                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-white/20 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-md border border-white/20">
-                    <svg class="w-10 h-10 text-white fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                </div>
-            </button>
+    {#if ist.aktifMi}
+        <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        
+        <div class="absolute bottom-4 right-4 z-20 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-out">
+            <div class="w-12 h-12 bg-[var(--accent)] text-white rounded-full flex items-center justify-center shadow-[0_8px_20px_rgba(0,0,0,0.4)] hover:scale-110 active:scale-95 transition-transform">
+                <svg class="w-6 h-6 fill-current ml-0.5" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+            </div>
+        </div>
+    {/if}
+</button>
         {/each}
     </div>
 
-    {#if mevcutTarzlar.length > 0}
-        <div class="mt-16" in:fade={{ delay: 500 }}>
-            <h2 class="text-sm font-black text-white/30 uppercase tracking-[0.3em] mb-6">Tespit Edilen Frekanslar</h2>
-            <div class="flex flex-wrap gap-3">
-                {#each mevcutTarzlar as tarz}
+    {#if digerTarzlar.length > 0}
+        <div class="mt-16 pt-8 border-t border-[var(--border)]" in:fade={{ delay: 500 }}>
+            <div class="flex items-center gap-4 mb-6">
+                <h2 class="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em]">Alternatif Frekanslar</h2>
+                <div class="h-[1px] flex-1 bg-[var(--border)]"></div>
+            </div>
+            <div class="flex flex-wrap gap-2.5">
+                {#each digerTarzlar as tarz}
                     <button 
                         type="button"
-                        onclick={() => istasyonuBaslat(tarz)}
-                        class="px-6 py-3 rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-pink-400 hover:border-pink-500/50 hover:bg-pink-500/5 transition-all text-xs font-bold uppercase tracking-widest cursor-pointer"
+                        onclick={() => {
+                            const uygunSarkilar = playerState.sarkiListesi.filter(s => s.tarz === tarz);
+                            if (uygunSarkilar.length > 0) sarkiCal(uygunSarkilar[Math.floor(Math.random() * uygunSarkilar.length)]);
+                        }}
+                        class="px-5 py-2.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-dim)] hover:text-[var(--accent)] hover:border-[var(--accent)]/50 hover:bg-[var(--bg-card-hover)] transition-all text-[10px] font-bold uppercase tracking-widest"
                     >
                         {tarz}
                     </button>
@@ -107,12 +153,16 @@
 </div>
 
 <style>
-    .animate-pulse {
-        animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    .animate-pulse-slow {
+        animation: pulse-slow 8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
 
-    @keyframes pulse {
-        0%, 100% { opacity: 0.1; transform: scale(1); }
-        50% { opacity: 0.2; transform: scale(1.1); }
+    @keyframes pulse-slow {
+        0%, 100% { opacity: 0.05; transform: scale(1); }
+        50% { opacity: 0.1; transform: scale(1.05); }
     }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 </style>

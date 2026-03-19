@@ -4,7 +4,6 @@
   import { playerState, sarkiCal, initializePlayer } from '../store.svelte';
   import { fade, fly } from 'svelte/transition';
 
-  // 1. Dinamik Karşılama
   let saat = new Date().getHours();
   let karsilama = $derived(
     saat < 6 ? "İyi Geceler" : 
@@ -13,12 +12,10 @@
     "İyi Akşamlar"
   );
 
-  // 2. Akıllı İstatistikler
   let toplamDinlenme = $derived(
     playerState.sarkiListesi.reduce((acc, sarki) => acc + (sarki.dinlenme_sayisi || 0), 0)
   );
 
-  // 3. Günün Öne Çıkanı (En çok dinlenen ilk şarkı)
   let enCokDinlenenler = $derived(
     [...playerState.sarkiListesi]
       .filter(s => (s.dinlenme_sayisi || 0) > 0)
@@ -29,7 +26,6 @@
     enCokDinlenenler.length > 0 ? enCokDinlenenler[0] : playerState.sarkiListesi[0]
   );
 
-  // 4. Son dinlenen 6 şarkı (Hızlı Erişim)
   let hizliErisim = $derived(
     [...playerState.sarkiListesi]
       .filter(s => s.son_dinlenme_tarihi) 
@@ -37,7 +33,6 @@
       .slice(0, 6)
   );
 
-  // 5. Favori Sanatçılar
   let favoriSanatcilar = $derived(
     Object.entries(
       playerState.sarkiListesi.reduce((acc, sarki) => {
@@ -51,7 +46,6 @@
     .map(entry => ({ isim: entry[0], skor: entry[1] }))
   );
 
-  // 6. Kütüphaneye eklenen son 5 şarkı
   let yeniEklenenler = $derived(
     [...playerState.sarkiListesi].reverse().slice(0, 5)
   );
@@ -63,7 +57,7 @@
   });
 </script>
 
-<div class="p-8 lg:p-10 w-full min-h-full pb-32 flex flex-col relative min-w-0 overflow-y-auto custom-scrollbar bg-[var(--bg-main)] text-[var(--text-main)] transition-colors duration-500">
+<div class="p-8 lg:p-10 w-full min-h-full pb-32 flex flex-col relative min-w-0 overflow-y-auto custom-scrollbar bg-transparent text-[var(--text-main)] transition-colors duration-500">
   
   {#if playerState.sarkiListesi.length === 0}
     <div class="flex flex-col items-center justify-center flex-1 mt-10 p-10 bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] border-dashed" in:fade>
@@ -74,7 +68,7 @@
       </div>
       <h3 class="text-2xl font-bold mb-2">Sistem Kaydı Bulunamadı</h3>
       <p class="text-[var(--text-dim)] mb-8 max-w-md text-center">Arşivin henüz boş. Bilgisayarından veya dış kaynaklardan yeni parçalar aktararak kütüphaneni oluşturmaya başla.</p>
-      <button type="button" onclick={() => playerState.isAddMusicModalOpen = true} class="bg-[var(--accent)] text-white px-8 py-3 rounded-full font-bold shadow-lg transition-all hover:scale-105 flex items-center gap-2 tracking-widest uppercase text-xs">
+      <button type="button" onclick={() => playerState.isAddMusicModalOpen = true} class="bg-[var(--accent)] hover:opacity-90 text-white px-8 py-3 rounded-full font-bold shadow-lg transition-all hover:scale-105 flex items-center gap-2 tracking-widest uppercase text-xs">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"></path></svg>
         Müzik Ekle
       </button>
@@ -96,8 +90,8 @@
     </div>
 
     {#if gununSarkisi}
-      <div class="w-full relative rounded-[var(--radius)] overflow-hidden mb-10 group shadow-2xl border border-[var(--border)] transition-all duration-500" in:fade>
-        <div class="absolute inset-0 bg-gradient-to-r from-[var(--bg-main)] via-[var(--bg-main)]/60 to-transparent z-10"></div>
+      <div class="w-full relative rounded-[var(--radius)] overflow-hidden mb-10 group shadow-2xl border border-[var(--border)]">
+        <div class="absolute inset-0 bg-gradient-to-r from-[var(--bg-main)] via-[var(--bg-main)]/70 to-transparent z-10"></div>
         {#if gununSarkisi.kapak_yolu}
           <img src={convertFileSrc(gununSarkisi.kapak_yolu)} alt="" class="absolute inset-0 w-full h-full object-cover blur-sm opacity-50 group-hover:scale-105 group-hover:blur-md transition-all duration-700" />
         {:else}
@@ -105,7 +99,7 @@
         {/if}
         
         <div class="relative z-20 p-8 lg:p-10 flex flex-col md:flex-row items-center md:items-end gap-6 md:gap-8">
-          <div class="w-32 h-32 md:w-48 md:h-48 shrink-0 rounded-[var(--radius)] overflow-hidden shadow-2xl border border-[var(--border)] relative">
+          <div class="w-32 h-32 md:w-48 md:h-48 shrink-0 rounded-[var(--radius)] overflow-hidden shadow-2xl border border-white/10 relative">
             {#if gununSarkisi.kapak_yolu}
               <img src={convertFileSrc(gununSarkisi.kapak_yolu)} alt="" class="w-full h-full object-cover" />
             {:else}
@@ -120,7 +114,7 @@
             <h2 class="text-4xl md:text-5xl font-black mb-2 truncate leading-tight">{gununSarkisi.isim}</h2>
             <p class="text-lg text-[var(--text-dim)] font-medium mb-6">{gununSarkisi.sarkici}</p>
             
-            <button onclick={() => sarkiCal(gununSarkisi!)} class="bg-[var(--accent)] hover:bg-[var(--accent-sec)] text-white w-fit mx-auto md:mx-0 px-8 py-3 rounded-full font-bold shadow-xl transition-all hover:scale-105 flex items-center gap-3 uppercase tracking-widest text-xs">
+            <button onclick={() => sarkiCal(gununSarkisi!)} class="bg-[var(--accent)] hover:opacity-90 text-white w-fit mx-auto md:mx-0 px-8 py-3 rounded-full font-bold shadow-xl transition-all hover:scale-105 flex items-center gap-3 uppercase tracking-widest text-xs">
               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
               Şimdi Dinle
             </button>
@@ -133,7 +127,8 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-10">
         {#each hizliErisim as sarki}
           <div 
-            role="button" tabindex="0" 
+            role="button" 
+            tabindex="0" 
             onclick={() => sarkiCal(sarki)}
             onkeydown={(e) => e.key === 'Enter' && sarkiCal(sarki)}
             class="flex items-center bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border)] hover:border-[var(--accent)]/30 rounded-[var(--radius)] overflow-hidden cursor-pointer group transition-all duration-300 shadow-lg"
@@ -167,7 +162,7 @@
           <h2 class="text-xl font-bold tracking-wide">Sık Dinlediğin Sanatçılar</h2>
           <a href="/artists" class="text-xs font-bold text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors uppercase tracking-widest">Tümünü Gör</a>
         </div>
-        <div class="flex gap-6 overflow-x-auto pb-4 custom-scrollbar">
+        <div class="flex gap-6 overflow-x-auto custom-scrollbar pb-4">
           {#each favoriSanatcilar as sanatci}
             <a href="/artist/{encodeURIComponent(sanatci.isim)}" class="flex flex-col items-center gap-3 group min-w-[120px] cursor-pointer">
               <div class="w-28 h-28 rounded-full bg-[var(--bg-surface)] border-2 border-transparent group-hover:border-[var(--accent-sec)]/50 shadow-lg flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:-translate-y-1">

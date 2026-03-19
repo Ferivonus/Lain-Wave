@@ -2,80 +2,119 @@
   import { onMount } from 'svelte';
   import { convertFileSrc } from '@tauri-apps/api/core';
   import FavoriteButton from '$lib/FavoriteButton.svelte';
-  // Merkezi store fonksiyonlarımızı alıyoruz
+  import SongStats from '$lib/SongStats.svelte';
   import { playerState, sarkiCal, initializePlayer } from '../../store.svelte';
+  import { fade, fly, scale } from 'svelte/transition';
 
-  // Sayfa yüklendiğinde verilerin tam olduğundan emin olalım
   onMount(async () => {
     if (playerState.sarkiListesi.length === 0) {
-      await initializePlayer(); // Veri çekme işlemini store'a devrettik
+      await initializePlayer();
     }
   });
 
-  // En çok dinlenen 5 şarkı (Dinlenme sayısına göre azalan sıralama)
+  let kategoriler = $derived.by(() => {
+    const map = new Map();
+    playerState.sarkiListesi.forEach(s => {
+      if (!s.tarz) return;
+      const t = s.tarz.trim();
+      map.set(t, (map.get(t) || 0) + 1);
+    });
+    return Array.from(map.entries()).map(([isim, adet]) => ({ isim, adet }));
+  });
+
   let enCokDinlenenler = $derived(
     [...playerState.sarkiListesi]
       .sort((a, b) => (b.dinlenme_sayisi || 0) - (a.dinlenme_sayisi || 0))
       .slice(0, 5)
   );
 
-  // Son eklenen 10 şarkı (Listeyi ters çevirip ilk 10'u alıyoruz)
   let yeniEklenenler = $derived(
     [...playerState.sarkiListesi]
+      .slice(-10) 
       .reverse()
-      .slice(0, 10)
   );
+
+  const tarzIkonlari: Record<string, string> = {
+    "Pop": "✨", "Rock": "🎸", "Lofi": "☕", "Cyberpunk": "🤖", 
+    "Ghibli": "🌳", "Electronic": "⚡", "Jazz": "🎷", "Podcast": "🎙️"
+  };
 </script>
 
-<div class="p-10 w-full min-h-full pb-32 flex flex-col relative min-w-0">
+<div class="p-8 lg:p-12 w-full min-h-full pb-32 flex flex-col relative min-w-0 bg-transparent text-[var(--text-main)] transition-colors duration-500 overflow-y-auto custom-scrollbar">
   
-  <div class="relative w-full h-64 rounded-3xl overflow-hidden mb-12 shadow-2xl border border-white/10 group">
-    <div class="absolute inset-0 bg-gradient-to-r from-purple-900 via-pink-600 to-orange-500 opacity-80"></div>
-    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=2070')] bg-cover bg-center mix-blend-overlay group-hover:scale-105 transition-transform duration-700"></div>
+  <section class="relative w-full h-72 rounded-[var(--radius)] overflow-hidden mb-12 shadow-2xl border border-[var(--border)] group shrink-0" in:fade>
+    <div class="absolute inset-0 bg-gradient-to-r from-[var(--accent)] via-[var(--accent-sec)] to-[var(--bg-main)] opacity-60 z-10"></div>
+    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=2070')] bg-cover bg-center mix-blend-overlay group-hover:scale-105 transition-transform duration-1000"></div>
     
-    <div class="absolute inset-0 p-10 flex flex-col justify-center">
-      <span class="text-xs font-black tracking-[0.5em] text-white/70 uppercase mb-2">Haftalık Keşif</span>
-      <h1 class="text-5xl font-black text-white mb-4 tracking-tighter italic">TRENDLER VE YENİLİKLER</h1>
-      <p class="text-white/80 max-w-lg font-medium">Lain Wave algoritması kütüphaneni senin için analiz etti. İşte bu aralar en çok kulak verdiğin parçalar.</p>
+    <div class="absolute inset-0 p-10 flex flex-col justify-center z-20">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="w-10 h-[2px] bg-white/50"></span>
+        <span class="text-[10px] font-black tracking-[0.4em] text-white/90 uppercase">Lain Wave Intelligence</span>
+      </div>
+      <h1 class="text-5xl lg:text-7xl font-black text-white mb-4 tracking-tighter italic leading-none drop-shadow-2xl">
+        KEŞFET
+      </h1>
+      <p class="text-white/80 max-w-lg font-medium text-sm leading-relaxed">
+        Sistem kütüphaneni analiz etti. Mevcut frekansların ve en yeni veri blokların aşağıda listelenmiştir.
+      </p>
     </div>
-  </div>
+  </section>
 
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+  <section class="mb-16">
+    <h2 class="text-xs font-black text-[var(--text-dim)] mb-6 uppercase tracking-[0.4em] flex items-center gap-4">
+        Frekans Grupları <div class="h-px flex-1 bg-[var(--border)]"></div>
+    </h2>
+    <div class="flex gap-4 overflow-x-auto pb-4 custom-scrollbar-h no-scrollbar">
+      {#each kategoriler as kat, i}
+        <a 
+          href="/search?q={kat.isim}"
+          class="flex-shrink-0 w-36 h-44 bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] p-5 flex flex-col justify-between hover:bg-[var(--bg-card-hover)] hover:border-[var(--accent)]/50 transition-all group shadow-lg"
+          in:scale={{ duration: 400, delay: i * 50 }}
+        >
+          <span class="text-4xl group-hover:scale-110 transition-transform">{tarzIkonlari[kat.isim] || "🎵"}</span>
+          <div>
+            <p class="font-black text-sm uppercase tracking-tight group-hover:text-[var(--accent)] transition-colors">{kat.isim}</p>
+            <p class="text-[9px] font-bold text-[var(--text-dim)] uppercase">{kat.adet} Parça</p>
+          </div>
+        </a>
+      {/each}
+    </div>
+  </section>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
     
     <div class="lg:col-span-5 flex flex-col">
-      <h2 class="text-2xl font-black text-white mb-6 flex items-center gap-3 uppercase italic tracking-tight">
-        <span class="text-pink-500 text-3xl">#</span> Zirvedekiler
+      <h2 class="text-xl font-black text-[var(--text-main)] mb-8 flex items-center gap-4 uppercase italic tracking-tight">
+        <span class="text-[var(--accent)] text-3xl font-serif">#</span> Zirvedekiler
       </h2>
       
-      <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-3">
         {#each enCokDinlenenler as sarki, index}
           <div 
             role="button" tabindex="0"
             onclick={() => sarkiCal(sarki)}
-            onkeydown={(e) => e.key === 'Enter' && sarkiCal(sarki)}
-            class="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-pink-500/30 transition-all group cursor-pointer"
+            onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && sarkiCal(sarki)}
+            class="flex items-center gap-5 p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] hover:bg-[var(--bg-card-hover)] hover:border-[var(--accent)]/30 transition-all group cursor-pointer shadow-sm"
           >
-            <span class="text-2xl font-black text-white/20 group-hover:text-pink-500 transition-colors w-8">{index + 1}</span>
+            <span class="text-2xl font-black text-[var(--text-dim)]/20 group-hover:text-[var(--accent)] transition-colors w-8 font-serif italic text-center">
+                {index + 1}
+            </span>
             
-            <div class="w-14 h-14 rounded-lg overflow-hidden shadow-lg shrink-0">
+            <div class="w-14 h-14 rounded-xl overflow-hidden shadow-lg shrink-0 border border-[var(--border)] bg-[var(--bg-surface)]">
               {#if sarki.kapak_yolu}
-                <img src={convertFileSrc(sarki.kapak_yolu)} alt="" class="w-full h-full object-cover" />
+                <img src={convertFileSrc(sarki.kapak_yolu)} alt="" class="w-full h-full object-cover transition-transform group-hover:scale-110" />
               {:else}
-                <div class="w-full h-full bg-black/40 flex items-center justify-center text-white/20 italic font-black">LW</div>
+                <div class="w-full h-full flex items-center justify-center text-[var(--text-dim)]/30 italic font-black text-xs">LW</div>
               {/if}
             </div>
 
-            <div class="flex flex-col min-w-0 flex-1">
-              <span class="font-bold text-white truncate">{sarki.isim}</span>
-              <span class="text-xs text-white/40 truncate">{sarki.sarkici}</span>
+            <div class="flex-1 min-w-0 pr-2">
+              <span class="font-bold text-[var(--text-main)] truncate block text-sm group-hover:text-[var(--accent)] transition-colors">{sarki.isim}</span>
+              <span class="text-[10px] text-[var(--text-dim)] font-bold uppercase tracking-widest truncate block opacity-60">{sarki.sarkici}</span>
             </div>
 
-            <div class="flex flex-col items-end gap-1">
-              <span class="text-[10px] font-bold text-pink-400 uppercase tracking-widest">{sarki.kalite || 'MP3'}</span>
-              <div class="flex items-center gap-1 text-white/20">
-                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                <span class="text-xs font-bold">{sarki.dinlenme_sayisi || 0}</span>
-              </div>
+            <div class="shrink-0">
+                <SongStats {sarki} />
             </div>
           </div>
         {/each}
@@ -83,51 +122,66 @@
     </div>
 
     <div class="lg:col-span-7 flex flex-col">
-      <h2 class="text-2xl font-black text-white mb-6 flex items-center gap-3 uppercase italic tracking-tight">
-        <span class="text-blue-500 text-3xl">/</span> Son Eklenenler
+      <h2 class="text-xl font-black text-[var(--text-main)] mb-8 flex items-center gap-4 uppercase italic tracking-tight">
+        <span class="text-[var(--accent-sec)] text-3xl font-serif">/</span> Son Eklenenler
       </h2>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {#each yeniEklenenler as sarki}
+        {#each yeniEklenenler as sarki, i}
           <div 
             role="button" tabindex="0"
             onclick={() => sarkiCal(sarki)}
-            onkeydown={(e) => e.key === 'Enter' && sarkiCal(sarki)}
-            class="flex items-center gap-4 p-3 rounded-xl bg-black/20 hover:bg-black/40 border border-white/5 transition-all cursor-pointer group"
+            onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && sarkiCal(sarki)}
+            class="flex items-center gap-4 p-3 rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] transition-all cursor-pointer group shadow-sm hover:border-[var(--accent-sec)]/30"
           >
-            <div class="w-12 h-12 rounded-md overflow-hidden shrink-0 relative">
+            <div class="w-12 h-12 rounded-xl overflow-hidden shrink-0 relative border border-[var(--border)]">
                {#if sarki.kapak_yolu}
-                  <img src={convertFileSrc(sarki.kapak_yolu)} alt="" class="w-full h-full object-cover" />
+                  <img src={convertFileSrc(sarki.kapak_yolu)} alt="" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                {:else}
-                  <div class="w-full h-full bg-white/5 flex items-center justify-center text-xs">🎵</div>
+                  <div class="w-full h-full bg-[var(--bg-surface)] flex items-center justify-center text-[var(--text-dim)]/20 text-xs">🎵</div>
                {/if}
-               <div class="absolute inset-0 bg-pink-500/0 group-hover:bg-pink-500/20 transition-colors flex items-center justify-center">
-                  <svg class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 scale-50 group-hover:scale-100 transition-all" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+               <div class="absolute inset-0 bg-[var(--accent)]/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                </div>
             </div>
             
-            <div class="flex flex-col min-w-0 flex-1">
-              <span class="text-sm font-bold text-white truncate">{sarki.isim}</span>
-              <span class="text-[10px] text-white/40 truncate uppercase tracking-tighter">{sarki.sarkici}</span>
+            <div class="flex-1 min-w-0 pr-2">
+              <span class="text-sm font-bold text-[var(--text-main)] truncate block leading-tight">{sarki.isim}</span>
+              <span class="text-[9px] text-[var(--text-dim)] font-bold truncate uppercase tracking-widest opacity-60">{sarki.sarkici}</span>
             </div>
 
-            <div class="flex items-center gap-2" onclick={(e) => e.stopPropagation()} role="presentation">
+            <div onclick={(e) => e.stopPropagation()} role="presentation" class="shrink-0">
                <FavoriteButton sarkiId={sarki.id} />
             </div>
           </div>
         {/each}
       </div>
 
-      <div class="mt-8 p-6 rounded-3xl bg-gradient-to-br from-white/5 to-transparent border border-white/10 flex items-center justify-between">
+      <div class="mt-8 p-8 rounded-[var(--radius)] bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-surface)] border border-[var(--border)] flex items-center justify-between shadow-xl">
         <div class="flex flex-col">
-          <span class="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">Toplam Kütüphane</span>
-          <span class="text-4xl font-black text-white italic">{playerState.sarkiListesi.length} <span class="text-sm not-italic font-medium text-white/40">Parça</span></span>
+          <span class="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.3em] mb-2">Toplam Veri Akışı</span>
+          <div class="flex items-end gap-2 leading-none">
+             <span class="text-5xl font-black text-[var(--text-main)] italic tracking-tighter">{playerState.sarkiListesi.length}</span>
+             <span class="text-[11px] font-bold text-[var(--accent)] uppercase tracking-widest mb-1">Indexli Parça</span>
+          </div>
         </div>
-        <div class="w-12 h-12 rounded-full border-2 border-white/10 flex items-center justify-center text-white/20">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+        <div class="w-14 h-14 rounded-full border border-[var(--border)] flex items-center justify-center text-[var(--accent)] bg-[var(--bg-surface)] shadow-inner">
+          <svg class="w-6 h-6 animate-pulse" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path>
+          </svg>
         </div>
       </div>
     </div>
-
   </div>
 </div>
+
+<style>
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  h1 { text-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+
+  .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+</style>

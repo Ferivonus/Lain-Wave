@@ -4,14 +4,13 @@
   import FavoriteButton from '$lib/FavoriteButton.svelte';
   import SongStats from '$lib/SongStats.svelte';
   import { playerState, initializePlayer, sarkiPlaylisteEkle, sarkiCal } from '../../store.svelte';
-  // Fonksiyonlarımızı merkezi store'dan içe aktarıyoruz
+  import { fade, fly } from 'svelte/transition';
 
   let aramaMetni = $state("");
 
-  // Sayfa açıldığında kütüphanenin boş olmadığından emin olalım
   onMount(async () => {
     if (playerState.sarkiListesi.length === 0) {
-      await initializePlayer(); // Tüm veri çekme işlemini store'a devrettik
+      await initializePlayer();
     }
   });
 
@@ -28,136 +27,165 @@
         })
   );
 
-  // Arayüz olayını (event) yakalayıp store'daki asıl fonksiyona iletiyoruz
+  let enPopulerler = $derived(
+    [...playerState.sarkiListesi]
+      .sort((a, b) => (b.dinlenme_sayisi || 0) - (a.dinlenme_sayisi || 0))
+      .slice(0, 5)
+  );
+
   async function handlePlaylistEkle(sarkiId: string, event: Event) {
     const selectElement = event.target as HTMLSelectElement;
     const playlistId = selectElement.value;
-    
+    if (!playlistId) return;
+
     const basarili = await sarkiPlaylisteEkle(sarkiId, playlistId);
     if (basarili) {
-      selectElement.value = ""; // İşlem başarılıysa seçimi sıfırla
+      selectElement.value = "";
     }
   }
 
   const kategoriler = [
-    { isim: "Siberpunk", renk: "from-fuchsia-600 to-purple-900" },
-    { isim: "Gece Sürüşü", renk: "from-blue-600 to-indigo-900" },
-    { isim: "Synthwave", renk: "from-pink-500 to-rose-900" },
-    { isim: "Lo-Fi Beats", renk: "from-emerald-500 to-teal-900" },
-    { isim: "J-Pop", renk: "from-red-500 to-orange-900" },
-    { isim: "Acoustic", renk: "from-amber-600 to-yellow-900" },
-    { isim: "Metal", renk: "from-zinc-600 to-neutral-900" },
-    { isim: "Podcast", renk: "from-cyan-600 to-blue-900" },
+    { isim: "Pop", renk: "bg-blue-500/20 text-blue-400" },
+    { isim: "Rock", renk: "bg-red-500/20 text-red-400" },
+    { isim: "Lofi", renk: "bg-indigo-500/20 text-indigo-400" },
+    { isim: "Electronic", renk: "bg-emerald-500/20 text-emerald-400" },
+    { isim: "Jazz", renk: "bg-amber-500/20 text-amber-400" },
+    { isim: "Classical", renk: "bg-zinc-500/20 text-zinc-400" },
   ];
 </script>
 
-<div class="w-full min-h-full pb-32 flex flex-col relative min-w-0">
+<div class="w-full min-h-full pb-32 flex flex-col relative bg-transparent text-[var(--text-main)] transition-colors duration-500">
   
-  <div class="sticky top-0 z-20 px-10 pt-10 pb-6 bg-gradient-to-b from-[#261825]/90 via-[#261825]/70 to-transparent backdrop-blur-xl">
-    <div class="relative group max-w-4xl mx-auto">
-      <div class="absolute inset-y-0 left-0 flex items-center pl-6 pointer-events-none transition-colors group-focus-within:text-pink-400 text-white/50">
-        <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  <div class="sticky top-0 z-20 px-8 pt-10 pb-6 bg-transparent backdrop-blur-xl">
+    <div class="relative group max-w-3xl">
+      <div class="absolute inset-y-0 left-0 flex items-center pl-6 pointer-events-none text-[var(--text-dim)] group-focus-within:text-[var(--accent)] transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
       </div>
       
       <input
         type="text"
         bind:value={aramaMetni}
-        placeholder="Ne dinlemek istersin?"
-        class="w-full bg-black/30 text-white placeholder-white/40 text-xl font-bold rounded-full py-5 pl-16 pr-14 outline-none border border-white/10 focus:border-pink-400/60 focus:bg-black/50 transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.3)] focus:shadow-[0_10px_40px_rgba(236,72,153,0.2)]"
+        placeholder="Kütüphanende ara..."
+        class="w-full bg-[var(--bg-surface)] text-[var(--text-main)] placeholder-[var(--text-dim)]/50 text-lg font-bold rounded-2xl py-4 pl-16 pr-14 outline-none border border-[var(--border)] focus:border-[var(--accent)]/50 transition-all shadow-xl"
       />
 
       {#if aramaMetni.length > 0}
         <button 
-          type="button" 
           onclick={() => aramaMetni = ""} 
-          class="absolute inset-y-0 right-0 flex items-center pr-5 text-white/40 hover:text-white transition-colors"
-          aria-label="Aramayı Temizle">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          class="absolute inset-y-0 right-0 flex items-center pr-5 text-[var(--text-dim)] hover:text-[var(--text-main)]"
+          aria-label="Temizle">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       {/if}
     </div>
   </div>
 
-  <div class="px-10 flex-1 min-w-0">
+  <div class="px-8 flex-1">
     {#if aramaMetni.trim() === ""}
-      <div class="max-w-6xl mx-auto mt-4">
-        <h2 class="text-2xl font-black text-white mb-6 tracking-tight drop-shadow-md uppercase italic">Hepsine Göz At</h2>
-        
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div class="max-w-6xl mt-4" in:fade>
+        <h2 class="text-sm font-black text-[var(--text-dim)] mb-6 uppercase tracking-[0.2em]">Türlere Göz At</h2>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {#each kategoriler as kategori}
-            <div class="relative aspect-[3/2] rounded-xl overflow-hidden cursor-pointer group shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-              <div class="absolute inset-0 bg-gradient-to-br {kategori.renk} opacity-90 group-hover:opacity-100 transition-opacity"></div>
-              <span class="absolute top-4 left-4 text-xl font-bold text-white tracking-wide drop-shadow-lg z-10">{kategori.isim}</span>
-              <div class="absolute -bottom-4 -right-4 w-24 h-24 bg-black/20 rounded-lg transform rotate-12 group-hover:rotate-6 transition-transform duration-300 shadow-xl backdrop-blur-sm border border-white/10"></div>
+            <div class="relative aspect-square rounded-[var(--radius)] {kategori.renk} border border-white/5 p-5 cursor-pointer hover:scale-[1.02] transition-all flex flex-col justify-end">
+              <span class="text-lg font-bold tracking-tight">{kategori.isim}</span>
             </div>
           {/each}
         </div>
       </div>
 
     {:else if aramaSonuclari.length === 0}
-      <div class="flex flex-col items-center justify-center h-64 text-center mt-10">
-        <div class="text-7xl mb-6 opacity-50 drop-shadow-xl transform hover:scale-110 transition-transform duration-500 cursor-default">🔍</div>
-        <h3 class="text-3xl font-black text-white mb-3 tracking-tight">Sonuç Bulunamadı</h3>
-        <p class="text-gray-300 font-medium text-lg">"{aramaMetni}" için kütüphanede eşleşen bir şey yok.</p>
+      <div class="flex flex-col mt-10" in:fade>
+        <div class="mb-12">
+          <h3 class="text-xl font-bold text-[var(--text-main)] mb-2">"{aramaMetni}" ile eşleşen bir sonuç yok.</h3>
+          <p class="text-[var(--text-dim)] text-sm">Yazım hatası yapmış olabilir misiniz?</p>
+        </div>
+
+        <div>
+          <h4 class="text-xs font-black text-[var(--accent)] mb-6 uppercase tracking-widest">Bunları mı aratmak istemiştiniz?</h4>
+          <div class="flex flex-col gap-2 max-w-4xl">
+            {#each enPopulerler as sarki}
+               <div 
+                role="button" tabindex="0" 
+                onclick={() => sarkiCal(sarki)}
+                onkeydown={(e) => e.key === 'Enter' && sarkiCal(sarki)}
+                class="flex items-center gap-4 p-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl hover:bg-[var(--bg-card-hover)] transition-all cursor-pointer group"
+              >
+                <div class="w-10 h-10 bg-[var(--bg-surface)] rounded-lg overflow-hidden shrink-0">
+                  {#if sarki.kapak_yolu}
+                    <img src={convertFileSrc(sarki.kapak_yolu)} alt="" class="w-full h-full object-cover" />
+                  {:else}
+                    <div class="w-full h-full flex items-center justify-center text-xs opacity-20">🎵</div>
+                  {/if}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-bold text-sm truncate">{sarki.isim}</p>
+                  <p class="text-xs text-[var(--text-dim)] truncate">{sarki.sarkici}</p>
+                </div>
+                <span class="text-[10px] font-bold text-[var(--accent)] uppercase">{sarki.dinlenme_sayisi} Dinlenme</span>
+              </div>
+            {/each}
+          </div>
+        </div>
       </div>
 
     {:else}
-      <div class="max-w-6xl mx-auto">
-        <div class="flex items-center justify-between mb-6 px-2 mt-4">
-          <h2 class="text-sm font-bold text-white/50 tracking-widest uppercase">
-            En İyi Eşleşmeler ({aramaSonuclari.length})
-          </h2>
+      <div class="max-w-6xl" in:fade>
+        <div class="flex text-[10px] font-black text-[var(--text-dim)] border-b border-[var(--border)] pb-3 mb-4 px-3 tracking-widest uppercase">
+          <span class="w-10 text-center">#</span>
+          <span class="flex-1">BAŞLIK</span>
+          <span class="w-40 text-right pr-4">İSTATİSTİK</span> 
+          <span class="w-1/4 pl-6 hidden md:block">ALBÜM</span>
+          <span class="w-40 text-center">İŞLEMLER</span>
         </div>
 
-        <div class="flex text-[10px] font-black text-white/30 border-b border-white/5 pb-3 mb-4 px-2 tracking-[0.2em] uppercase">
-          <span class="w-12 text-center shrink-0">#</span>
-          <span class="flex-1 min-w-0">BAŞLIK</span>
-          <span class="w-48 shrink-0 text-right pr-4">İSTATİSTİK</span> 
-          <span class="w-1/4 shrink-0 pl-6">ALBÜM</span>
-          <span class="w-48 text-center shrink-0">İŞLEMLER</span>
-        </div>
-
-        <div class="flex flex-col gap-1.5">
+        <div class="flex flex-col gap-1">
           {#each aramaSonuclari as sarki, index}
-            <div role="button" tabindex="0" onclick={() => sarkiCal(sarki)} onkeydown={(e) => e.key === 'Enter' && sarkiCal(sarki)} class="flex items-center text-sm p-2 rounded-xl hover:bg-white/5 transition-all duration-200 cursor-pointer group {playerState.aktifSarki?.id === sarki.id ? 'bg-white/10 border border-white/10' : 'border border-transparent'}">
-              
-              <span class="w-12 text-center shrink-0">
-                <span class="text-white/30 group-hover:hidden font-mono text-xs">{index + 1}</span>
-                <svg class="w-4 h-4 mx-auto hidden group-hover:block text-pink-400" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <div 
+              role="button" tabindex="0" 
+              onclick={() => sarkiCal(sarki)} 
+              onkeydown={(e) => e.key === 'Enter' && sarkiCal(sarki)} 
+              class="flex items-center p-2 rounded-xl hover:bg-[var(--bg-card-hover)] transition-all cursor-pointer group {playerState.aktifSarki?.id === sarki.id ? 'bg-[var(--accent)]/5 border border-[var(--accent)]/20' : 'border border-transparent'}"
+            >
+              <span class="w-10 text-center shrink-0">
+                <span class="text-[var(--text-dim)] group-hover:hidden font-mono text-xs">{index + 1}</span>
+                <svg class="w-4 h-4 mx-auto hidden group-hover:block text-[var(--accent)]" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
               </span>
               
               <div class="flex-1 flex items-center gap-4 min-w-0">
-                <div class="w-12 h-12 bg-black/30 rounded-lg overflow-hidden shrink-0 shadow-md">
+                <div class="w-11 h-11 bg-[var(--bg-surface)] rounded-lg overflow-hidden shrink-0 shadow-sm border border-[var(--border)]">
                   {#if sarki.kapak_yolu}
-                    <img src={convertFileSrc(sarki.kapak_yolu)} alt="Kapak" class="w-full h-full object-cover" />
+                    <img src={convertFileSrc(sarki.kapak_yolu)} alt="" class="w-full h-full object-cover" />
                   {:else}
-                    <div class="w-full h-full flex items-center justify-center text-white/20 bg-white/5">🎵</div>
+                    <div class="w-full h-full flex items-center justify-center text-white/10">🎵</div>
                   {/if}
                 </div>
                 
-                <div class="flex flex-col min-w-0 gap-0.5 pr-2">
-                  <span class="font-bold text-sm truncate {playerState.aktifSarki?.id === sarki.id ? 'text-pink-400' : 'text-white'}">{sarki.isim}</span>
-                  <a href="/artist/{encodeURIComponent(sarki.sarkici)}" 
-                     class="text-xs text-white/40 truncate font-medium hover:text-pink-400 transition-colors" 
-                     onclick={(e) => e.stopPropagation()}>
-                    {sarki.sarkici}
-                  </a>
+                <div class="flex flex-col min-w-0 pr-2">
+                  <span class="font-bold text-sm truncate {playerState.aktifSarki?.id === sarki.id ? 'text-[var(--accent)]' : 'text-[var(--text-main)]'}">{sarki.isim}</span>
+                  <span class="text-xs text-[var(--text-dim)] truncate font-medium">{sarki.sarkici}</span>
                 </div>
               </div>
 
-              <div class="w-48 shrink-0 flex items-center justify-end pr-4">
+              <div class="w-40 shrink-0 flex items-center justify-end pr-4 text-[var(--text-dim)]">
                 <SongStats {sarki} />
               </div>
 
-              <span class="w-1/4 text-white/40 truncate font-bold text-[10px] uppercase tracking-tighter pl-6 shrink-0">{sarki.album}</span>
+              <span class="w-1/4 text-[var(--text-dim)] truncate font-bold text-[10px] uppercase pl-6 shrink-0 hidden md:block">{sarki.album}</span>
 
-              <div class="w-48 shrink-0 flex items-center justify-end gap-3 pr-2" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()} role="presentation">
+              <div class="w-40 shrink-0 flex items-center justify-end gap-3 pr-2" 
+                   role="presentation"
+                   onclick={(e) => e.stopPropagation()} 
+                   onkeydown={(e) => e.stopPropagation()}>
                 <FavoriteButton sarkiId={sarki.id} />
-                <select aria-label="Playliste Ekle" onchange={(e) => handlePlaylistEkle(sarki.id, e)} class="bg-black/50 text-[10px] text-white/70 rounded-lg px-2 py-1.5 outline-none border border-white/5 hover:border-pink-500/50 cursor-pointer w-28 focus:border-pink-400 transition-all font-bold uppercase tracking-tighter">
-                  <option value="">➕ EKLE...</option>
+                
+                <select 
+                  aria-label="Playliste Ekle" 
+                  onchange={(e) => handlePlaylistEkle(sarki.id, e)} 
+                  class="bg-[var(--bg-surface)] text-[10px] text-[var(--text-dim)] rounded-lg px-2 py-1.5 outline-none border border-[var(--border)] hover:border-[var(--accent)]/50 cursor-pointer w-24 focus:border-[var(--accent)] transition-all font-bold uppercase"
+                >
+                  <option value="">➕ LİSTE</option>
                   {#each playerState.playlistler as pl}
                     {#if !pl.sarkilar.includes(sarki.id)}
                       <option value={pl.id}>{pl.isim.toUpperCase()}</option>
@@ -165,7 +193,6 @@
                   {/each}
                 </select>
               </div>
-              
             </div>
           {/each}
         </div>
@@ -173,3 +200,10 @@
     {/if}
   </div>
 </div>
+
+<style>
+  input::selection {
+    background: var(--accent);
+    color: white;
+  }
+</style>
