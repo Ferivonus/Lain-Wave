@@ -683,6 +683,60 @@ async fn youtube_indir(app: AppHandle, url: String, tarz: String) -> Result<Sark
     Ok(yeni_sarki)
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct YouTubeSonuc {
+    pub title: String,
+    pub channel: String,
+    pub duration_string: String,
+    pub thumbnail: String,
+    pub webpage_url: String,
+}
+
+#[tauri::command]
+async fn youtube_arama(sorgu: String) -> Result<Vec<YouTubeSonuc>, String> {
+    // yt-dlp'ye "ilk 5 sonucu getir ve json olarak dök" diyoruz
+    let arama_kodu = format!("ytsearch5:{}", sorgu);
+
+    let output = Command::new("yt-dlp")
+        .args([
+            "--dump-json",
+            "--default-search",
+            "ytsearch",
+            "--no-playlist",
+            &arama_kodu,
+        ])
+        .output()
+        .map_err(|e| format!("yt-dlp çalıştırılamadı: {}", e))?;
+
+    if !output.status.success() {
+        return Err("Arama sırasında bir hata oluştu.".to_string());
+    }
+
+    let output_str = String::from_utf8_lossy(&output.stdout);
+    let mut sonuclar = Vec::new();
+
+    // yt-dlp her satıra bir JSON objesi basar, satır satır okuyup listeye ekliyoruz
+    for line in output_str.lines() {
+        if let Ok(json) = serde_json::from_str::<serde_json::Value>(line) {
+            sonuclar.push(YouTubeSonuc {
+                title: json["title"].as_str().unwrap_or("Bilinmeyen").to_string(),
+                channel: json["uploader"]
+                    .as_str()
+                    .unwrap_or("Bilinmeyen")
+                    .to_string(),
+                duration_string: json["duration_string"]
+                    .as_str()
+                    .unwrap_or("0:00")
+                    .to_string(),
+                thumbnail: json["thumbnail"].as_str().unwrap_or("").to_string(),
+                webpage_url: json["webpage_url"].as_str().unwrap_or("").to_string(),
+            });
+        }
+    }
+
+    Ok(sonuclar)
+}
+
 pub fn run() {
     let drpc = DiscordClient::new(1483819416951984128);
     let discord_arc = Arc::new(Mutex::new(drpc));
@@ -787,6 +841,7 @@ pub fn run() {
             dinlenme_sayisi_artir,
             open_data_folder,
             playlist_sil,
+            youtube_arama,
             youtube_indir
         ])
         .run(tauri::generate_context!())

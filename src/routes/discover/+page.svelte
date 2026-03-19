@@ -1,10 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { convertFileSrc } from '@tauri-apps/api/core';
+  import { convertFileSrc, invoke } from '@tauri-apps/api/core';
   import FavoriteButton from '$lib/FavoriteButton.svelte';
-  import SongStats from '$lib/SongStats.svelte';
   import { playerState, sarkiCal, initializePlayer, sarkiSil, sarkiPlaylisteEkle, type Sarki } from '../../store.svelte';
-  import { fade, fly, scale } from 'svelte/transition';
+  import { fade, fly, scale, slide } from 'svelte/transition';
 
   onMount(async () => {
     if (playerState.sarkiListesi.length === 0) {
@@ -12,6 +11,7 @@
     }
   });
 
+  // --- KÜTÜPHANE STATE'LERİ ---
   let kategoriler = $derived.by(() => {
     const map = new Map();
     playerState.sarkiListesi.forEach(s => {
@@ -39,6 +39,71 @@
     "Ghibli": "🌳", "Electronic": "⚡", "Jazz": "🎷", "Podcast": "🎙️"
   };
 
+  // --- YOUTUBE ARAMA & İNDİRME STATE'LERİ ---
+  let aramaSorgusu = $state("");
+  let aramaYapiliyor = $state(false);
+  let aramaSonuclari = $state<any[]>([]);
+  let indirmeUrl = $state("");
+  let indiriliyor = $state(false);
+  let indirmeMesaji = $state("");
+
+  async function muzikAra() {
+      if (!aramaSorgusu.trim()) return;
+
+      // Eğer kullanıcı direkt URL yapıştırdıysa, arama yapmadan direkt indir
+      if (aramaSorgusu.includes("http://") || aramaSorgusu.includes("https://")) {
+          indirmeUrl = aramaSorgusu;
+          await youtubeIndir();
+          return;
+      }
+
+      aramaYapiliyor = true;
+      aramaSonuclari = [];
+      indirmeMesaji = "Ağda frekanslar taranıyor...";
+
+      try {
+          const sonuclar = await invoke<any[]>('youtube_arama', { sorgu: aramaSorgusu });
+          aramaSonuclari = sonuclar;
+          if (sonuclar.length > 0) {
+              indirmeMesaji = `${sonuclar.length} sinyal tespit edildi.`;
+          } else {
+              indirmeMesaji = "Ağda eşleşen sinyal bulunamadı.";
+          }
+      } catch (e) {
+          indirmeMesaji = "Tarama başarısız: " + e;
+      } finally {
+          aramaYapiliyor = false;
+      }
+  }
+
+  async function youtubeIndir() {
+      if (!indirmeUrl.trim()) return;
+
+      indiriliyor = true;
+      indirmeMesaji = "Veri akışı sağlanıyor, arşive indiriliyor...";
+
+      try {
+          const sonuc = await invoke<string>('youtube_indir', { url: indirmeUrl });
+          if (sonuc.includes("başarıyla") || sonuc.includes("eklendi") || sonuc.includes("Eklendi")) {
+              indirmeMesaji = "Veri başarıyla arşive eklendi.";
+              aramaSorgusu = "";
+              indirmeUrl = "";
+              aramaSonuclari = []; // İndirme bitince arama listesini temizle
+              await initializePlayer(); // Kütüphaneyi anında güncelle
+          } else {
+              indirmeMesaji = sonuc;
+          }
+      } catch (e) {
+          indirmeMesaji = "Bağlantı koptu: " + e;
+      } finally {
+          indiriliyor = false;
+          setTimeout(() => { 
+              if (!indiriliyor && !aramaYapiliyor) indirmeMesaji = ""; 
+          }, 5000);
+      }
+  }
+
+  // --- STANDART FONKSİYONLAR ---
   async function handleSarkiSil(sarki: Sarki, event: MouseEvent | KeyboardEvent) {
     event.preventDefault();
     event.stopPropagation();
@@ -81,9 +146,87 @@
         KEŞFET
       </h1>
       <p class="text-white/80 max-w-lg font-medium text-sm leading-relaxed">
-        Sistem kütüphaneni analiz etti. Mevcut frekansların ve en yeni veri blokların aşağıda listelenmiştir.
+        Sistem kütüphaneni analiz etti. Ağdan yeni veri akışları yakalayabilir, arama yapabilir veya mevcut arşivi inceleyebilirsin.
       </p>
     </div>
+  </section>
+
+  <section class="mb-16 bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] p-8 shadow-xl relative overflow-hidden group">
+      <div class="absolute top-0 right-0 w-64 h-64 bg-[var(--accent)]/5 blur-[80px] rounded-full pointer-events-none transition-transform group-hover:scale-110"></div>
+      
+      <div class="flex items-center gap-4 mb-6 relative z-10">
+          <div class="w-12 h-12 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center border border-red-500/20">
+              <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          </div>
+          <div>
+              <h2 class="text-xl font-black uppercase tracking-tight italic">Ağ Tarayıcısı</h2>
+              <p class="text-[10px] text-[var(--text-dim)] font-bold tracking-widest uppercase mt-1">Sistemde müzik arayın veya URL yapıştırın</p>
+          </div>
+      </div>
+
+      <div class="flex flex-col md:flex-row gap-4 relative z-10 mb-4">
+          <input 
+              type="text" 
+              bind:value={aramaSorgusu}
+              onkeydown={(e) => e.key === 'Enter' && !aramaYapiliyor && muzikAra()}
+              placeholder="Şarkı veya sanatçı adı yazın, ya da bağlantı (URL) yapıştırın..." 
+              class="flex-1 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl px-6 py-4 outline-none text-sm text-[var(--text-main)] focus:border-red-500/50 transition-colors placeholder:text-[var(--text-dim)]/50 placeholder:italic font-mono"
+              disabled={aramaYapiliyor || indiriliyor}
+          />
+          <button 
+              type="button"
+              onclick={muzikAra}
+              disabled={aramaYapiliyor || indiriliyor || !aramaSorgusu.trim()}
+              class="bg-red-500 hover:bg-red-600 text-white font-black uppercase tracking-[0.2em] text-[10px] px-10 py-4 rounded-xl transition-all shadow-lg hover:shadow-red-500/25 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[160px]"
+          >
+              {#if aramaYapiliyor || indiriliyor}
+                  <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+              {:else}
+                  Ağı Tara
+              {/if}
+          </button>
+      </div>
+      
+      {#if indirmeMesaji}
+          <div class="mb-2 text-[10px] font-mono font-bold uppercase tracking-widest {indirmeMesaji.includes('başarı') ? 'text-[var(--accent)]' : 'text-red-400'}" in:slide>
+              > {indirmeMesaji}
+          </div>
+      {/if}
+
+      {#if aramaSonuclari.length > 0}
+          <div class="flex flex-col gap-2 mt-6" in:fade>
+              <h3 class="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.3em] mb-2 border-b border-[var(--border)] pb-2">Bulunan Sinyaller</h3>
+              
+              {#each aramaSonuclari as sonuc}
+                  <div class="flex items-center gap-4 p-3 bg-[var(--bg-surface)] border border-[var(--border)] hover:border-red-500/30 rounded-xl group transition-all">
+                      
+                      <div class="w-16 h-12 bg-black rounded-lg overflow-hidden shrink-0 relative">
+                          <img src={sonuc.thumbnail} alt="" class="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity" />
+                      </div>
+
+                      <div class="flex-1 min-w-0">
+                          <p class="text-xs font-bold text-[var(--text-main)] truncate">{sonuc.title}</p>
+                          <div class="flex items-center gap-2 mt-1">
+                              <span class="text-[9px] font-black text-[var(--text-dim)] uppercase truncate max-w-[150px]">{sonuc.channel}</span>
+                              <span class="w-1 h-1 bg-[var(--border)] rounded-full"></span>
+                              <span class="text-[9px] font-mono text-[var(--text-dim)]">{sonuc.duration_string}</span>
+                          </div>
+                      </div>
+
+                      <button 
+                          type="button"
+                          onclick={() => { indirmeUrl = sonuc.webpage_url; youtubeIndir(); }}
+                          disabled={indiriliyor}
+                          class="p-3 text-[var(--text-dim)] hover:text-white hover:bg-red-500 rounded-lg transition-all disabled:opacity-50"
+                          title="Bu Frekansı Arşive İndir"
+                      >
+                          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                      </button>
+
+                  </div>
+              {/each}
+          </div>
+      {/if}
   </section>
 
   <section class="mb-16">
