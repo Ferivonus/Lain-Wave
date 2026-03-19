@@ -18,7 +18,11 @@
     }
 
     function duzenleModaliAc(e: MouseEvent) {
+        // Üstteki (satıra tıklayınca şarkı çalma) olayını engellemek için
+        e.preventDefault();
         e.stopPropagation();
+        
+        // Önce şarkıyı ata, sonra modalı aç
         playerState.duzenlenecekSarki = sarki;
         playerState.isEditModalOpen = true;
     }
@@ -30,6 +34,7 @@
         type="button" 
         onclick={duzenleModaliAc}
         class="opacity-0 group-hover:opacity-100 p-1.5 rounded-md hover:bg-[var(--accent)]/10 hover:text-[var(--accent)] transition-all shrink-0"
+        aria-label="Verileri Düzenle"
         title="Verileri Düzenle"
     >
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">

@@ -8,6 +8,7 @@
   import RightPanel from '$lib/RightPanel.svelte';
   import AddMusicModal from '$lib/AddMusicModal.svelte';
   import FooterPlayer from '$lib/FooterPlayer.svelte';
+  import EditSongModal from '$lib/EditSongModal.svelte';
   
   let { children } = $props();
   let aktifYol = $derived(page.url.pathname as string);
@@ -27,11 +28,13 @@
   function klavyeKisaYollari(e: KeyboardEvent) {
     const hedef = e.target as HTMLElement;
     
+    // Form elemanlarında veya düzenlenebilir alanlarda kısayolu devre dışı bırak
     if (
       ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(hedef.tagName) || 
       hedef.isContentEditable || 
       hedef.getAttribute('role') === 'button' ||
-      hedef.getAttribute('role') === 'dialog'
+      hedef.getAttribute('role') === 'dialog' ||
+      hedef.closest('button') // İç içe elementler için garanti
     ) {
       return;
     }
@@ -46,10 +49,6 @@
 <svelte:window onkeydown={klavyeKisaYollari} />
 
 <div class="{playerState.currentTheme} h-screen w-full flex flex-col font-sans overflow-hidden bg-[var(--bg-main)] text-[var(--text-main)] relative transition-colors duration-500">
-
-  {#if playerState.isAddMusicModalOpen}
-    <AddMusicModal />
-  {/if}
 
   <div class="flex-1 flex overflow-hidden relative">
     <Sidebar {aktifYol} onYeniPlaylist={yeniPlaylistOlustur} />
@@ -69,6 +68,8 @@
     onToggleRightPanel={() => sagMenuAcik = !sagMenuAcik} 
   />
 
+  <AddMusicModal /> 
+  <EditSongModal />
 </div>
 
 <style>

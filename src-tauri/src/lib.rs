@@ -702,10 +702,35 @@ async fn youtube_indir(app: tauri::AppHandle, url: String, tarz: String) -> Resu
 }
 
 #[tauri::command]
-async fn youtube_arama(sorgu: String) -> Result<Vec<YouTubeSonuc>, String> {
+async fn youtube_arama(app: tauri::AppHandle, sorgu: String) -> Result<Vec<YouTubeSonuc>, String> {
     let arama_kodu = format!("ytsearch5:{}", sorgu);
 
-    let mut cmd = std::process::Command::new("yt-dlp");
+    let yt_dlp_path = {
+        let exe_path = std::env::current_exe()
+            .map(|p| p.parent().map(|parent| parent.to_path_buf()))
+            .ok()
+            .flatten()
+            .unwrap_or_default();
+        let resource_dir = app.path().resource_dir().unwrap_or_default();
+        let current_dir = std::env::current_dir().unwrap_or_default();
+
+        let olasi_yollar = vec![
+            exe_path.join("binaries").join("yt-dlp.exe"),
+            resource_dir.join("binaries").join("yt-dlp.exe"),
+            current_dir.join("binaries").join("yt-dlp.exe"),
+            current_dir
+                .join("src-tauri")
+                .join("binaries")
+                .join("yt-dlp.exe"),
+        ];
+
+        olasi_yollar
+            .into_iter()
+            .find(|p| p.exists())
+            .ok_or_else(|| "Arama motoru (yt-dlp) bulunamadı!".to_string())?
+    };
+
+    let mut cmd = std::process::Command::new(&yt_dlp_path);
     cmd.args([
         "--dump-json",
         "--default-search",
@@ -722,7 +747,7 @@ async fn youtube_arama(sorgu: String) -> Result<Vec<YouTubeSonuc>, String> {
 
     let output = cmd
         .output()
-        .map_err(|e| format!("yt-dlp çalıştırılamadı: {}", e))?;
+        .map_err(|e| format!("Arama başlatılamadı: {}", e))?;
 
     if !output.status.success() {
         return Err("Arama sırasında bir hata oluştu.".to_string());
