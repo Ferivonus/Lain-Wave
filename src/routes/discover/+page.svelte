@@ -3,7 +3,7 @@
   import { convertFileSrc } from '@tauri-apps/api/core';
   import FavoriteButton from '$lib/FavoriteButton.svelte';
   import SongStats from '$lib/SongStats.svelte';
-  import { playerState, sarkiCal, initializePlayer } from '../../store.svelte';
+  import { playerState, sarkiCal, initializePlayer, sarkiSil, sarkiPlaylisteEkle, type Sarki } from '../../store.svelte';
   import { fade, fly, scale } from 'svelte/transition';
 
   onMount(async () => {
@@ -38,6 +38,32 @@
     "Pop": "✨", "Rock": "🎸", "Lofi": "☕", "Cyberpunk": "🤖", 
     "Ghibli": "🌳", "Electronic": "⚡", "Jazz": "🎷", "Podcast": "🎙️"
   };
+
+  async function handleSarkiSil(sarki: Sarki, event: MouseEvent | KeyboardEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const mesaj = `"${sarki.isim}" adlı parçayı kütüphaneden ve diskten KALICI olarak silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz.`;
+    
+    if (confirm(mesaj)) {
+        try {
+            await sarkiSil(sarki);
+        } catch (hata) {
+            alert("Silme işlemi sırasında bir hata oluştu.");
+        }
+    }
+  }
+
+  async function handlePlaylistEkle(sarkiId: string, event: Event) {
+    const selectElement = event.target as HTMLSelectElement;
+    const playlistId = selectElement.value;
+    if (!playlistId) return;
+
+    const basarili = await sarkiPlaylisteEkle(sarkiId, playlistId);
+    if(basarili) {
+        selectElement.value = ""; 
+    }
+  }
 </script>
 
 <div class="p-8 lg:p-12 w-full min-h-full pb-32 flex flex-col relative min-w-0 bg-transparent text-[var(--text-main)] transition-colors duration-500 overflow-y-auto custom-scrollbar">
@@ -94,13 +120,26 @@
             role="button" tabindex="0"
             onclick={() => sarkiCal(sarki)}
             onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && sarkiCal(sarki)}
-            class="flex items-center gap-5 p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] hover:bg-[var(--bg-card-hover)] hover:border-[var(--accent)]/30 transition-all group cursor-pointer shadow-sm"
+            aria-label="{sarki.isim} parçasını çal"
+            class="flex items-center gap-4 p-4 rounded-2xl transition-all group cursor-pointer shadow-sm border {playerState.aktifSarki?.id === sarki.id ? 'bg-[var(--accent)]/10 border-[var(--accent)]/30' : 'bg-[var(--bg-card)] border-[var(--border)] hover:bg-[var(--bg-card-hover)] hover:border-[var(--accent)]/30'}"
+            in:fly={{ x: -20, duration: 400, delay: index * 50 }}
           >
-            <span class="text-2xl font-black text-[var(--text-dim)]/20 group-hover:text-[var(--accent)] transition-colors w-8 font-serif italic text-center">
-                {index + 1}
-            </span>
+            <div class="w-8 text-center shrink-0">
+               {#if playerState.aktifSarki?.id === sarki.id && playerState.suAnOynuyorMu}
+                  <div class="flex items-end justify-center gap-0.5 h-3.5 mb-1">
+                     <div class="w-1 bg-[var(--accent)] animate-[bounce_1s_infinite]"></div>
+                     <div class="w-1 bg-[var(--accent)] animate-[bounce_1.2s_infinite]"></div>
+                     <div class="w-1 bg-[var(--accent)] animate-[bounce_0.8s_infinite]"></div>
+                  </div>
+               {:else}
+                  <span class="text-xl font-black text-[var(--text-dim)]/20 group-hover:hidden transition-colors font-serif italic">
+                      {index + 1}
+                  </span>
+                  <svg class="w-4 h-4 mx-auto hidden group-hover:block text-[var(--accent)]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+               {/if}
+            </div>
             
-            <div class="w-14 h-14 rounded-xl overflow-hidden shadow-lg shrink-0 border border-[var(--border)] bg-[var(--bg-surface)]">
+            <div class="w-12 h-12 rounded-xl overflow-hidden shadow-lg shrink-0 border border-[var(--border)] bg-[var(--bg-surface)]">
               {#if sarki.kapak_yolu}
                 <img src={convertFileSrc(sarki.kapak_yolu)} alt="" class="w-full h-full object-cover transition-transform group-hover:scale-110" />
               {:else}
@@ -110,11 +149,34 @@
 
             <div class="flex-1 min-w-0 pr-2">
               <span class="font-bold text-[var(--text-main)] truncate block text-sm group-hover:text-[var(--accent)] transition-colors">{sarki.isim}</span>
-              <span class="text-[10px] text-[var(--text-dim)] font-bold uppercase tracking-widest truncate block opacity-60">{sarki.sarkici}</span>
+              <a href="/artist/{encodeURIComponent(sarki.sarkici)}" onclick={(e) => e.stopPropagation()} class="text-[10px] text-[var(--text-dim)] font-bold uppercase tracking-widest truncate block opacity-80 hover:text-[var(--accent)] transition-colors">{sarki.sarkici}</a>
             </div>
 
-            <div class="shrink-0">
-                <SongStats {sarki} />
+            <div class="shrink-0 flex items-center gap-2" role="presentation" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
+              <select 
+                  aria-label="Listeye Ekle" 
+                  onchange={(e) => handlePlaylistEkle(sarki.id, e)} 
+                  class="bg-[var(--bg-surface)] text-[9px] text-[var(--text-dim)] rounded-lg px-1.5 py-1 outline-none border border-[var(--border)] hover:border-[var(--accent)]/50 cursor-pointer w-20 focus:border-[var(--accent)] transition-all font-bold uppercase opacity-0 group-hover:opacity-100 hidden sm:block"
+              >
+                <option value="">➕ EKLE</option>
+                {#each playerState.playlistler as pl}
+                  {#if !pl.sarkilar.includes(sarki.id)}
+                    <option value={pl.id}>{pl.isim.toUpperCase()}</option>
+                  {/if}
+                {/each}
+              </select>
+              
+              <FavoriteButton sarkiId={sarki.id} />
+              
+              <button 
+                  type="button" 
+                  aria-label="Sil" 
+                  title="Kalıcı Olarak Sil" 
+                  onclick={(e) => handleSarkiSil(sarki, e)} 
+                  class="text-[var(--text-dim)]/30 hover:text-red-500 transition-all p-1 opacity-0 group-hover:opacity-100"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
             </div>
           </div>
         {/each}
@@ -132,7 +194,9 @@
             role="button" tabindex="0"
             onclick={() => sarkiCal(sarki)}
             onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && sarkiCal(sarki)}
-            class="flex items-center gap-4 p-3 rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] transition-all cursor-pointer group shadow-sm hover:border-[var(--accent-sec)]/30"
+            aria-label="{sarki.isim} çal"
+            class="flex items-center gap-4 p-3 rounded-2xl transition-all cursor-pointer group shadow-sm border {playerState.aktifSarki?.id === sarki.id ? 'bg-[var(--accent)]/10 border-[var(--accent)]/30' : 'bg-[var(--bg-card)] border-[var(--border)] hover:bg-[var(--bg-card-hover)] hover:border-[var(--accent-sec)]/30'}"
+            in:fly={{ y: 10, duration: 400, delay: i * 30 }}
           >
             <div class="w-12 h-12 rounded-xl overflow-hidden shrink-0 relative border border-[var(--border)]">
                {#if sarki.kapak_yolu}
@@ -146,18 +210,41 @@
             </div>
             
             <div class="flex-1 min-w-0 pr-2">
-              <span class="text-sm font-bold text-[var(--text-main)] truncate block leading-tight">{sarki.isim}</span>
-              <span class="text-[9px] text-[var(--text-dim)] font-bold truncate uppercase tracking-widest opacity-60">{sarki.sarkici}</span>
+              <span class="text-sm font-bold text-[var(--text-main)] truncate block leading-tight group-hover:text-[var(--accent)] transition-colors">{sarki.isim}</span>
+              <a href="/artist/{encodeURIComponent(sarki.sarkici)}" onclick={(e) => e.stopPropagation()} class="text-[9px] text-[var(--text-dim)] font-bold truncate uppercase tracking-widest opacity-80 hover:text-[var(--accent)] transition-colors block">{sarki.sarkici}</a>
             </div>
 
-            <div onclick={(e) => e.stopPropagation()} role="presentation" class="shrink-0">
+            <div onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()} role="presentation" class="shrink-0 flex items-center gap-2 pr-2">
+               
+               <select 
+                   aria-label="Listeye Ekle" 
+                   onchange={(e) => handlePlaylistEkle(sarki.id, e)} 
+                   class="bg-[var(--bg-surface)] text-[9px] text-[var(--text-dim)] rounded-lg px-1.5 py-1 outline-none border border-[var(--border)] hover:border-[var(--accent)]/50 cursor-pointer w-20 focus:border-[var(--accent)] transition-all font-bold uppercase opacity-0 group-hover:opacity-100 hidden md:block"
+               >
+                 <option value="">➕ EKLE</option>
+                 {#each playerState.playlistler as pl}
+                   {#if !pl.sarkilar.includes(sarki.id)}
+                     <option value={pl.id}>{pl.isim.toUpperCase()}</option>
+                   {/if}
+                 {/each}
+               </select>
+
                <FavoriteButton sarkiId={sarki.id} />
+               
+               <button 
+                  type="button" 
+                  aria-label="Sil" 
+                  onclick={(e) => handleSarkiSil(sarki, e)} 
+                  class="text-[var(--text-dim)]/30 hover:text-red-500 transition-all p-1 opacity-0 group-hover:opacity-100"
+               >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+               </button>
             </div>
           </div>
         {/each}
       </div>
 
-      <div class="mt-8 p-8 rounded-[var(--radius)] bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-surface)] border border-[var(--border)] flex items-center justify-between shadow-xl">
+      <div class="mt-8 p-8 rounded-[var(--radius)] bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-surface)] border border-[var(--border)] flex items-center justify-between shadow-xl" in:fade={{ delay: 500 }}>
         <div class="flex flex-col">
           <span class="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.3em] mb-2">Toplam Veri Akışı</span>
           <div class="flex items-end gap-2 leading-none">
@@ -176,10 +263,13 @@
 </div>
 
 <style>
+  @keyframes bounce {
+    0%, 100% { height: 4px; }
+    50% { height: 14px; }
+  }
+
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-  h1 { text-shadow: 0 10px 30px rgba(0,0,0,0.5); }
 
   .custom-scrollbar::-webkit-scrollbar { width: 4px; }
   .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }

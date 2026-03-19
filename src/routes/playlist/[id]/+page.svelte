@@ -4,7 +4,15 @@
   import { page } from '$app/state'; 
   import FavoriteButton from '$lib/FavoriteButton.svelte';
   import SongStats from '$lib/SongStats.svelte';
-  import { playerState, sarkiCal, initializePlayer, playlisttenSarkiCikar } from '../../../store.svelte';
+  import { 
+    playerState, 
+    sarkiCal, 
+    type Sarki, 
+    initializePlayer, 
+    playlisttenSarkiCikar, 
+    sarkiSil,
+    siraGuncelle
+  } from '../../../store.svelte';
   import { fade, fly } from 'svelte/transition';
 
   let playlistId = $derived(page.params.id);
@@ -15,17 +23,17 @@
     playerState.sarkiListesi.filter(sarki => aktifPlaylist?.sarkilar?.includes(sarki.id))
   );
 
-  onMount(async () => {
-    if (playerState.sarkiListesi.length === 0 || playerState.playlistler.length === 0) {
-      await initializePlayer();
-    }
-  });
-
   let playlistKapakGorseli = $derived(
     gosterilenSarkilar.length > 0 && gosterilenSarkilar[0].kapak_yolu 
       ? convertFileSrc(gosterilenSarkilar[0].kapak_yolu) 
       : null
   );
+
+  onMount(async () => {
+    if (playerState.sarkiListesi.length === 0 || playerState.playlistler.length === 0) {
+      await initializePlayer();
+    }
+  });
 
   function listeyiCal() {
     if (gosterilenSarkilar.length > 0) {
@@ -34,12 +42,65 @@
   }
 
   async function handleListedenCikar(sarkiId: string, isim: string, event: Event) {
+    event.preventDefault();
     event.stopPropagation();
     if (!playlistId) return; 
     
     if (confirm(`"${isim}" adlı şarkıyı bu listeden çıkarmak istediğinize emin misiniz?`)) {
         await playlisttenSarkiCikar(playlistId, sarkiId);
     }
+  }
+
+  async function handleKalicSarkiSil(sarki: Sarki, event: MouseEvent | KeyboardEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const mesaj = `DİKKAT: "${sarki.isim}" adlı parçayı kütüphaneden ve diskten KALICI olarak silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz.`;
+    
+    if (confirm(mesaj)) {
+        try {
+            await sarkiSil(sarki);
+        } catch (hata) {
+            alert("Silme işlemi sırasında bir hata oluştu.");
+        }
+    }
+  }
+
+  let suruklenenIndex = $state<number | null>(null);
+  let uzerindeGezinilenIndex = $state<number | null>(null);
+
+  function dragBasla(event: DragEvent, index: number) {
+    suruklenenIndex = index;
+    if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = "move";
+    }
+  }
+
+  function dragUzerinde(event: DragEvent, index: number) {
+    event.preventDefault(); 
+    uzerindeGezinilenIndex = index;
+  }
+
+  async function drop(event: DragEvent, hedefIndex: number) {
+    event.preventDefault();
+    if (suruklenenIndex !== null && suruklenenIndex !== hedefIndex && aktifPlaylist) {
+      let yeniSira = [...aktifPlaylist.sarkilar];
+      const [suruklenenSarkiId] = yeniSira.splice(suruklenenIndex, 1); 
+      yeniSira.splice(hedefIndex, 0, suruklenenSarkiId); 
+      
+      aktifPlaylist.sarkilar = yeniSira;
+      
+      const sarkiYeniListe = yeniSira.map(id => playerState.sarkiListesi.find(s => s.id === id)).filter(Boolean) as Sarki[];
+      if (playerState.aktifSarki && sarkiYeniListe.some(s => s.id === playerState.aktifSarki?.id)) {
+          await siraGuncelle(sarkiYeniListe);
+      }
+    }
+    dragBitir();
+  }
+
+  function dragBitir() {
+    suruklenenIndex = null;
+    uzerindeGezinilenIndex = null;
   }
 </script>
 
@@ -72,6 +133,7 @@
         
         {#if gosterilenSarkilar.length > 0}
           <button 
+            type="button"
             onclick={listeyiCal} 
             class="flex items-center gap-3 bg-[var(--text-main)] text-[var(--bg-main)] hover:bg-[var(--accent)] hover:text-white px-10 py-3.5 rounded-full font-black shadow-xl transition-all active:scale-95 uppercase text-[10px] lg:text-xs tracking-widest"
             aria-label="Listeyi oynat"
@@ -94,23 +156,36 @@
     </div>
   {:else}
     <div class="flex text-[10px] font-black text-[var(--text-dim)] border-b border-[var(--border)] pb-3 mb-4 px-4 tracking-[0.2em] uppercase mt-6">
+      <span class="w-8 shrink-0"></span> 
       <span class="w-10 text-center shrink-0">#</span>
       <span class="flex-1 min-w-0 ml-4">BAŞLIK</span>
       <span class="w-48 shrink-0 text-right pr-4 hidden md:block">İSTATİSTİK</span> 
       <span class="w-1/4 shrink-0 pl-6 hidden lg:block">ALBÜM</span>
-      <span class="w-24 text-center shrink-0">İŞLEMLER</span>
+      <span class="w-32 text-center shrink-0">İŞLEMLER</span>
     </div>
 
-    <div class="flex flex-col gap-1">
+    <div class="flex flex-col gap-1.5">
       {#each gosterilenSarkilar as sarki, index}
         <div 
-            role="button" tabindex="0" 
+            role="button" 
+            tabindex="0" 
+            draggable="true"
+            ondragstart={(e) => dragBasla(e, index)}
+            ondragover={(e) => dragUzerinde(e, index)}
+            ondrop={(e) => drop(e, index)}
+            ondragend={dragBitir}
             onclick={() => sarkiCal(sarki)} 
             onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && sarkiCal(sarki)} 
             aria-label="{sarki.isim} çal"
-            class="flex items-center text-sm p-2 rounded-2xl hover:bg-[var(--bg-card-hover)] transition-all duration-300 cursor-pointer group 
-            {playerState.aktifSarki?.id === sarki.id ? 'bg-[var(--accent)]/10 border border-[var(--accent)]/20 shadow-lg' : 'border border-transparent'}">
+            class="flex items-center text-sm p-2.5 rounded-2xl hover:bg-[var(--bg-card-hover)] transition-all duration-300 cursor-pointer group 
+                   {playerState.aktifSarki?.id === sarki.id ? 'bg-[var(--accent)]/10 border border-[var(--accent)]/20 shadow-lg' : 'border border-transparent'}
+                   {uzerindeGezinilenIndex === index ? 'border-t-2 border-[var(--accent)] bg-[var(--accent)]/5' : 'border-t-2 border-transparent'}"
+        >
           
+          <div class="w-8 text-[var(--text-dim)]/20 hover:text-[var(--accent)] cursor-grab active:cursor-grabbing flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shrink-0" title="Sıralamayı Değiştir">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3v2H7V3h2zm0 8v2H7v-2h2zm0 8v2H7v-2h2zm6-16v2h-2V3h2zm0 8v2h-2v-2h2zm0 8v2h-2v-2h2z"/></svg>
+          </div>
+
           <div class="w-10 text-center shrink-0">
              {#if playerState.aktifSarki?.id === sarki.id && playerState.suAnOynuyorMu}
                 <div class="flex items-end justify-center gap-0.5 h-3.5 mb-1">
@@ -140,7 +215,7 @@
                 {sarki.isim}
               </span>
               <a href="/artist/{encodeURIComponent(sarki.sarkici)}" 
-                 class="text-[11px] text-[var(--text-dim)] truncate font-bold uppercase tracking-tighter hover:text-[var(--accent)] transition-colors" 
+                 class="text-[11px] text-[var(--text-dim)] truncate font-bold uppercase tracking-tight hover:text-[var(--accent)] transition-colors inline-block max-w-max opacity-80" 
                  onclick={(e) => e.stopPropagation()}>
                 {sarki.sarkici}
               </a>
@@ -155,7 +230,7 @@
             {sarki.album || "Single"}
           </span>
           
-          <div class="w-24 flex items-center justify-center gap-3 shrink-0" 
+          <div class="w-32 flex items-center justify-end gap-3 shrink-0 pr-2" 
                role="presentation"
                onclick={(e) => e.stopPropagation()} 
                onkeydown={(e) => e.stopPropagation()}>
@@ -165,9 +240,19 @@
             <button 
                 type="button" 
                 aria-label="Listeden Çıkar" 
-                title="Listeden Kaldır" 
+                title="Sadece Bu Listeden Kaldır" 
                 onclick={(e) => handleListedenCikar(sarki.id, sarki.isim, e)} 
-                class="text-[var(--text-dim)]/30 hover:text-red-500 transition-all p-1"
+                class="text-[var(--text-dim)]/30 hover:text-[var(--accent)] transition-all p-1 opacity-0 group-hover:opacity-100"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+
+            <button 
+                type="button" 
+                aria-label="Kalıcı Sil" 
+                title="Kütüphaneden ve Diskten Sil" 
+                onclick={(e) => handleKalicSarkiSil(sarki, e)} 
+                class="text-[var(--text-dim)]/30 hover:text-red-500 transition-all p-1 opacity-0 group-hover:opacity-100"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
             </button>
@@ -187,4 +272,6 @@
   .custom-scrollbar::-webkit-scrollbar { width: 4px; }
   .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+  .cursor-grab:active { cursor: grabbing; }
 </style>

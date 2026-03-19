@@ -12,8 +12,8 @@
 
     function formatDinlenme(sayi?: number) {
         if (!sayi) return "0";
-        if (sayi >= 1000000) return (sayi / 1000000).toFixed(1) + "M";
-        if (sayi >= 1000) return (sayi / 1000).toFixed(1) + "K";
+        if (sayi >= 1000000) return (sayi / 1000000).toFixed(1).replace(/\.0$/, '') + "M";
+        if (sayi >= 1000) return (sayi / 1000).toFixed(1).replace(/\.0$/, '') + "K";
         return sayi.toString();
     }
 </script>
@@ -44,7 +44,7 @@
     {/if}
 
     {#if sarki.kalite && sarki.kalite.trim() !== ""}
-        {@const kaliteBuyuk = sarki.kalite.toUpperCase()}
+        {@const kaliteBuyuk = sarki.kalite.trim().toUpperCase()}
         {@const isHighRes = kaliteBuyuk === 'FLAC' || kaliteBuyuk === 'WAV'}
         <div 
             class="hidden {isHighRes ? 'sm:flex' : 'lg:flex'} items-center px-1.5 py-0.5 rounded-md font-black tracking-widest uppercase border transition-all duration-300 cursor-default

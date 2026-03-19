@@ -4,7 +4,7 @@
   import { page } from '$app/state';
   import FavoriteButton from '$lib/FavoriteButton.svelte';
   import SongStats from '$lib/SongStats.svelte';
-  import { playerState, sarkiCal, initializePlayer } from '../../../store.svelte';
+  import { playerState, sarkiCal, initializePlayer, sarkiSil, type Sarki } from '../../../store.svelte';
   import { fade, fly, scale } from 'svelte/transition';
 
   onMount(async () => {
@@ -34,6 +34,22 @@
   function hepsiniCal() {
     if (sanatciSarkilari.length > 0) {
       sarkiCal(sanatciSarkilari[0]);
+    }
+  }
+
+  async function handleSarkiSil(sarki: Sarki, event: MouseEvent | KeyboardEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const mesaj = `"${sarki.isim}" adlı parçayı kütüphaneden ve diskten KALICI olarak silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz.`;
+    
+    if (confirm(mesaj)) {
+        try {
+            await sarkiSil(sarki);
+            console.log(`${sarki.isim} başarıyla silindi.`);
+        } catch (hata) {
+            alert("Silme işlemi sırasında bir hata oluştu.");
+        }
     }
   }
 </script>
@@ -129,11 +145,22 @@
               <SongStats {sarki} />
             </div>
 
-            <div class="flex items-center px-2 shrink-0" 
+            <div class="flex items-center gap-3 px-2 shrink-0" 
                  role="presentation"
                  onclick={(e) => e.stopPropagation()} 
                  onkeydown={(e) => e.stopPropagation()}>
+                 
               <FavoriteButton sarkiId={sarki.id} />
+              
+              <button 
+                  type="button" 
+                  aria-label="Kütüphaneden Sil" 
+                  title="Kalıcı Olarak Sil" 
+                  onclick={(e) => handleSarkiSil(sarki, e)} 
+                  class="text-[var(--text-dim)]/30 hover:text-red-500 transition-all p-1 opacity-0 group-hover:opacity-100"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
             </div>
           </div>
         {/each}
@@ -176,7 +203,6 @@
     text-shadow: 0 10px 30px rgba(0,0,0,0.5);
   }
 
-  /* DÜZELTME: Artık 'custom-scrollbar' sınıfı HTML'de kullanıldığı için uyarı vermeyecek */
   .custom-scrollbar::-webkit-scrollbar { width: 4px; }
   .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--accent); }

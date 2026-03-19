@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { convertFileSrc } from '@tauri-apps/api/core';
-  import { fly, fade, scale } from 'svelte/transition';
+  import { fly, fade } from 'svelte/transition';
   import { playerState, initializePlayer } from '../../store.svelte';
 
   onMount(async () => {
@@ -31,10 +31,10 @@
   });
 </script>
 
-<div class="p-8 lg:p-12 w-full min-h-full pb-32 flex flex-col relative min-w-0 bg-transparent text-[var(--text-main)] transition-colors duration-500">
+<div class="p-8 lg:p-12 w-full min-h-full pb-32 flex flex-col relative min-w-0 bg-transparent text-[var(--text-main)] transition-colors duration-500 overflow-y-auto custom-scrollbar">
   
   <header class="mb-12" in:fly={{ y: -20, duration: 600 }}>
-    <h1 class="text-4xl lg:text-5xl font-black italic tracking-tighter uppercase leading-none">
+    <h1 class="text-4xl lg:text-5xl font-black italic tracking-tighter uppercase leading-none orkun-favori">
       Sanatçılar
     </h1>
     <p class="text-[var(--text-dim)] text-[10px] lg:text-xs mt-3 font-bold uppercase tracking-[0.3em]">
@@ -69,10 +69,14 @@
               </div>
             {/if}
             
-            <div class="absolute inset-0 bg-[var(--accent)]/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
-               <div class="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center shadow-2xl transform scale-50 group-hover:scale-100 transition-all duration-300">
-                  <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6h2v6zm4 0h-2V7h2v10z"/></svg>
-               </div>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            
+            <div class="absolute bottom-2 right-2 lg:bottom-4 lg:right-4 z-20 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-out">
+                <div class="w-10 h-10 lg:w-12 lg:h-12 bg-[var(--accent)] text-white rounded-full flex items-center justify-center shadow-[0_8px_20px_rgba(0,0,0,0.4)] hover:scale-110 active:scale-95 transition-transform">
+                    <svg class="w-5 h-5 lg:w-6 lg:h-6 fill-current ml-0.5" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                </div>
             </div>
           </div>
 
@@ -100,4 +104,8 @@
     outline-offset: 4px;
     background: var(--bg-card);
   }
+
+  .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 </style>

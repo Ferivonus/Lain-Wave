@@ -12,14 +12,13 @@
     sarkiSil, 
     siraGuncelle 
   } from '../../store.svelte';
-  import { fade, fly, scale } from 'svelte/transition';
+  import { fade, fly } from 'svelte/transition';
 
   onMount(async () => {
     if(playerState.sarkiListesi.length === 0) {
          await initializePlayer();
     }
   });
-
 
   async function handlePlaylistEkle(sarkiId: string, event: Event) {
     const selectElement = event.target as HTMLSelectElement;
@@ -41,7 +40,6 @@
     if (confirm(mesaj)) {
         try {
             await sarkiSil(sarki);
-            console.log(`${sarki.isim} başarıyla silindi.`);
         } catch (hata) {
             alert("Silme işlemi sırasında bir hata oluştu.");
         }
@@ -89,7 +87,7 @@
     </div>
     
     <div class="flex flex-col text-center md:text-left pb-2 min-w-0">
-      <span class="text-[10px] font-black mb-3 text-[var(--accent)] tracking-[0.4em] uppercase italic">Local Frequency Arhive</span>
+      <span class="text-[10px] font-black mb-3 text-[var(--accent)] tracking-[0.4em] uppercase italic">Local Frequency Archive</span>
       <h1 class="text-5xl lg:text-7xl font-black tracking-tighter leading-none mb-6 uppercase italic drop-shadow-md">
         Kütüphane
       </h1>
@@ -174,7 +172,7 @@
             </div>
             <div class="flex flex-col min-w-0">
               <span class="font-bold truncate text-sm {playerState.aktifSarki?.id === sarki.id ? 'text-[var(--accent)]' : 'text-[var(--text-main)]'}">{sarki.isim}</span>
-              <span class="text-[11px] text-[var(--text-dim)] truncate font-bold uppercase tracking-tight opacity-70 group-hover:text-[var(--accent)] transition-colors">{sarki.sarkici}</span>
+              <a href="/artist/{encodeURIComponent(sarki.sarkici)}" onclick={(e) => e.stopPropagation()} class="text-[11px] text-[var(--text-dim)] truncate font-bold uppercase tracking-tight opacity-70 group-hover:text-[var(--accent)] transition-colors inline-block max-w-max">{sarki.sarkici}</a>
             </div>
           </div>
 
@@ -196,7 +194,7 @@
             <select 
                 aria-label="Listeye Ekle" 
                 onchange={(e) => handlePlaylistEkle(sarki.id, e)} 
-                class="bg-[var(--bg-surface)] text-[10px] text-[var(--text-dim)] rounded-lg px-2 py-1.5 outline-none border border-[var(--border)] hover:border-[var(--accent)]/50 cursor-pointer w-24 focus:border-[var(--accent)] transition-all font-bold uppercase"
+                class="bg-[var(--bg-surface)] text-[10px] text-[var(--text-dim)] rounded-lg px-2 py-1.5 outline-none border border-[var(--border)] hover:border-[var(--accent)]/50 cursor-pointer w-24 focus:border-[var(--accent)] transition-all font-bold uppercase hidden sm:block opacity-0 group-hover:opacity-100"
             >
               <option value="">➕ EKLE</option>
               {#each playerState.playlistler as pl}
@@ -211,7 +209,7 @@
                 aria-label="Kütüphaneden Sil" 
                 title="Sil" 
                 onclick={(e) => handleSarkiSil(sarki, e)} 
-                class="text-[var(--text-dim)]/30 hover:text-red-500 transition-all p-1"
+                class="text-[var(--text-dim)]/30 hover:text-red-500 transition-all p-1 opacity-0 group-hover:opacity-100"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
             </button>

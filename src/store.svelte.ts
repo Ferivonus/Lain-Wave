@@ -59,7 +59,7 @@ export async function discordGuncelle(durum: 'caliyor' | 'duraklatildi' | 'bosta
             await invoke('update_discord_status', {
                 detay: playerState.aktifSarki.isim,
                 durum: `▶️ Çalıyor - ${playerState.aktifSarki.sarkici}`,
-                toplamSaniye: kalanSure > 0 ? kalanSure : 0
+                toplamSaniye: Math.max(0, kalanSure)
             });
         }
     } catch (e) {
@@ -86,7 +86,13 @@ export async function sarkiCal(sarki: Sarki) {
         sarki.dinlenme_sayisi = yeniSayi;
         sarki.son_dinlenme_tarihi = yeniTarih;
     } catch (e) {
+        const index = playerState.sarkiListesi.findIndex(s => s.id === sarki.id);
+        if (index !== -1) {
+            playerState.sarkiListesi[index].dinlenme_sayisi = (playerState.sarkiListesi[index].dinlenme_sayisi || 0) + 1;
+            playerState.sarkiListesi[index].son_dinlenme_tarihi = simdi;
+        }
         sarki.dinlenme_sayisi = (sarki.dinlenme_sayisi || 0) + 1;
+        sarki.son_dinlenme_tarihi = simdi;
     }
 
     localStorage.setItem('lainwave_son_sarki', sarki.id);
@@ -118,13 +124,15 @@ export async function oynatDuraklatToggle() {
     
     playerState.suAnOynuyorMu = !playerState.suAnOynuyorMu;
 }
+
 export function sonrakiSarki() {
     const { aktifSarki, sarkiListesi } = playerState;
     if (!aktifSarki || sarkiListesi.length === 0) return;
 
     const index = sarkiListesi.findIndex(s => s.id === aktifSarki.id);
-    const sonrakiIndex = (index + 1) % sarkiListesi.length;
+    if (index === -1) return;
     
+    const sonrakiIndex = (index + 1) % sarkiListesi.length;
     sarkiCal(sarkiListesi[sonrakiIndex]);
 }
 
@@ -133,8 +141,9 @@ export function oncekiSarki() {
     if (!aktifSarki || sarkiListesi.length === 0) return;
 
     const index = sarkiListesi.findIndex(s => s.id === aktifSarki.id);
+    if (index === -1) return;
+
     const oncekiIndex = (index - 1 + sarkiListesi.length) % sarkiListesi.length;
-    
     sarkiCal(sarkiListesi[oncekiIndex]);
 }
 
@@ -147,9 +156,11 @@ export async function initializePlayer() {
         const sonSarkiId = localStorage.getItem('lainwave_son_sarki');
         if (sonSarkiId && playerState.sarkiListesi.length > 0) {
             const bulunanSarki = playerState.sarkiListesi.find(s => s.id === sonSarkiId);
-            if (bulunanSarki && playerState.audioRef) {
+            if (bulunanSarki) {
                 playerState.aktifSarki = bulunanSarki;
-                playerState.audioRef.src = convertFileSrc(bulunanSarki.yol);
+                if (playerState.audioRef) {
+                    playerState.audioRef.src = convertFileSrc(bulunanSarki.yol);
+                }
             }
         }
 
@@ -161,6 +172,7 @@ export async function initializePlayer() {
         console.error("Veriler yüklenemedi:", e);
     }
 }
+
 export async function yeniPlaylistOlustur() {
     const isim = prompt("Yeni çalma listesinin adını girin (Örn: Gece Sürüşü):");
     if (isim && isim.trim() !== "") {
@@ -192,6 +204,17 @@ export async function sarkiSil(sarki: Sarki) {
     try {
         await invoke('sarki_sil', { sarkiId: sarki.id });
         playerState.sarkiListesi = playerState.sarkiListesi.filter(s => s.id !== sarki.id);
+        
+        if (playerState.aktifSarki?.id === sarki.id) {
+            playerState.aktifSarki = null;
+            playerState.suAnOynuyorMu = false;
+            if (playerState.audioRef) {
+                playerState.audioRef.pause();
+                playerState.audioRef.src = "";
+            }
+            discordGuncelle('bosta');
+        }
+        
         return true;
     } catch (err) {
         console.error("Silme hatası:", err);

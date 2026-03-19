@@ -26,7 +26,16 @@
 
   function klavyeKisaYollari(e: KeyboardEvent) {
     const hedef = e.target as HTMLElement;
-    if (['INPUT', 'TEXTAREA', 'BUTTON'].includes(hedef.tagName)) return;
+    
+    if (
+      ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(hedef.tagName) || 
+      hedef.isContentEditable || 
+      hedef.getAttribute('role') === 'button' ||
+      hedef.getAttribute('role') === 'dialog'
+    ) {
+      return;
+    }
+
     if (e.key === ' ' || e.code === 'Space') {
       e.preventDefault(); 
       oynatDuraklatToggle();
@@ -37,13 +46,6 @@
 <svelte:window onkeydown={klavyeKisaYollari} />
 
 <div class="{playerState.currentTheme} h-screen w-full flex flex-col font-sans overflow-hidden bg-[var(--bg-main)] text-[var(--text-main)] relative transition-colors duration-500">
-  
-  <style>
-    ::selection {
-      background-color: var(--selection-bg);
-      color: white;
-    }
-  </style>
 
   {#if playerState.isAddMusicModalOpen}
     <AddMusicModal />
@@ -70,6 +72,11 @@
 </div>
 
 <style>
+  :global(::selection) {
+    background-color: var(--selection-bg);
+    color: white;
+  }
+  
   :global(.custom-scrollbar::-webkit-scrollbar) { width: 4px; }
   :global(.custom-scrollbar::-webkit-scrollbar-track) { background: transparent; }
   :global(.custom-scrollbar::-webkit-scrollbar-thumb) { 
