@@ -7,13 +7,16 @@
     let veriYolu = $state("Yükleniyor...");
     let surum = "2.1"; 
 
+    let discordAktif = $state(localStorage.getItem('lainwave_discord') !== 'false');
+    let medyaTuslariAktif = $state(localStorage.getItem('lainwave_media_keys') !== 'false');
+
     const temalar = [
-        { id: 'theme-modern', ad: 'Modern Dark', renkler: ['#6366f1', '#18181b'], desc: 'Profesyonel ve dengeli' },
-        { id: 'theme-cyberpunk', ad: 'Cyberpunk', renkler: ['#ff0055', '#00ff41'], desc: 'Neon ve yüksek enerji' },
+        { id: 'theme-modern', ad: 'Modern Dark', renkler: ['#6366f1', '#18181b'], desc: 'Profesyonel ve dengeli', badge: 'VARSAYILAN' },
+        { id: 'theme-cyberpunk', ad: 'Cyberpunk', renkler: ['#ff0055', '#00ff41'], desc: 'Neon ve yüksek enerji', badge: 'ORKUN FAVORİ', special: true },
         { id: 'theme-lofi', ad: 'Lo-Fi Night', renkler: ['#ff9a9e', '#1e1b29'], desc: 'Sakin çalışma modu' },
-        { id: 'theme-ghibli', ad: 'Studio Ghibli', renkler: ['#8ba8a9', '#dce4e2'], desc: 'The Wind Rises estetiği', fav: true },
+        { id: 'theme-ghibli', ad: 'Studio Ghibli', renkler: ['#8ba8a9', '#dce4e2'], desc: 'The Wind Rises estetiği', badge: 'DEV CHOICE' },
         { id: 'theme-retro', ad: 'Retro 80s', renkler: ['#f97316', '#2b1055'], desc: 'Nostaljik arcade' },
-        { id: 'theme-ocean', ad: 'Deep Ocean', renkler: ['#00d2ff', '#010b13'], desc: 'Derin ve huzurlu', fav: true },
+        { id: 'theme-ocean', ad: 'Deep Ocean', renkler: ['#00d2ff', '#010b13'], desc: 'Derin ve huzurlu', badge: 'EN POPÜLER' },
         { id: 'theme-sakura', ad: 'Sakura Zen', renkler: ['#f472b6', '#120f10'], desc: 'Zarif dokunuşlar' },
         { id: 'theme-oled', ad: 'OLED Eclipse', renkler: ['#ffffff', '#000000'], desc: 'Maksimum kontrast' }
     ];
@@ -33,6 +36,16 @@
     function temaSec(temaId: string) {
         playerState.currentTheme = temaId;
         localStorage.setItem('lainwave_theme', temaId);
+    }
+
+    function toggleDiscord() {
+        discordAktif = !discordAktif;
+        localStorage.setItem('lainwave_discord', discordAktif.toString());
+    }
+
+    function toggleMedyaTuslari() {
+        medyaTuslariAktif = !medyaTuslariAktif;
+        localStorage.setItem('lainwave_media_keys', medyaTuslariAktif.toString());
     }
 
     async function verileriSifirla() {
@@ -81,9 +94,10 @@
                                 ? 'border-[var(--accent)] shadow-[0_15px_40px_rgba(0,0,0,0.4),0_0_20px_var(--accent-glow)]' 
                                 : 'border-[var(--border)] opacity-60 hover:opacity-100 bg-[var(--bg-card)] hover:shadow-xl'}"
                         >
-                            {#if tema.fav}
-                                <div class="absolute top-0 right-0 bg-[var(--accent)] text-white text-[8px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-tighter z-20 shadow-lg">
-                                    DEV CHOICE
+                            {#if tema.badge}
+                                <div class="absolute top-0 right-0 z-20 shadow-lg px-3 py-1 rounded-bl-xl text-[8px] flex items-center justify-center
+                                    {tema.special ? 'orkun-favori-badge border-l border-b border-[#ff2d81]/30' : 'bg-[var(--accent)] text-white font-black uppercase tracking-tighter'}">
+                                    <span class={tema.special ? 'orkun-favori-text' : ''}>{tema.badge}</span>
                                 </div>
                             {/if}
 
@@ -115,8 +129,42 @@
                 {/each}
             </div>
         </section>
-        
+
         <section class="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] p-10 shadow-2xl relative overflow-hidden" in:fade={{ delay: 300 }}>
+            <div class="flex items-center gap-5 mb-10">
+                <div class="p-4 bg-[var(--accent)]/10 rounded-2xl text-[var(--accent)] shadow-inner">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-black uppercase italic tracking-tight">Sistem Davranışı</h2>
+                    <p class="text-[var(--text-dim)] text-[10px] uppercase tracking-widest font-bold mt-1 opacity-80">Uygulama protokolleri ve entegrasyonlar</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <button onclick={toggleDiscord} class="flex items-center justify-between p-6 bg-[var(--bg-surface)] rounded-2xl border border-[var(--border)] hover:border-[var(--accent)]/50 transition-all group">
+                    <div class="text-left">
+                        <p class="text-xs font-black uppercase tracking-widest">Discord Rich Presence</p>
+                        <p class="text-[10px] text-[var(--text-dim)] mt-1 font-bold uppercase">Durumunuzu ağda paylaşın</p>
+                    </div>
+                    <div class="w-12 h-6 rounded-full relative transition-colors {discordAktif ? 'bg-[var(--accent)]' : 'bg-gray-700'}">
+                        <div class="absolute top-1 w-4 h-4 bg-white rounded-full transition-all {discordAktif ? 'left-7' : 'left-1'}"></div>
+                    </div>
+                </button>
+
+                <button onclick={toggleMedyaTuslari} class="flex items-center justify-between p-6 bg-[var(--bg-surface)] rounded-2xl border border-[var(--border)] hover:border-[var(--accent)]/50 transition-all group">
+                    <div class="text-left">
+                        <p class="text-xs font-black uppercase tracking-widest">Global Medya Tuşları</p>
+                        <p class="text-[10px] text-[var(--text-dim)] mt-1 font-bold uppercase">Arka planda kontrol izni</p>
+                    </div>
+                    <div class="w-12 h-6 rounded-full relative transition-colors {medyaTuslariAktif ? 'bg-[var(--accent)]' : 'bg-gray-700'}">
+                        <div class="absolute top-1 w-4 h-4 bg-white rounded-full transition-all {medyaTuslariAktif ? 'left-7' : 'left-1'}"></div>
+                    </div>
+                </button>
+            </div>
+        </section>
+        
+        <section class="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] p-10 shadow-2xl relative overflow-hidden" in:fade={{ delay: 400 }}>
             <div class="absolute top-0 right-0 w-96 h-96 bg-[var(--accent)]/5 blur-[100px] -z-10 rounded-full pointer-events-none"></div>
 
             <div class="flex items-center gap-5 mb-10">
@@ -125,7 +173,7 @@
                 </div>
                 <div>
                     <h2 class="text-2xl font-black uppercase italic tracking-tight">Veri Yönetimi</h2>
-                    <p class="text-[var(--text-dim)] text-[10px] uppercase tracking-widest font-bold mt-1 opacity-80">Sistem dosyaları ve yedekleme dizini</p>
+                    <p class="text-[var(--text-dim)] text-[10px] uppercase tracking-widest font-bold mt-1 opacity-80">Sistem dosyaları ve dizin yapılandırması</p>
                 </div>
             </div>
 
@@ -160,7 +208,7 @@
             </div>
         </section>
 
-        <footer class="flex flex-col items-center justify-center py-20 group" in:fade={{ delay: 400 }}>
+        <footer class="flex flex-col items-center justify-center py-20 group" in:fade={{ delay: 500 }}>
             <div class="w-16 h-16 bg-[var(--accent)] rounded-[var(--radius)] flex items-center justify-center mb-6 rotate-3 group-hover:rotate-0 transition-transform duration-700 shadow-[0_10px_30px_var(--accent-glow)]">
                 <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
             </div>
@@ -185,6 +233,21 @@
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    .orkun-favori-badge {
+        background: #000000;
+    }
+
+    .orkun-favori-text {
+        font-family: 'Inter', sans-serif; 
+        font-weight: 900;
+        font-style: italic;
+        text-transform: uppercase;
+        letter-spacing: -0.05em;
+        color: #ff2d81;
+        text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5), 0 0 10px rgba(255, 45, 129, 0.4);
+        filter: contrast(1.2);
+    }
 
     button {
         cursor: pointer;
