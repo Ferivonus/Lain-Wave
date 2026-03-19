@@ -7,9 +7,14 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::{Arc, Mutex};
+use tauri::tray::TrayIconEvent;
+use tauri::Emitter;
+use tauri::{
+    menu::{Menu, MenuItem},
+    tray::TrayIconBuilder,
+};
 use tauri::{AppHandle, Manager};
-
-use tauri::Emitter; // Tauri 2.0'da emit kullanabilmek için gerekli // Satır satır okuma için
+use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Shortcut, ShortcutState};
 
 #[derive(Serialize, Deserialize, Clone)]
 struct Sarki {
@@ -35,7 +40,6 @@ struct Playlist {
     sarkilar: Vec<String>,
 }
 
-// --- GÜVENLİ YARDIMCI FONKSİYONLAR ---
 fn db_yolunu_bul(app: &AppHandle) -> PathBuf {
     let mut yol = app
         .path()
@@ -78,8 +82,6 @@ fn favorites_yolunu_bul(app: &AppHandle) -> PathBuf {
     yol
 }
 
-// --- ANA KOMUTLAR ---
-
 #[derive(Serialize)]
 struct MetadataBilgisi {
     isim: Option<String>,
@@ -112,7 +114,6 @@ fn sarki_metadata_oku(yol: String) -> Result<MetadataBilgisi, String> {
     }
 }
 
-// KRİTİK DÜZELTME 1: Kopyalama işlemi arayüzü dondurmasın diye async yapıldı
 #[tauri::command]
 async fn sarki_kaydet(
     app: AppHandle,
@@ -681,14 +682,92 @@ async fn youtube_indir(app: AppHandle, url: String, tarz: String) -> Result<Sark
 
     Ok(yeni_sarki)
 }
+
 pub fn run() {
-    let mut drpc = DiscordClient::new(1483819416951984128);
-    drpc.start();
+    let drpc = DiscordClient::new(1483819416951984128);
+    let discord_arc = Arc::new(Mutex::new(drpc));
+    let discord_clone = Arc::clone(&discord_arc);
+
+    std::thread::spawn(move || {
+        let mut client = discord_clone.lock().unwrap();
+
+        client.start();
+    });
 
     tauri::Builder::default()
-        .manage(DiscordState(Arc::new(Mutex::new(drpc))))
+        .manage(DiscordState(discord_arc))
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(
+            tauri_plugin_global_shortcut::Builder::new()
+                .with_handler(|app: &AppHandle, shortcut: &Shortcut, event| {
+                    if event.state() == ShortcutState::Pressed {
+                        if shortcut.key == Code::MediaPlayPause {
+                            let _ = app.emit("media-toggle", ());
+                        } else if shortcut.key == Code::MediaTrackNext {
+                            let _ = app.emit("media-next", ());
+                        } else if shortcut.key == Code::MediaTrackPrevious {
+                            let _ = app.emit("media-prev", ());
+                        }
+                    }
+                })
+                .build(),
+        )
+        .setup(|app| {
+            let shortcuts = [
+                Shortcut::new(None, Code::MediaPlayPause),
+                Shortcut::new(None, Code::MediaTrackNext),
+                Shortcut::new(None, Code::MediaTrackPrevious),
+            ];
+
+            for sc in shortcuts {
+                if let Err(e) = app.global_shortcut().register(sc) {
+                    eprintln!("Kısayol kaydı başarısız: {}", e);
+                }
+            }
+
+            let tray_menu = Menu::with_items(
+                app,
+                &[
+                    &MenuItem::with_id(app, "show", "Lain Wave'i Göster", true, None::<&str>)?,
+                    &MenuItem::with_id(app, "exit", "Tamamen Kapat", true, None::<&str>)?,
+                ],
+            )?;
+
+            let _tray = TrayIconBuilder::new()
+                .icon(app.default_window_icon().unwrap().clone())
+                .menu(&tray_menu)
+                .on_menu_event(|app_handle, event| match event.id.as_ref() {
+                    "show" => {
+                        if let Some(window) = app_handle.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
+                    "exit" => {
+                        app_handle.exit(0);
+                    }
+                    _ => {}
+                })
+                .on_tray_icon_event(|tray, event| {
+                    if let TrayIconEvent::Click { .. } = event {
+                        let app_handle = tray.app_handle();
+                        if let Some(window) = app_handle.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
+                })
+                .build(app)?;
+
+            Ok(())
+        })
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                let _ = window.hide();
+                api.prevent_close();
+            }
+        })
         .invoke_handler(tauri::generate_handler![
             sarki_kaydet,
             sarkilari_getir,
@@ -710,5 +789,5 @@ pub fn run() {
             youtube_indir
         ])
         .run(tauri::generate_context!())
-        .expect("Sistem başlatılırken kritik bir hata oluştu");
+        .expect("Lain Wave başlatılamadı");
 }
