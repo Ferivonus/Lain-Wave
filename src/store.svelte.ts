@@ -34,7 +34,9 @@ export const playerState = $state({
     sesSeviyesi: 1,
     currentTheme: 'theme-modern',
     isAddMusicModalOpen: false,
-    isLyricsOpen: false 
+    isLyricsOpen: false,
+    isEditModalOpen: false,
+    duzenlenecekSarki: null as Sarki | null
 });
 
 export async function discordGuncelle(durum: 'caliyor' | 'duraklatildi' | 'bosta' = 'caliyor') {

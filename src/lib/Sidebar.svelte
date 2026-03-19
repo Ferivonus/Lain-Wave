@@ -67,8 +67,8 @@
         </a>
 
         <a href="/discover" class="flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all {aktifYol === '/discover' ? 'bg-[var(--accent)]/10 text-[var(--accent)] shadow-sm' : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card)]'}">
-            <svg class="w-6 h-6 lg:w-5 lg:h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-            <span class="hidden lg:block uppercase tracking-wider text-[10px] lg:text-[11px]">Trendler</span>
+            <svg class="w-6 h-6 lg:w-5 lg:h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path><line x1="2" y1="12" x2="22" y2="12"></line></svg>
+            <span class="hidden lg:block uppercase tracking-wider text-[10px] lg:text-[11px]">Ağ Tarayıcısı</span>
         </a>
 
         <a href="/favorites" class="flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all {aktifYol === '/favorites' ? 'bg-[var(--accent)]/10 text-[var(--accent)] shadow-sm' : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card)]'}">
@@ -92,7 +92,7 @@
         </a>
 
         <div class="mt-8 mb-3 px-4 hidden lg:flex items-center justify-between shrink-0">
-            <a href="/playlists" class="text-[10px] font-black text-[var(--text-dim)] tracking-[0.3em] uppercase hover:text-[var(--accent)] transition-colors">Koleksiyonlar</a>
+            <a href="/playlists" class="text-[10px] font-black text-[var(--text-dim)] tracking-[0.3em] uppercase hover:text-[var(--accent)] transition-colors {aktifYol === '/playlists' ? 'text-[var(--accent)]' : ''}">Koleksiyonlar</a>
             <button type="button" onclick={onYeniPlaylist} class="text-[var(--text-dim)] hover:text-[var(--accent)] p-1 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] rounded-md border border-[var(--border)] transition-all" title="Yeni Liste Oluştur">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             </button>

@@ -17,28 +17,47 @@ use tauri::{AppHandle, Manager};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Shortcut, ShortcutState};
 
 #[derive(Serialize, Deserialize, Clone)]
-struct Sarki {
-    id: String,
-    isim: String,
-    sarkici: String,
-    album: String,
-    yol: String,
-    kapak_yolu: Option<String>,
-    tarz: Option<String>,
-    kalite: Option<String>,
-    sure: Option<u32>,
-    dinlenme_sayisi: Option<u32>,
-    son_dinlenme_tarihi: Option<u64>,
-    yil: Option<u32>,
-    notlar: Option<String>,
+pub struct Sarki {
+    pub id: String,
+    pub isim: String,
+    pub sarkici: String,
+    pub album: String,
+    pub yol: String,
+    pub kapak_yolu: Option<String>,
+    pub tarz: Option<String>,
+    pub kalite: Option<String>,
+    pub sure: Option<u32>,
+    pub dinlenme_sayisi: Option<u32>,
+    pub son_dinlenme_tarihi: Option<u64>,
+    pub yil: Option<u32>,
+    pub notlar: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-struct Playlist {
-    id: String,
-    isim: String,
-    sarkilar: Vec<String>,
+pub struct Playlist {
+    pub id: String,
+    pub isim: String,
+    pub sarkilar: Vec<String>,
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct YouTubeSonuc {
+    pub title: String,
+    pub channel: String,
+    pub duration_string: String,
+    pub thumbnail: String,
+    pub webpage_url: String,
+}
+
+#[derive(Serialize)]
+pub struct MetadataBilgisi {
+    pub isim: Option<String>,
+    pub sarkici: Option<String>,
+    pub album: Option<String>,
+    pub tarz: Option<String>,
+}
+
+struct DiscordState(Arc<Mutex<DiscordClient>>);
 
 fn db_yolunu_bul(app: &AppHandle) -> PathBuf {
     let mut yol = app
@@ -80,14 +99,6 @@ fn favorites_yolunu_bul(app: &AppHandle) -> PathBuf {
         .expect("Sistem klasörüne erişilemiyor!");
     yol.push("favoriler.json");
     yol
-}
-
-#[derive(Serialize)]
-struct MetadataBilgisi {
-    isim: Option<String>,
-    sarkici: Option<String>,
-    album: Option<String>,
-    tarz: Option<String>,
 }
 
 #[tauri::command]
@@ -435,8 +446,6 @@ fn open_data_folder(app: AppHandle) {
     }
 }
 
-struct DiscordState(Arc<Mutex<DiscordClient>>);
-
 #[tauri::command]
 fn update_discord_status(
     state: tauri::State<'_, DiscordState>,
@@ -514,7 +523,7 @@ fn playlist_sil(app: AppHandle, playlist_id: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-async fn youtube_indir(app: AppHandle, url: String, tarz: String) -> Result<Sarki, String> {
+async fn youtube_indir(app: tauri::AppHandle, url: String, tarz: String) -> Result<Sarki, String> {
     let db_yolu = db_yolunu_bul(&app);
     let songs_klasoru = songs_klasoru_bul(&app);
 
@@ -552,7 +561,7 @@ async fn youtube_indir(app: AppHandle, url: String, tarz: String) -> Result<Sark
     }
 
     let mut sarkilar: Vec<Sarki> = if db_yolu.exists() {
-        let icerik = fs::read_to_string(&db_yolu).unwrap_or_else(|_| "[]".to_string());
+        let icerik = std::fs::read_to_string(&db_yolu).unwrap_or_else(|_| "[]".to_string());
         serde_json::from_str(&icerik).unwrap_or_default()
     } else {
         Vec::new()
@@ -570,8 +579,9 @@ async fn youtube_indir(app: AppHandle, url: String, tarz: String) -> Result<Sark
     let hedef_ses_yolu = songs_klasoru.join(format!("{}.wav", id));
     let hedef_kapak_yolu = songs_klasoru.join(format!("{}.jpg", id));
 
-    let mut child = Command::new(&yt_dlp_path)
-        .arg("--quiet")
+    let mut cmd = std::process::Command::new(&yt_dlp_path);
+
+    cmd.arg("--quiet")
         .arg("--no-warnings")
         .arg("--newline")
         .arg("--progress")
@@ -596,7 +606,15 @@ async fn youtube_indir(app: AppHandle, url: String, tarz: String) -> Result<Sark
         .arg(&yt_dlp_hedef)
         .arg(&url)
         .stdout(std::process::Stdio::piped())
-        .stderr(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped());
+
+    #[cfg(target_os = "windows")]
+    use std::os::windows::process::CommandExt;
+
+    #[cfg(target_os = "windows")]
+    cmd.creation_flags(0x08000000);
+
+    let mut child = cmd
         .spawn()
         .map_err(|e| format!("Süreç başlatılamadı: {}", e))?;
 
@@ -674,7 +692,7 @@ async fn youtube_indir(app: AppHandle, url: String, tarz: String) -> Result<Sark
     };
 
     sarkilar.push(yeni_sarki.clone());
-    fs::write(
+    std::fs::write(
         db_yolunu_bul(&app),
         serde_json::to_string_pretty(&sarkilar).unwrap(),
     )
@@ -683,28 +701,26 @@ async fn youtube_indir(app: AppHandle, url: String, tarz: String) -> Result<Sark
     Ok(yeni_sarki)
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct YouTubeSonuc {
-    pub title: String,
-    pub channel: String,
-    pub duration_string: String,
-    pub thumbnail: String,
-    pub webpage_url: String,
-}
-
 #[tauri::command]
 async fn youtube_arama(sorgu: String) -> Result<Vec<YouTubeSonuc>, String> {
-    // yt-dlp'ye "ilk 5 sonucu getir ve json olarak dök" diyoruz
     let arama_kodu = format!("ytsearch5:{}", sorgu);
 
-    let output = Command::new("yt-dlp")
-        .args([
-            "--dump-json",
-            "--default-search",
-            "ytsearch",
-            "--no-playlist",
-            &arama_kodu,
-        ])
+    let mut cmd = std::process::Command::new("yt-dlp");
+    cmd.args([
+        "--dump-json",
+        "--default-search",
+        "ytsearch",
+        "--no-playlist",
+        &arama_kodu,
+    ]);
+
+    #[cfg(target_os = "windows")]
+    use std::os::windows::process::CommandExt;
+
+    #[cfg(target_os = "windows")]
+    cmd.creation_flags(0x08000000);
+
+    let output = cmd
         .output()
         .map_err(|e| format!("yt-dlp çalıştırılamadı: {}", e))?;
 
@@ -715,7 +731,6 @@ async fn youtube_arama(sorgu: String) -> Result<Vec<YouTubeSonuc>, String> {
     let output_str = String::from_utf8_lossy(&output.stdout);
     let mut sonuclar = Vec::new();
 
-    // yt-dlp her satıra bir JSON objesi basar, satır satır okuyup listeye ekliyoruz
     for line in output_str.lines() {
         if let Ok(json) = serde_json::from_str::<serde_json::Value>(line) {
             sonuclar.push(YouTubeSonuc {
@@ -737,6 +752,42 @@ async fn youtube_arama(sorgu: String) -> Result<Vec<YouTubeSonuc>, String> {
     Ok(sonuclar)
 }
 
+#[tauri::command]
+fn sarki_guncelle(
+    app: AppHandle,
+    id: String,
+    isim: String,
+    sarkici: String,
+    album: String,
+    tarz: Option<String>,
+    yil: Option<u32>,
+) -> Result<Sarki, String> {
+    let db_yolu = db_yolunu_bul(&app);
+    if !db_yolu.exists() {
+        return Err("Veritabanı yok".into());
+    }
+
+    let icerik = std::fs::read_to_string(&db_yolu).unwrap_or_else(|_| "[]".to_string());
+    let mut sarkilar: Vec<Sarki> = serde_json::from_str(&icerik).unwrap_or_default();
+
+    if let Some(sarki) = sarkilar.iter_mut().find(|s| s.id == id) {
+        sarki.isim = isim;
+        sarki.sarkici = sarkici;
+        sarki.album = album;
+        sarki.tarz = tarz;
+        sarki.yil = yil;
+
+        let guncel_sarki = sarki.clone();
+
+        std::fs::write(&db_yolu, serde_json::to_string_pretty(&sarkilar).unwrap())
+            .map_err(|e| format!("Kütüphane güncellenemedi: {}", e))?;
+
+        Ok(guncel_sarki)
+    } else {
+        Err("Şarkı bulunamadı".into())
+    }
+}
+
 pub fn run() {
     let drpc = DiscordClient::new(1483819416951984128);
     let discord_arc = Arc::new(Mutex::new(drpc));
@@ -744,7 +795,7 @@ pub fn run() {
 
     std::thread::spawn(move || {
         let mut client = discord_clone.lock().unwrap();
-        client.start();
+        let _ = client.start();
     });
 
     tauri::Builder::default()
@@ -842,6 +893,7 @@ pub fn run() {
             open_data_folder,
             playlist_sil,
             youtube_arama,
+            sarki_guncelle,
             youtube_indir
         ])
         .run(tauri::generate_context!())
