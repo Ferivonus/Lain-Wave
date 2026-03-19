@@ -690,7 +690,6 @@ pub fn run() {
 
     std::thread::spawn(move || {
         let mut client = discord_clone.lock().unwrap();
-
         client.start();
     });
 
@@ -721,16 +720,14 @@ pub fn run() {
             ];
 
             for sc in shortcuts {
-                if let Err(e) = app.global_shortcut().register(sc) {
-                    eprintln!("Kısayol kaydı başarısız: {}", e);
-                }
+                let _ = app.global_shortcut().register(sc);
             }
 
             let tray_menu = Menu::with_items(
                 app,
                 &[
-                    &MenuItem::with_id(app, "show", "Lain Wave'i Göster", true, None::<&str>)?,
-                    &MenuItem::with_id(app, "exit", "Tamamen Kapat", true, None::<&str>)?,
+                    &MenuItem::with_id(app, "show", "Aç", true, None::<&str>)?,
+                    &MenuItem::with_id(app, "exit", "Kapat", true, None::<&str>)?,
                 ],
             )?;
 
@@ -745,12 +742,16 @@ pub fn run() {
                         }
                     }
                     "exit" => {
-                        app_handle.exit(0);
+                        std::process::exit(0);
                     }
                     _ => {}
                 })
                 .on_tray_icon_event(|tray, event| {
-                    if let TrayIconEvent::Click { .. } = event {
+                    if let TrayIconEvent::Click {
+                        button: tauri::tray::MouseButton::Left,
+                        ..
+                    } = event
+                    {
                         let app_handle = tray.app_handle();
                         if let Some(window) = app_handle.get_webview_window("main") {
                             let _ = window.show();
