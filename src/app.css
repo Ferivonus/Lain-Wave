@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+/* app.css */
+
+/* app.css */
+
+:root, .theme-modern {
+  --bg-main: #0f0f11;
+  --bg-surface: #18181b;
+  --bg-card: rgba(39, 39, 42, 0.3);
+  --bg-card-hover: rgba(63, 63, 70, 0.5);
+  --accent: #6366f1; /* Indigo */
+  --accent-sec: #a855f7; /* Purple */
+  --text-main: #fafafa;
+  --text-dim: #71717a;
+  --border: rgba(255, 255, 255, 0.05);
+  --border-hover: rgba(99, 102, 241, 0.3);
+  --radius: 1rem;
+}
+
+.theme-cyberpunk {
+  --bg-main: #050505;
+  --bg-surface: #0d0208;
+  --bg-card: rgba(0, 255, 65, 0.03);
+  --bg-card-hover: rgba(255, 0, 85, 0.1);
+  --accent: #ff0055; /* Neon Pink */
+  --accent-sec: #00ff41; /* Matrix Green */
+  --text-main: #00ff41;
+  --text-dim: #008f11;
+  --border: rgba(255, 0, 85, 0.2);
+  --border-hover: #ff0055;
+  --radius: 0px;
+}
+
+.theme-retro {
+  --bg-main: #2b1055;
+  --bg-surface: #361a6b;
+  --bg-card: rgba(255, 255, 255, 0.05);
+  --bg-card-hover: rgba(249, 115, 22, 0.2);
+  --accent: #f97316; /* Orange */
+  --accent-sec: #ec4899; /* Pink */
+  --text-main: #ffffff;
+  --text-dim: #fca5a5;
+  --border: rgba(249, 115, 22, 0.2);
+  --border-hover: #f97316;
+  --radius: 2rem;
+}
