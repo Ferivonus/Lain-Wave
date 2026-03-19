@@ -11,12 +11,12 @@
     let medyaTuslariAktif = $state(localStorage.getItem('lainwave_media_keys') !== 'false');
 
     const temalar = [
-        { id: 'theme-modern', ad: 'Modern Dark', renkler: ['#6366f1', '#18181b'], desc: 'Profesyonel ve dengeli', badge: 'VARSAYILAN' },
-        { id: 'theme-cyberpunk', ad: 'Cyberpunk', renkler: ['#ff0055', '#00ff41'], desc: 'Neon ve yüksek enerji', badge: 'ORKUN FAVORİ', special: true },
+        { id: 'theme-modern', ad: 'Modern Dark', renkler: ['#6366f1', '#18181b'], desc: 'Profesyonel ve dengeli', reklam: 'VARSAYILAN' },
+        { id: 'theme-orkun-favori', ad: 'Orkun Favori', renkler: ['#ff2d81', '#050505'], desc: 'Neon ve yüksek enerji', reklam: 'ORKUN FAVORİ' },
         { id: 'theme-lofi', ad: 'Lo-Fi Night', renkler: ['#ff9a9e', '#1e1b29'], desc: 'Sakin çalışma modu' },
-        { id: 'theme-ghibli', ad: 'Studio Ghibli', renkler: ['#8ba8a9', '#dce4e2'], desc: 'The Wind Rises estetiği', badge: 'DEV CHOICE' },
+        { id: 'theme-ghibli', ad: 'Studio Ghibli', renkler: ['#a3c9a8', '#232b2b'], desc: 'The Wind Rises estetiği', reklam: 'DEV CHOICE' },
         { id: 'theme-retro', ad: 'Retro 80s', renkler: ['#f97316', '#2b1055'], desc: 'Nostaljik arcade' },
-        { id: 'theme-ocean', ad: 'Deep Ocean', renkler: ['#00d2ff', '#010b13'], desc: 'Derin ve huzurlu', badge: 'EN POPÜLER' },
+        { id: 'theme-ocean', ad: 'Deep Ocean', renkler: ['#00d2ff', '#010b13'], desc: 'Derin ve huzurlu', reklam: 'EN POPÜLER' },
         { id: 'theme-sakura', ad: 'Sakura Zen', renkler: ['#f472b6', '#120f10'], desc: 'Zarif dokunuşlar' },
         { id: 'theme-oled', ad: 'OLED Eclipse', renkler: ['#ffffff', '#000000'], desc: 'Maksimum kontrast' }
     ];
@@ -38,14 +38,24 @@
         localStorage.setItem('lainwave_theme', temaId);
     }
 
-    function toggleDiscord() {
+    async function toggleDiscord() {
         discordAktif = !discordAktif;
         localStorage.setItem('lainwave_discord', discordAktif.toString());
+        
+        // Eğer kullanıcı Discord'u kapattıysa durumu anında temizle
+        if (!discordAktif) {
+            try {
+                await invoke('clear_discord_status');
+            } catch (e) {
+                console.warn("Discord durumu temizlenemedi", e);
+            }
+        }
     }
 
     function toggleMedyaTuslari() {
         medyaTuslariAktif = !medyaTuslariAktif;
         localStorage.setItem('lainwave_media_keys', medyaTuslariAktif.toString());
+        // Not: Medya tuşları için değişiklik uygulamayı yeniden başlatınca tam etkili olur.
     }
 
     async function verileriSifirla() {
@@ -59,7 +69,17 @@
 
 <div class="p-8 lg:p-12 w-full min-h-full pb-32 flex flex-col relative max-w-6xl mx-auto bg-transparent text-[var(--text-main)] transition-colors duration-500 overflow-y-auto custom-scrollbar">
     
-    <header class="mb-12" in:fly={{ y: -20, duration: 600 }}>
+    <button 
+        type="button"
+        onclick={() => history.back()} 
+        class="flex items-center gap-2 text-[var(--text-dim)] hover:text-[var(--accent)] transition-colors mb-8 group w-fit"
+        in:fly={{ x: -20, duration: 500 }}
+    >
+        <svg class="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        <span class="text-[10px] font-black uppercase tracking-[0.2em]">Ana Sisteme Dön</span>
+    </button>
+
+    <header class="mb-12" in:fly={{ y: -20, duration: 600, delay: 100 }}>
         <div class="flex items-center gap-3 mb-4">
             <span class="flex h-2.5 w-2.5 relative">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent)] opacity-75"></span>
@@ -94,26 +114,27 @@
                                 ? 'border-[var(--accent)] shadow-[0_15px_40px_rgba(0,0,0,0.4),0_0_20px_var(--accent-glow)]' 
                                 : 'border-[var(--border)] opacity-60 hover:opacity-100 bg-[var(--bg-card)] hover:shadow-xl'}"
                         >
-                            {#if tema.badge}
-                                <div class="absolute top-0 right-0 z-20 shadow-lg px-3 py-1 rounded-bl-xl text-[8px] flex items-center justify-center
-                                    {tema.special ? 'orkun-favori-badge border-l border-b border-[#ff2d81]/30' : 'bg-[var(--accent)] text-white font-black uppercase tracking-tighter'}">
-                                    <span class={tema.special ? 'orkun-favori-text' : ''}>{tema.badge}</span>
+                            {#if tema.reklam}
+                                <div class="absolute top-2 left-3 z-10 opacity-80 mix-blend-overlay">
+                                    <span class="text-[9px] font-black uppercase tracking-[0.2em]" style="color: {tema.renkler[0]}">
+                                        {tema.reklam}
+                                    </span>
                                 </div>
                             {/if}
 
-                            <div class="relative z-10 space-y-2">
+                            <div class="relative z-20 space-y-2 mt-4">
                                 <div class="flex gap-1.5">
-                                    <div class="w-2.5 h-2.5 rounded-full" style="background: {tema.renkler[0]}"></div>
+                                    <div class="w-2.5 h-2.5 rounded-full shadow-lg" style="background: {tema.renkler[0]}"></div>
                                     <div class="w-8 h-2.5 rounded-full opacity-30" style="background: {tema.renkler[0]}"></div>
                                 </div>
                             </div>
 
-                            <div class="absolute -bottom-4 -right-4 text-5xl font-black opacity-5 italic select-none group-hover:opacity-10 transition-opacity">
+                            <div class="absolute -bottom-4 -right-4 text-6xl font-black opacity-5 italic select-none group-hover:opacity-10 transition-opacity tracking-tighter" style="color: {tema.renkler[0]}">
                                 {tema.ad.split(' ')[0]}
                             </div>
                             
                             {#if playerState.currentTheme === tema.id}
-                                <div class="absolute inset-0 bg-[var(--accent)]/10 flex items-center justify-center backdrop-blur-[2px]" in:fade>
+                                <div class="absolute inset-0 bg-[var(--accent)]/10 flex items-center justify-center backdrop-blur-[2px] z-30" in:fade>
                                     <div class="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center shadow-2xl scale-100" in:scale>
                                         <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                                     </div>
@@ -233,21 +254,6 @@
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--accent); }
-
-    .orkun-favori-badge {
-        background: #000000;
-    }
-
-    .orkun-favori-text {
-        font-family: 'Inter', sans-serif; 
-        font-weight: 900;
-        font-style: italic;
-        text-transform: uppercase;
-        letter-spacing: -0.05em;
-        color: #ff2d81;
-        text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5), 0 0 10px rgba(255, 45, 129, 0.4);
-        filter: contrast(1.2);
-    }
 
     button {
         cursor: pointer;
