@@ -38,7 +38,7 @@ Lain Wave is a highly optimized music management system built for speed and reli
 To run this project, you must have Node.js and Rust installed on your system.
 
 1. Clone the repository:
-   git clone https://github.com/username/lainwave.git
+   git clone https://github.com/Ferivonus/lainwave.git
    cd lainwave
 
 2. Install dependencies:
