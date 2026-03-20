@@ -527,6 +527,18 @@ async fn youtube_indir(app: tauri::AppHandle, url: String, tarz: String) -> Resu
     let db_yolu = db_yolunu_bul(&app);
     let songs_klasoru = songs_klasoru_bul(&app);
 
+    let mut temiz_url = url.clone();
+
+    if let Some(pos) = temiz_url.find("&list=") {
+        temiz_url.truncate(pos);
+    }
+    if let Some(pos) = temiz_url.find("?list=") {
+        temiz_url.truncate(pos);
+    }
+    if let Some(pos) = temiz_url.find("&index=") {
+        temiz_url.truncate(pos);
+    }
+
     let (yt_dlp_path, ffmpeg_path) = {
         let exe_path = std::env::current_exe()
             .map(|p| p.parent().map(|parent| parent.to_path_buf()))
@@ -583,6 +595,7 @@ async fn youtube_indir(app: tauri::AppHandle, url: String, tarz: String) -> Resu
 
     cmd.arg("--quiet")
         .arg("--no-warnings")
+        .arg("--no-playlist")
         .arg("--newline")
         .arg("--progress")
         .arg("--no-simulate")
@@ -604,7 +617,7 @@ async fn youtube_indir(app: tauri::AppHandle, url: String, tarz: String) -> Resu
         .arg("%(title)s|*|%(uploader)s|*|%(duration)s")
         .arg("-o")
         .arg(&yt_dlp_hedef)
-        .arg(&url)
+        .arg(&temiz_url)
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped());
 
@@ -688,7 +701,7 @@ async fn youtube_indir(app: tauri::AppHandle, url: String, tarz: String) -> Resu
         dinlenme_sayisi: Some(0),
         son_dinlenme_tarihi: None,
         yil: None,
-        notlar: Some(url),
+        notlar: Some(temiz_url),
     };
 
     sarkilar.push(yeni_sarki.clone());
@@ -700,10 +713,9 @@ async fn youtube_indir(app: tauri::AppHandle, url: String, tarz: String) -> Resu
 
     Ok(yeni_sarki)
 }
-
 #[tauri::command]
 async fn youtube_arama(app: tauri::AppHandle, sorgu: String) -> Result<Vec<YouTubeSonuc>, String> {
-    let arama_kodu = format!("ytsearch5:{}", sorgu);
+    let arama_kodu = format!("ytsearch20:{}", sorgu);
 
     let yt_dlp_path = {
         let exe_path = std::env::current_exe()

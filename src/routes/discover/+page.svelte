@@ -39,17 +39,20 @@
     "Ghibli": "🌳", "Electronic": "⚡", "Jazz": "🎷", "Podcast": "🎙️"
   };
 
-  // --- YOUTUBE ARAMA & İNDİRME ---
+  // --- YOUTUBE ARAMA & İNDİRME STATE'LERİ ---
   let aramaSorgusu = $state("");
   let aramaYapiliyor = $state(false);
   let aramaSonuclari = $state<any[]>([]);
-  let indirmeUrl = $state("");
-  let indiriliyor = $state(false);
   let indirmeMesaji = $state("");
+
+  // YENİ: Gösterilen sonuç sayısı ve aktif indirilenler listesi
+  let gosterilenSayi = $state(5);
+  let aktifIndirmeler = $state<Set<string>>(new Set());
 
   async function muzikAra() {
       if (!aramaSorgusu.trim()) return;
 
+      // Direkt URL girildiyse
       if (aramaSorgusu.includes("http://") || aramaSorgusu.includes("https://")) {
           await youtubeIndir(aramaSorgusu);
           return;
@@ -57,6 +60,7 @@
 
       aramaYapiliyor = true;
       aramaSonuclari = [];
+      gosterilenSayi = 5; // Yeni aramada gösterim sayısını sıfırla
       indirmeMesaji = "Ağda frekanslar taranıyor...";
 
       try {
@@ -70,25 +74,29 @@
       }
   }
 
-  async function youtubeIndir(gelenUrl?: string) {
-      const urlToDownload = gelenUrl || indirmeUrl;
-      if (!urlToDownload.trim()) return;
+  async function youtubeIndir(hedefUrl: string) {
+      if (!hedefUrl.trim() || aktifIndirmeler.has(hedefUrl)) return;
 
-      indiriliyor = true;
-      indirmeMesaji = "Veri akışı sağlanıyor, arşive indiriliyor...";
+      // İndirme listesine ekle (Reaktivite için yeni set oluşturuyoruz)
+      aktifIndirmeler = new Set(aktifIndirmeler).add(hedefUrl);
+      indirmeMesaji = "Veri akışı sağlanıyor...";
 
       try {
-          await invoke<Sarki>('youtube_indir', { url: urlToDownload, tarz: "Pop" });
+          await invoke<Sarki>('youtube_indir', { url: hedefUrl, tarz: "Pop" });
           indirmeMesaji = "Veri başarıyla arşive eklendi.";
-          aramaSorgusu = "";
-          indirmeUrl = "";
-          aramaSonuclari = [];
+          // NOT: Arama sonuçlarını veya sorguyu SIFIRLAMIYORUZ!
           await initializePlayer();
       } catch (e) {
           indirmeMesaji = "Bağlantı koptu: " + e;
       } finally {
-          indiriliyor = false;
-          setTimeout(() => { if (!indiriliyor && !aramaYapiliyor) indirmeMesaji = ""; }, 5000);
+          // İndirme bitince listeden çıkar
+          const yeniSet = new Set(aktifIndirmeler);
+          yeniSet.delete(hedefUrl);
+          aktifIndirmeler = yeniSet;
+
+          setTimeout(() => { 
+              if (aktifIndirmeler.size === 0 && !aramaYapiliyor) indirmeMesaji = ""; 
+          }, 5000);
       }
   }
 
@@ -149,16 +157,16 @@
               onkeydown={(e) => e.key === 'Enter' && !aramaYapiliyor && muzikAra()}
               placeholder="Şarkı veya sanatçı adı yazın..." 
               class="flex-1 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl px-6 py-4 outline-none text-sm text-[var(--text-main)] focus:border-red-500/50 transition-colors placeholder:text-[var(--text-dim)]/50 font-mono"
-              disabled={aramaYapiliyor || indiriliyor}
+              disabled={aramaYapiliyor}
           />
           <button 
               type="button"
               onclick={muzikAra}
-              disabled={aramaYapiliyor || indiriliyor || !aramaSorgusu.trim()}
+              disabled={aramaYapiliyor || !aramaSorgusu.trim()}
               aria-label="Aramayı Başlat"
               class="bg-red-500 hover:bg-red-600 text-white font-black uppercase tracking-[0.2em] text-[10px] px-10 py-4 rounded-xl transition-all shadow-lg active:scale-95 disabled:opacity-50 shrink-0 min-w-[160px]"
           >
-              {#if aramaYapiliyor || indiriliyor}
+              {#if aramaYapiliyor}
                   <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
               {:else} Ağı Tara {/if}
           </button>
@@ -169,16 +177,14 @@
       {/if}
 
       {#if aramaSonuclari.length > 0}
-          <div class="flex flex-col gap-2 mt-6 max-h-[400px] overflow-y-auto custom-scrollbar pr-2" in:fade>
-              <h3 class="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.3em] mb-2 border-b border-[var(--border)] pb-2">Bulunan Sinyaller (Tıklayarak İndir)</h3>
-              {#each aramaSonuclari as sonuc}
-                  <button 
-                      type="button"
-                      onclick={() => youtubeIndir(sonuc.webpage_url)}
-                      disabled={indiriliyor}
-                      aria-label="{sonuc.title} parçasını indir"
-                      class="flex items-center gap-4 p-3 bg-[var(--bg-surface)] border border-[var(--border)] hover:border-red-500/30 rounded-xl group transition-all text-left w-full min-w-0"
-                  >
+          <div class="flex flex-col gap-2 mt-6" in:fade>
+              <h3 class="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.3em] mb-2 border-b border-[var(--border)] pb-2">
+                  Bulunan Sinyaller ({aramaSonuclari.length})
+              </h3>
+              
+              {#each aramaSonuclari.slice(0, gosterilenSayi) as sonuc}
+                  {@const isDownloading = aktifIndirmeler.has(sonuc.webpage_url)}
+                  <div class="flex items-center gap-4 p-3 bg-[var(--bg-surface)] border border-[var(--border)] hover:border-red-500/30 rounded-xl group transition-all w-full min-w-0">
                       <div class="w-16 h-10 bg-black rounded-lg overflow-hidden shrink-0 relative">
                           <img src={sonuc.thumbnail} alt="" class="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity" />
                       </div>
@@ -190,11 +196,32 @@
                               <span class="text-[9px] font-mono text-[var(--text-dim)]">{sonuc.duration_string}</span>
                           </div>
                       </div>
-                      <div class="p-2 text-[var(--text-dim)] group-hover:text-red-500 shrink-0 transition-colors">
-                          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                      </div>
-                  </button>
+                      
+                      <button 
+                          type="button"
+                          onclick={() => youtubeIndir(sonuc.webpage_url)}
+                          disabled={isDownloading}
+                          aria-label="{sonuc.title} indir"
+                          class="p-3 text-[var(--text-dim)] hover:text-white hover:bg-red-500 rounded-lg transition-all disabled:opacity-50 shrink-0 {isDownloading ? 'text-red-500 bg-red-500/10' : ''}"
+                      >
+                          {#if isDownloading}
+                              <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                          {:else}
+                              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                          {/if}
+                      </button>
+                  </div>
               {/each}
+
+              {#if gosterilenSayi < aramaSonuclari.length}
+                  <button 
+                      type="button" 
+                      onclick={() => gosterilenSayi += 5}
+                      class="mt-4 py-3 w-full rounded-xl border border-dashed border-[var(--border)] text-[10px] font-black uppercase tracking-widest text-[var(--text-dim)] hover:text-[var(--accent)] hover:border-[var(--accent)]/50 hover:bg-[var(--accent)]/5 transition-all"
+                  >
+                      Daha Fazla Göster ({aramaSonuclari.length - gosterilenSayi} Kaldı)
+                  </button>
+              {/if}
           </div>
       {/if}
   </section>

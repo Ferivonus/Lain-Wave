@@ -32,20 +32,17 @@
     function kapat() {
         if (yukleniyor) return;
         playerState.isEditModalOpen = false;
-        // Animasyonun bitmesi için kısa bir bekleme
         setTimeout(() => {
             playerState.duzenlenecekSarki = null;
         }, 300);
     }
 
     async function kaydet() {
-        // Doğrulama
         if (!formVerisi.isim.trim() || yukleniyor) return;
         
         yukleniyor = true;
 
         try {
-            // Rust komutunu çağır
             const guncelSarki = await invoke<Sarki>('sarki_guncelle', {
                 id: formVerisi.id,
                 isim: formVerisi.isim.trim(),
@@ -55,17 +52,14 @@
                 yil: formVerisi.yil ? parseInt(formVerisi.yil.toString()) : null
             });
 
-            // 1. Ana listeyi reaktif olarak güncelle (map kullanımı Svelte 5 için daha güvenlidir)
             playerState.sarkiListesi = playerState.sarkiListesi.map(s => 
                 s.id === formVerisi.id ? guncelSarki : s
             );
             
-            // 2. Eğer şu an çalan şarkı buysa onu da güncelle
             if (playerState.aktifSarki?.id === formVerisi.id) {
                 playerState.aktifSarki = guncelSarki;
             }
 
-            // 3. MODALI KAPAT (Buraya ulaştıysa işlem başarılıdır)
             kapat();
             
         } catch (error) {

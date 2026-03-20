@@ -53,7 +53,6 @@
     function kapat() {
         if (yukleniyor) return;
         playerState.isAddMusicModalOpen = false;
-        // Animasyon bitince state'i sıfırla
         setTimeout(baskaEkle, 300); 
     }
 
