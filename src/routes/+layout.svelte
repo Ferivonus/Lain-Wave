@@ -3,7 +3,7 @@
   import { page } from '$app/state'; 
   import { invoke } from '@tauri-apps/api/core';
   import '../app.css';
-  import { playerState, oynatDuraklatToggle, initializePlayer, yeniPlaylistOlustur } from '../store.svelte';
+  import { playerState, oynatDuraklatToggle, initializePlayer, yeniPlaylistOlustur, type Ayarlar } from '../store.svelte';
   
   import Sidebar from '$lib/Sidebar.svelte';
   import RightPanel from '$lib/RightPanel.svelte';
@@ -45,7 +45,7 @@
     isSaving = true;
 
     try {
-        const ayarlar: any = await invoke('ayarlari_getir');
+        const ayarlar = await invoke<Ayarlar>('ayarlari_getir');
         ayarlar.kullanici_adi = tempUsername.trim();
         await invoke('ayarlari_kaydet', { ayarlar });
         
@@ -108,7 +108,7 @@
           </div>
           
           <h2 class="text-3xl font-black uppercase italic tracking-tighter mb-2 text-white">Sisteme Giriş</h2>
-          <p class="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-10 leading-relaxed">Lain Wave ağına bağlanmak için<br>bir kimlik belirleyin</p>
+          <p class="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-8 leading-relaxed">Lain Wave ağına bağlanmak için<br>bir kimlik belirleyin</p>
           
           <div class="w-full space-y-4">
               <input 
@@ -127,6 +127,12 @@
               >
                   {#if isSaving} Bağlanıyor... {:else} Ağa Bağlan {/if}
               </button>
+              
+              <div class="pt-4 border-t border-white/5">
+                  <p class="text-[8px] font-bold text-white/30 uppercase tracking-widest leading-relaxed">
+                      Bu kimlik sadece cihazınızda yerel olarak saklanır ve sistemi kişiselleştirmek için kullanılır.<br>İstemiyorsanız rastgele bir isim belirleyebilirsiniz.
+                  </p>
+              </div>
           </div>
       </div>
   </div>
