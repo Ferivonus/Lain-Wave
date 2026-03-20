@@ -2,7 +2,7 @@
     import { invoke } from '@tauri-apps/api/core';
     import { listen, type UnlistenFn } from '@tauri-apps/api/event';
     import { open } from '@tauri-apps/plugin-dialog';
-    import { playerState, type Sarki } from '../store.svelte';
+    import { playerState, type Sarki, sarkiPlaylisteEkle } from '../store.svelte';
     import { fade, scale, fly, slide } from 'svelte/transition';
     import { cubicOut } from 'svelte/easing';
 
@@ -31,6 +31,9 @@
     let aramaYapiliyor = $state(false);
     let aramaSonuclari = $state<any[]>([]);
     let aramaMesaji = $state("");
+
+    let sonEklenenSarkiId = $state<string | null>(null);
+    let listeyeEklendiMi = $state(false);
 
     const tarzlar = ["Pop", "Rock", "Lofi", "Electronic", "Jazz", "Hip-Hop", "Classical", "Podcast"];
 
@@ -70,6 +73,8 @@
         aramaSorgusu = "";
         aramaSonuclari = [];
         aramaMesaji = "";
+        sonEklenenSarkiId = null;
+        listeyeEklendiMi = false;
     }
 
     async function dosyaSec() {
@@ -140,11 +145,21 @@
             }
             playerState.sarkiListesi = [...playerState.sarkiListesi, sarki];
             formVerisi.isim = sarki.isim;
+            sonEklenenSarkiId = sarki.id;
             gorunum = 'basarili';
         } catch (hata) {
             alert(`İşlem sırasında hata: ${hata}`);
         } finally {
             yukleniyor = false;
+        }
+    }
+
+    async function playlisteEkle(e: Event) {
+        const select = e.target as HTMLSelectElement;
+        const plId = select.value;
+        if (plId && sonEklenenSarkiId) {
+            await sarkiPlaylisteEkle(sonEklenenSarkiId, plId);
+            listeyeEklendiMi = true;
         }
     }
 
@@ -198,10 +213,10 @@
                 </div>
             {/if}
 
-            <div class="p-6 overflow-y-auto custom-scrollbar flex-1">
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-1 min-h-0">
                 {#if gorunum === 'secim'}
                     <div class="grid gap-3" in:fly={{ y: 8, duration: 400 }}>
-                        <button onclick={dosyaSec} class="flex items-center gap-5 p-5 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border)] rounded-2xl transition-all text-left group">
+                        <button type="button" onclick={dosyaSec} class="flex items-center gap-5 p-5 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border)] rounded-2xl transition-all text-left group">
                             <div class="w-11 h-11 bg-[var(--accent)]/10 text-[var(--accent)] rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                             </div>
@@ -211,7 +226,7 @@
                             </div>
                         </button>
 
-                        <button onclick={() => gorunum = 'youtube'} class="flex items-center gap-5 p-5 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border)] rounded-2xl transition-all text-left group">
+                        <button type="button" onclick={() => gorunum = 'youtube'} class="flex items-center gap-5 p-5 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border)] rounded-2xl transition-all text-left group">
                             <div class="w-11 h-11 bg-red-500/10 text-red-500 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                                 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
                             </div>
@@ -220,11 +235,21 @@
                                 <span class="text-[11px] text-[var(--text-dim)] uppercase tracking-tight">YouTube araması yap veya link gir</span>
                             </div>
                         </button>
+
+                        <button type="button" onclick={() => { kapat(); setTimeout(() => playerState.isCreatePlaylistModalOpen = true, 300); }} class="flex items-center gap-5 p-5 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border)] rounded-2xl transition-all text-left group">
+                            <div class="w-11 h-11 bg-emerald-500/10 text-emerald-500 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
+                            </div>
+                            <div>
+                                <span class="block font-bold">Koleksiyon / Liste Ekle</span>
+                                <span class="text-[11px] text-[var(--text-dim)] uppercase tracking-tight">Yeni oluştur veya JSON yükle</span>
+                            </div>
+                        </button>
                     </div>
 
                 {:else if gorunum === 'detay' || gorunum === 'youtube'}
                     <div class="space-y-6" in:fly={{ x: 12, duration: 400 }}>
-                        <button onclick={() => gorunum = 'secim'} class="text-[10px] font-black text-[var(--accent)] uppercase tracking-widest flex items-center gap-1 hover:opacity-80 transition-opacity">
+                        <button type="button" onclick={() => gorunum = 'secim'} class="text-[10px] font-black text-[var(--accent)] uppercase tracking-widest flex items-center gap-1 hover:opacity-80 transition-opacity">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"></path></svg> Geri Dön
                         </button>
                         
@@ -238,7 +263,7 @@
                                 </div>
                                 <div class="grid grid-cols-4 gap-2">
                                     {#each tarzlar as tarz}
-                                        <button onclick={() => secilenTarz = tarz} class="py-2 text-[9px] font-bold uppercase tracking-widest rounded-lg border transition-all {secilenTarz === tarz ? 'bg-[var(--accent)] border-[var(--accent)] text-white shadow-lg shadow-[var(--accent)]/20' : 'bg-[var(--bg-card)] border-transparent text-[var(--text-dim)] hover:bg-[var(--bg-card-hover)]'}">{tarz}</button>
+                                        <button type="button" onclick={() => secilenTarz = tarz} class="py-2 text-[9px] font-bold uppercase tracking-widest rounded-lg border transition-all {secilenTarz === tarz ? 'bg-[var(--accent)] border-[var(--accent)] text-white shadow-lg shadow-[var(--accent)]/20' : 'bg-[var(--bg-card)] border-transparent text-[var(--text-dim)] hover:bg-[var(--bg-card-hover)]'}">{tarz}</button>
                                     {/each}
                                 </div>
                             </div>
@@ -248,7 +273,7 @@
                                     <label for="yt-search-input" class="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest">Arama veya URL</label>
                                     <div class="flex gap-2">
                                         <input id="yt-search-input" type="text" bind:value={aramaSorgusu} onkeydown={(e) => e.key === 'Enter' && !aramaYapiliyor && muzikAra()} placeholder="Tarkan..." class="flex-1 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-3.5 text-sm focus:border-red-500/50 outline-none transition-all font-mono" />
-                                        <button onclick={muzikAra} disabled={aramaYapiliyor || !aramaSorgusu.trim()} class="bg-red-500 hover:bg-red-600 text-white rounded-xl px-5 font-black uppercase tracking-widest text-[10px] transition-all disabled:opacity-50 min-w-[80px]">
+                                        <button type="button" onclick={muzikAra} disabled={aramaYapiliyor || !aramaSorgusu.trim()} class="bg-red-500 hover:bg-red-600 text-white rounded-xl px-5 font-black uppercase tracking-widest text-[10px] transition-all disabled:opacity-50 min-w-[80px]">
                                             {#if aramaYapiliyor}...{:else}Tara{/if}
                                         </button>
                                     </div>
@@ -259,7 +284,7 @@
                                 {#if aramaSonuclari.length > 0}
                                     <div class="flex flex-col gap-2 mt-2">
                                         {#each aramaSonuclari as sonuc}
-                                            <button onclick={() => kaydet(sonuc.webpage_url)} class="flex items-center gap-3 p-2 bg-[var(--bg-card)] hover:bg-red-500/10 border border-[var(--border)] hover:border-red-500/30 rounded-xl transition-all text-left group">
+                                            <button type="button" onclick={() => kaydet(sonuc.webpage_url)} class="flex items-center gap-3 p-2 bg-[var(--bg-card)] hover:bg-red-500/10 border border-[var(--border)] hover:border-red-500/30 rounded-xl transition-all text-left group">
                                                 <div class="w-12 h-9 bg-black rounded-md overflow-hidden shrink-0 relative"><img src={sonuc.thumbnail} alt="" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" /></div>
                                                 <div class="flex-1 min-w-0">
                                                     <p class="text-xs font-bold text-[var(--text-main)] truncate group-hover:text-red-400 transition-colors">{sonuc.title}</p>
@@ -273,19 +298,19 @@
                                 <div class="space-y-4 pt-2 border-t border-[var(--border)]">
                                     <div class="space-y-2">
                                         <label for="local-isim" class="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest">Şarkı Adı</label>
-                                        <input id="local-isim" bind:value={formVerisi.isim} class="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-3.5 text-sm outline-none focus:border-[var(--accent)]/50" />
+                                        <input id="local-isim" type="text" bind:value={formVerisi.isim} class="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-3.5 text-sm outline-none focus:border-[var(--accent)]/50" />
                                     </div>
                                     <div class="grid grid-cols-2 gap-4">
                                         <div class="space-y-2">
                                             <label for="local-artist" class="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest">Sanatçı</label>
-                                            <input id="local-artist" bind:value={formVerisi.sarkici} class="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-3.5 text-sm outline-none focus:border-[var(--accent)]/50" />
+                                            <input id="local-artist" type="text" bind:value={formVerisi.sarkici} class="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-3.5 text-sm outline-none focus:border-[var(--accent)]/50" />
                                         </div>
                                         <div class="space-y-2">
                                             <label for="local-album" class="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest">Albüm</label>
-                                            <input id="local-album" bind:value={formVerisi.album} class="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-3.5 text-sm outline-none focus:border-[var(--accent)]/50" />
+                                            <input id="local-album" type="text" bind:value={formVerisi.album} class="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-3.5 text-sm outline-none focus:border-[var(--accent)]/50" />
                                         </div>
                                     </div>
-                                    <button onclick={() => kaydet()} disabled={!formVerisi.isim} class="w-full bg-[var(--accent)] text-white font-black py-4 rounded-2xl shadow-xl hover:opacity-90 transition-all disabled:opacity-20 uppercase tracking-[0.2em] text-[11px] mt-4">Kütüphaneye Ekle</button>
+                                    <button type="button" onclick={() => kaydet()} disabled={!formVerisi.isim} class="w-full bg-[var(--accent)] text-white font-black py-4 rounded-2xl shadow-xl hover:opacity-90 transition-all disabled:opacity-20 uppercase tracking-[0.2em] text-[11px] mt-4">Kütüphaneye Ekle</button>
                                 </div>
                             {/if}
                         </div>
@@ -297,10 +322,35 @@
                             <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
                         </div>
                         <h2 class="text-xl font-bold uppercase tracking-tighter mb-2 italic">Aktarım Başarılı</h2>
-                        <p class="text-[var(--text-dim)] text-xs mb-10 px-6 leading-relaxed uppercase">"{formVerisi.isim}" kütüphane veritabanına işlendi.</p>
+                        <p class="text-[var(--text-dim)] text-xs mb-8 px-6 leading-relaxed uppercase truncate">"{formVerisi.isim}" kütüphane veritabanına işlendi.</p>
+                        
                         <div class="grid gap-3">
-                            <button onclick={baskaEkle} class="w-full bg-[var(--accent)] text-white font-black py-4 rounded-2xl hover:opacity-90 transition-all uppercase text-[11px] tracking-widest">Yeni Giriş Yap</button>
-                            <button onclick={kapat} class="w-full bg-[var(--bg-card)] text-[var(--text-dim)] font-bold py-3.5 rounded-2xl hover:bg-[var(--bg-card-hover)] transition-all uppercase text-[10px] tracking-widest">Kapat</button>
+                            {#if playerState.playlistler.length > 0}
+                                {#if listeyeEklendiMi}
+                                    <div class="w-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 font-black py-4 px-4 rounded-2xl uppercase text-[10px] tracking-widest flex items-center justify-center gap-2" in:scale>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                        Listeye Eklendi
+                                    </div>
+                                {:else}
+                                    <div class="relative w-full">
+                                        <select 
+                                            onchange={playlisteEkle}
+                                            class="w-full bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-main)] font-bold py-4 px-4 rounded-2xl outline-none focus:border-[var(--accent)] transition-all uppercase text-[10px] tracking-widest appearance-none cursor-pointer hover:bg-[var(--bg-card-hover)]"
+                                        >
+                                            <option value="">➕ BİR ÇALMA LİSTESİNE EKLE</option>
+                                            {#each playerState.playlistler as pl}
+                                                <option value={pl.id}>{pl.isim}</option>
+                                            {/each}
+                                        </select>
+                                        <div class="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-dim)]">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"></path></svg>
+                                        </div>
+                                    </div>
+                                {/if}
+                            {/if}
+
+                            <button type="button" onclick={baskaEkle} class="w-full bg-[var(--accent)] text-white font-black py-4 rounded-2xl hover:shadow-[0_0_15px_var(--accent-glow)] transition-all uppercase text-[11px] tracking-widest active:scale-95">Yeni Giriş Yap</button>
+                            <button type="button" onclick={kapat} class="w-full bg-[var(--bg-card)] text-[var(--text-dim)] border border-[var(--border)] font-bold py-3.5 rounded-2xl hover:bg-[var(--bg-card-hover)] hover:text-white transition-all uppercase text-[10px] tracking-widest active:scale-95">Kapat</button>
                         </div>
                     </div>
                 {/if}
@@ -313,4 +363,5 @@
     div[role="dialog"]:focus { outline: none; }
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 </style>

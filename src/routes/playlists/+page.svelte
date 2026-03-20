@@ -37,9 +37,32 @@
     <h1 class="text-5xl lg:text-7xl font-black italic tracking-tighter uppercase leading-none drop-shadow-lg truncate">
       Çalma Listeleri
     </h1>
-    <p class="text-[var(--text-dim)] text-[10px] lg:text-xs mt-4 font-bold uppercase tracking-[0.3em] truncate">
-        Kütüphanende {playerState.playlistler.length} adet özel frekans bloğu tanımlı
-    </p>
+    
+    <div class="flex flex-col md:flex-row md:items-center gap-6 mt-6">
+      <p class="text-[var(--text-dim)] text-[10px] lg:text-xs font-bold uppercase tracking-[0.3em] truncate flex-1">
+          Kütüphanende {playerState.playlistler.length} adet özel frekans bloğu tanımlı
+      </p>
+      
+      <div class="flex flex-wrap items-center gap-3 shrink-0">
+        <button 
+          type="button" 
+          onclick={() => playerState.isAddMusicModalOpen = true} 
+          class="flex items-center gap-2 bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-dim)] hover:text-[var(--accent)] hover:border-[var(--accent)]/50 hover:bg-[var(--accent)]/5 px-6 py-3 rounded-full font-black shadow-lg transition-all active:scale-95 uppercase text-[10px] tracking-widest shrink-0"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
+          Yeni Parça Ekle
+        </button>
+
+        <button 
+          type="button" 
+          onclick={yeniPlaylistOlustur} 
+          class="flex items-center gap-2 bg-[var(--text-main)] text-[var(--bg-main)] hover:bg-[var(--accent)] hover:text-white px-8 py-3 rounded-full font-black shadow-xl transition-all active:scale-95 uppercase text-[10px] tracking-widest shrink-0"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Yeni Liste
+        </button>
+      </div>
+    </div>
   </header>
 
   <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 lg:gap-8 auto-rows-fr">
@@ -47,7 +70,7 @@
     <button 
       type="button" 
       onclick={yeniPlaylistOlustur} 
-      aria-label="Yeni çalma listesi oluştur"
+      aria-label="Yeni çalma listesi oluştur veya içe aktar"
       class="group flex flex-col items-center justify-center bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border-2 border-dashed border-[var(--border)] hover:border-[var(--accent)]/50 rounded-[var(--radius)] p-4 lg:p-5 transition-all duration-300 shadow-lg active:scale-95 h-full w-full min-h-[220px]"
       in:fade
     >
@@ -56,7 +79,7 @@
             <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
         </svg>
       </div>
-      <span class="text-[11px] font-black text-[var(--text-dim)] group-hover:text-[var(--text-main)] transition-colors tracking-[0.2em] uppercase mt-2 text-center w-full truncate">Yeni Liste</span>
+      <span class="text-[11px] font-black text-[var(--text-dim)] group-hover:text-[var(--text-main)] transition-colors tracking-[0.2em] uppercase mt-2 text-center w-full truncate">Yeni / İçe Aktar</span>
     </button>
 
     {#each playerState.playlistler as liste, i}

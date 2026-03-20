@@ -5,12 +5,15 @@
     import { fade, fly } from 'svelte/transition';
 
     let saat = new Date().getHours();
-    let karsilama = $derived(
-        saat < 6 ? "İyi Geceler" : 
-        saat < 12 ? "Günaydın" : 
-        saat < 18 ? "İyi Günler" : 
-        "İyi Akşamlar"
-    );
+    
+    let karsilama = $derived.by(() => {
+        const mesaj = saat < 6 ? "İyi Geceler" : 
+                      saat < 12 ? "Günaydın" : 
+                      saat < 18 ? "İyi Günler" : 
+                      "İyi Akşamlar";
+        
+        return playerState.username ? `${mesaj}, ${playerState.username}` : mesaj;
+    });
 
     let toplamDinlenme = $derived(
         playerState.sarkiListesi.reduce((acc, sarki) => acc + (sarki.dinlenme_sayisi || 0), 0)
@@ -76,8 +79,8 @@
     {:else}
         
         <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8" in:fly={{ y: -20, duration: 600 }}>
-            <h1 class="text-4xl lg:text-5xl font-black tracking-tighter drop-shadow-md italic uppercase leading-none">{karsilama}</h1>
-            <div class="flex gap-3">
+            <h1 class="text-4xl lg:text-5xl font-black tracking-tighter drop-shadow-md italic uppercase leading-none truncate flex-1 pr-4" title={karsilama}>{karsilama}</h1>
+            <div class="flex gap-3 shrink-0">
                 <div class="bg-[var(--bg-surface)] border border-[var(--border)] px-4 py-2 rounded-xl flex items-center gap-2 text-[10px] font-black text-[var(--text-dim)] tracking-[0.2em] uppercase shadow-sm">
                     <svg class="w-4 h-4 text-[var(--accent)]" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
                     {playerState.sarkiListesi.length} Parça

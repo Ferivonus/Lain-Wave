@@ -22,6 +22,13 @@ export type Playlist = {
     sarkilar: string[]; 
 };
 
+export type Ayarlar = {
+    kullanici_adi: string;
+    discord_aktif: boolean;
+    medya_tuslari_aktif: boolean;
+    tema: string;
+};
+
 export const playerState = $state({
     aktifSarki: null as Sarki | null,
     suAnOynuyorMu: false,
@@ -36,7 +43,9 @@ export const playerState = $state({
     isAddMusicModalOpen: false,
     isLyricsOpen: false,
     isEditModalOpen: false,
-    duzenlenecekSarki: null as Sarki | null
+    duzenlenecekSarki: null as Sarki | null,
+    isCreatePlaylistModalOpen: false,
+    username: "",
 });
 
 export async function discordGuncelle(durum: 'caliyor' | 'duraklatildi' | 'bosta' = 'caliyor') {
@@ -75,7 +84,7 @@ export async function sarkiCal(sarki: Sarki) {
     const simdi = Date.now();
 
     try {
-        const [yeniSayi, yeniTarih]: any = await invoke('dinlenme_sayisi_artir', { 
+        const [yeniSayi, yeniTarih] = await invoke<[number, number]>('dinlenme_sayisi_artir', { 
             sarkiId: sarki.id, 
             tarih: simdi 
         });
@@ -151,9 +160,21 @@ export function oncekiSarki() {
 
 export async function initializePlayer() {
     try {
-        playerState.sarkiListesi = await invoke('sarkilari_getir');
-        playerState.playlistler = await invoke('playlistleri_getir');
-        playerState.favoriler = await invoke('favorileri_getir');
+        playerState.sarkiListesi = await invoke<Sarki[]>('sarkilari_getir');
+        playerState.playlistler = await invoke<Playlist[]>('playlistleri_getir');
+        playerState.favoriler = await invoke<string[]>('favorileri_getir');
+
+        try {
+            const ayarlar = await invoke<Ayarlar>('ayarlari_getir');
+            if (ayarlar) {
+                playerState.username = ayarlar.kullanici_adi || "";
+                if (ayarlar.tema) {
+                    playerState.currentTheme = ayarlar.tema;
+                }
+            }
+        } catch (ayarHata) {
+            console.warn("Ayarlar yüklenemedi:", ayarHata);
+        }
 
         const sonSarkiId = localStorage.getItem('lainwave_son_sarki');
         if (sonSarkiId && playerState.sarkiListesi.length > 0) {
@@ -175,22 +196,14 @@ export async function initializePlayer() {
     }
 }
 
-export async function yeniPlaylistOlustur() {
-    const isim = prompt("Yeni çalma listesinin adını girin (Örn: Gece Sürüşü):");
-    if (isim && isim.trim() !== "") {
-        try {
-            const yeniListe: Playlist = await invoke('playlist_olustur', { isim: isim.trim() });
-            playerState.playlistler = [...playerState.playlistler, yeniListe];
-        } catch (e) {
-            alert("Liste oluşturulurken hata oluştu!");
-        }
-    }
+export function yeniPlaylistOlustur() {
+    playerState.isCreatePlaylistModalOpen = true;
 }
 
 export async function sarkiPlaylisteEkle(sarkiId: string, playlistId: string) {
     if (!playlistId) return false;
     try {
-        const guncelListe: Playlist = await invoke('playliste_sarki_ekle', { playlistId, sarkiId });
+        const guncelListe = await invoke<Playlist>('playliste_sarki_ekle', { playlistId, sarkiId });
         const index = playerState.playlistler.findIndex(p => p.id === playlistId);
         if (index !== -1) {
             playerState.playlistler[index] = guncelListe;
@@ -248,7 +261,7 @@ export async function playlistSil(id: string) {
 
 export async function playlisttenSarkiCikar(playlistId: string, sarkiId: string) {
     try {
-        const guncelListe: Playlist = await invoke('playlistten_sarki_cikar', { 
+        const guncelListe = await invoke<Playlist>('playlistten_sarki_cikar', { 
             playlistId: playlistId, 
             sarkiId: sarkiId 
         });
@@ -276,7 +289,7 @@ export async function toggleFavori(sarkiId: string) {
     }
 
     try {
-        const guncelFavoriler: string[] = await invoke('favori_degistir', { sarkiId });
+        const guncelFavoriler = await invoke<string[]>('favori_degistir', { sarkiId });
         playerState.favoriler = guncelFavoriler; 
     } catch (err) {
         console.error("Favori işlemi başarısız:", err);

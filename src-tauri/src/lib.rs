@@ -825,6 +825,107 @@ fn sarki_guncelle(
     }
 }
 
+#[tauri::command]
+async fn playlist_disa_aktar(
+    app: tauri::AppHandle,
+    playlist_adi: String,
+    icerik: String,
+) -> Result<String, String> {
+    use std::path::PathBuf;
+
+    let app_dir = app
+        .path()
+        .app_data_dir()
+        .unwrap_or_else(|_| PathBuf::from("."));
+
+    let settings_path = app
+        .path()
+        .app_local_data_dir()
+        .unwrap_or_default()
+        .join("settings.json");
+    let kullanici_adi = if settings_path.exists() {
+        let ayarlar_str =
+            std::fs::read_to_string(&settings_path).unwrap_or_else(|_| "{}".to_string());
+        if let Ok(ayarlar_json) = serde_json::from_str::<serde_json::Value>(&ayarlar_str) {
+            let ad = ayarlar_json["kullanici_adi"]
+                .as_str()
+                .unwrap_or("Anonim")
+                .trim();
+            if ad.is_empty() {
+                "Anonim".to_string()
+            } else {
+                ad.to_string()
+            }
+        } else {
+            "Anonim".to_string()
+        }
+    } else {
+        "Anonim".to_string()
+    };
+
+    let export_dir = app_dir.join("paylasima_uygun_playlistler");
+    if !export_dir.exists() {
+        std::fs::create_dir_all(&export_dir)
+            .map_err(|e| format!("Klasör oluşturulamadı: {}", e))?;
+    }
+
+    let gecersiz_karakterler = &['/', '\\', ':', '*', '?', '"', '<', '>', '|'][..];
+    let guvenli_isim = playlist_adi.replace(gecersiz_karakterler, "_");
+    let guvenli_kullanici = kullanici_adi.replace(gecersiz_karakterler, "_");
+
+    let dosya_yolu = export_dir.join(format!("{} - {}.json", guvenli_kullanici, guvenli_isim));
+
+    std::fs::write(&dosya_yolu, icerik).map_err(|e| format!("Dosya yazılamadı: {}", e))?;
+
+    Ok(dosya_yolu.to_string_lossy().to_string())
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Ayarlar {
+    pub kullanici_adi: String,
+    pub discord_aktif: bool,
+    pub medya_tuslari_aktif: bool,
+    pub tema: String,
+}
+
+impl Default for Ayarlar {
+    fn default() -> Self {
+        Self {
+            kullanici_adi: String::new(),
+            discord_aktif: true,
+            medya_tuslari_aktif: true,
+            tema: "theme-modern".to_string(),
+        }
+    }
+}
+
+fn settings_yolunu_bul(app: &AppHandle) -> PathBuf {
+    let mut yol = app.path().app_local_data_dir().unwrap();
+    if !yol.exists() {
+        let _ = fs::create_dir_all(&yol);
+    }
+    yol.push("settings.json");
+    yol
+}
+
+#[tauri::command]
+fn ayarlari_getir(app: AppHandle) -> Result<Ayarlar, String> {
+    let db_yolu = settings_yolunu_bul(&app);
+    if !db_yolu.exists() {
+        return Ok(Ayarlar::default());
+    }
+    let icerik = fs::read_to_string(&db_yolu).unwrap_or_else(|_| "{}".to_string());
+    Ok(serde_json::from_str(&icerik).unwrap_or_default())
+}
+
+#[tauri::command]
+fn ayarlari_kaydet(app: AppHandle, ayarlar: Ayarlar) -> Result<(), String> {
+    let db_yolu = settings_yolunu_bul(&app);
+    let icerik = serde_json::to_string_pretty(&ayarlar).map_err(|e| e.to_string())?;
+    fs::write(db_yolu, icerik).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 pub fn run() {
     let drpc = DiscordClient::new(1483819416951984128);
     let discord_arc = Arc::new(Mutex::new(drpc));
@@ -931,7 +1032,10 @@ pub fn run() {
             playlist_sil,
             youtube_arama,
             sarki_guncelle,
-            youtube_indir
+            youtube_indir,
+            playlist_disa_aktar,
+            ayarlari_getir,
+            ayarlari_kaydet
         ])
         .run(tauri::generate_context!())
         .expect("Lain Wave başlatılamadı");

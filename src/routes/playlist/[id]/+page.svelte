@@ -4,6 +4,7 @@
   import { page } from '$app/state'; 
   import FavoriteButton from '$lib/FavoriteButton.svelte';
   import SongStats from '$lib/SongStats.svelte';
+  import ExportPlaylistButton from '$lib/ExportPlaylistButton.svelte';
   import { 
     playerState, 
     sarkiCal, 
@@ -54,7 +55,8 @@
     event.preventDefault();
     event.stopPropagation();
     
-    if (confirm(`DİKKAT: "${sarki.isim}" adlı parçayı kütüphaneden ve diskten KALICI olarak silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz.`)) {
+    const mesaj = `DİKKAT: "${sarki.isim}" adlı parçayı kütüphaneden ve diskten KALICI olarak silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz.`;
+    if (confirm(mesaj)) {
         try {
             await sarkiSil(sarki);
         } catch (hata) {
@@ -122,22 +124,28 @@
         {aktifPlaylist?.isim || "Yükleniyor..."}
       </h1>
       
-      <div class="flex flex-col sm:flex-row items-center gap-6">
+      <div class="flex flex-col sm:flex-row items-center gap-6 mt-2">
         <p class="text-[var(--text-dim)] text-xs lg:text-sm font-bold uppercase tracking-widest whitespace-nowrap truncate">
           {gosterilenSarkilar.length} Benzersiz Kayıt • Sıralı Liste
         </p>
         
-        {#if gosterilenSarkilar.length > 0}
-          <button 
-            type="button"
-            onclick={listeyiCal} 
-            class="flex items-center gap-3 bg-[var(--text-main)] text-[var(--bg-main)] hover:bg-[var(--accent)] hover:text-white px-10 py-3.5 rounded-full font-black shadow-xl transition-all active:scale-95 uppercase text-[10px] lg:text-xs tracking-widest shrink-0"
-            aria-label="Listeyi oynat"
-          >
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-            Listeyi Çal
-          </button>
-        {/if}
+        <div class="flex items-center gap-3">
+            {#if gosterilenSarkilar.length > 0 && aktifPlaylist}
+                <ExportPlaylistButton {aktifPlaylist} sarkilar={gosterilenSarkilar} />
+            {/if}
+
+            {#if gosterilenSarkilar.length > 0}
+              <button 
+                type="button"
+                onclick={listeyiCal} 
+                class="flex items-center gap-3 bg-[var(--text-main)] text-[var(--bg-main)] hover:bg-[var(--accent)] hover:text-white px-10 py-2.5 rounded-lg font-black shadow-xl transition-all active:scale-95 uppercase text-[10px] lg:text-xs tracking-widest shrink-0"
+                aria-label="Listeyi oynat"
+              >
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                Listeyi Çal
+              </button>
+            {/if}
+        </div>
       </div>
     </div>
   </header>
@@ -147,7 +155,7 @@
       <div class="text-6xl mb-8 opacity-20 filter grayscale">💽</div>
       <h3 class="text-2xl font-bold mb-3 tracking-tight uppercase">Sinyal Bulunamadı</h3>
       <p class="text-[var(--text-dim)] font-medium text-sm max-w-sm leading-relaxed uppercase tracking-wider">
-        Bu çalma listesi henüz kütüphaneden veri almamış. "Arama" veya "Kütüphane" sekmelerinden şarkı ekleyebilirsin.
+        Bu çalma listesi henüz kütüphaneden veri almamış. "Keşfet" veya "Kütüphane" sekmelerinden şarkı ekleyebilirsin.
       </p>
     </div>
   {:else}
@@ -175,7 +183,6 @@
                    {playerState.aktifSarki?.id === sarki.id ? 'bg-[var(--accent)]/10 shadow-inner border-transparent' : 'border-transparent hover:bg-[var(--bg-card-hover)]'}
                    {uzerindeGezinilenIndex === index ? '!border-[var(--accent)] bg-[var(--accent)]/5' : ''}"
         >
-          
           <div class="w-12 shrink-0 flex items-center justify-start relative">
              <div class="mr-2 text-[var(--text-dim)]/20 hover:text-[var(--accent)] cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-all shrink-0" title="Sıralamayı Değiştir">
                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M9 3v2H7V3h2zm0 8v2H7v-2h2zm0 8v2H7v-2h2zm6-16v2h-2V3h2zm0 8v2h-2v-2h2zm0 8v2h-2v-2h2z"/></svg>
@@ -207,11 +214,9 @@
                 {sarki.isim}
               </span>
               <div class="flex items-center gap-2 mt-0.5 overflow-hidden">
-                <a href="/artist/{encodeURIComponent(sarki.sarkici)}" 
-                   class="text-[10px] text-[var(--text-dim)] truncate font-bold uppercase tracking-widest hover:text-[var(--accent)] transition-colors inline-block max-w-max opacity-80" 
-                   onclick={(e) => e.stopPropagation()}>
+                <button onclick={(e) => { e.stopPropagation();  }} class="text-[10px] text-[var(--text-dim)] truncate font-bold uppercase tracking-widest hover:text-[var(--accent)] transition-colors inline-block max-w-max opacity-80 text-left">
                   {sarki.sarkici}
-                </a>
+                </button>
                 {#if sarki.album}
                   <span class="w-1 h-1 rounded-full bg-[var(--border)] shrink-0 hidden sm:block"></span>
                   <span class="text-[9px] text-[var(--text-dim)]/50 uppercase font-bold truncate hidden sm:block">
