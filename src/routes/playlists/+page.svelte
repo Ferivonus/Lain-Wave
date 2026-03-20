@@ -31,41 +31,41 @@
   
   <header class="mb-12" in:fly={{ y: -20, duration: 600 }}>
     <div class="flex items-center gap-3 mb-4">
-      <span class="w-10 h-[2px] bg-[var(--accent)]/50"></span>
-      <span class="text-[10px] font-black tracking-[0.4em] text-[var(--text-dim)] uppercase">Koleksiyonlar</span>
+      <span class="w-10 h-[2px] bg-[var(--accent)]/50 shrink-0"></span>
+      <span class="text-[10px] font-black tracking-[0.4em] text-[var(--text-dim)] uppercase truncate">Koleksiyonlar</span>
     </div>
-    <h1 class="text-5xl lg:text-7xl font-black italic tracking-tighter uppercase leading-none drop-shadow-lg">
+    <h1 class="text-5xl lg:text-7xl font-black italic tracking-tighter uppercase leading-none drop-shadow-lg truncate">
       Çalma Listeleri
     </h1>
-    <p class="text-[var(--text-dim)] text-[10px] lg:text-xs mt-4 font-bold uppercase tracking-[0.3em]">
+    <p class="text-[var(--text-dim)] text-[10px] lg:text-xs mt-4 font-bold uppercase tracking-[0.3em] truncate">
         Kütüphanende {playerState.playlistler.length} adet özel frekans bloğu tanımlı
     </p>
   </header>
 
-  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 lg:gap-8">
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 lg:gap-8 auto-rows-fr">
     
     <button 
       type="button" 
       onclick={yeniPlaylistOlustur} 
       aria-label="Yeni çalma listesi oluştur"
-      class="group flex flex-col items-center justify-center bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border-2 border-dashed border-[var(--border)] hover:border-[var(--accent)]/50 rounded-[var(--radius)] aspect-[4/5] transition-all duration-300 shadow-lg active:scale-95"
+      class="group flex flex-col items-center justify-center bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border-2 border-dashed border-[var(--border)] hover:border-[var(--accent)]/50 rounded-[var(--radius)] p-4 lg:p-5 transition-all duration-300 shadow-lg active:scale-95 h-full w-full min-h-[220px]"
       in:fade
     >
-      <div class="w-16 h-16 rounded-full bg-[var(--bg-surface)] group-hover:bg-[var(--accent)]/10 flex items-center justify-center transition-all mb-4 border border-[var(--border)] group-hover:scale-110 shadow-inner group-hover:border-[var(--accent)]/50">
+      <div class="w-16 h-16 rounded-full bg-[var(--bg-surface)] group-hover:bg-[var(--accent)]/10 flex items-center justify-center transition-all mb-4 border border-[var(--border)] group-hover:scale-110 shadow-inner group-hover:border-[var(--accent)]/50 shrink-0">
         <svg class="w-8 h-8 text-[var(--text-dim)] group-hover:text-[var(--accent)] transition-colors" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
             <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
         </svg>
       </div>
-      <span class="text-[11px] font-black text-[var(--text-dim)] group-hover:text-[var(--text-main)] transition-colors tracking-[0.2em] uppercase mt-2">Yeni Liste</span>
+      <span class="text-[11px] font-black text-[var(--text-dim)] group-hover:text-[var(--text-main)] transition-colors tracking-[0.2em] uppercase mt-2 text-center w-full truncate">Yeni Liste</span>
     </button>
 
     {#each playerState.playlistler as liste, i}
       <a 
         href="/playlist/{liste.id}" 
         in:scale={{ duration: 400, start: 0.95, delay: i * 30 }}
-        class="group flex flex-col bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] rounded-[var(--radius)] p-4 lg:p-5 transition-all duration-500 shadow-lg border border-[var(--border)] hover:border-[var(--accent)]/30 text-left relative overflow-hidden h-full justify-between"
+        class="group flex flex-col bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] rounded-[var(--radius)] p-4 lg:p-5 transition-all duration-500 shadow-lg border border-[var(--border)] hover:border-[var(--accent)]/30 text-left relative overflow-hidden h-full w-full min-w-0"
       >
-        <div class="w-full aspect-square bg-gradient-to-br {gradientler[i % gradientler.length]} rounded-[calc(var(--radius)-0.5rem)] mb-5 flex items-center justify-center relative overflow-hidden transition-all duration-500 group-hover:shadow-xl border border-white/10">
+        <div class="w-full aspect-square shrink-0 bg-gradient-to-br {gradientler[i % gradientler.length]} rounded-[calc(var(--radius)-0.5rem)] mb-5 flex items-center justify-center relative overflow-hidden transition-all duration-500 group-hover:shadow-xl border border-white/10">
           <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-500"></div>
           
           <svg class="w-20 h-20 text-white/40 group-hover:text-white group-hover:scale-110 transition-all duration-700 drop-shadow-2xl" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -78,27 +78,29 @@
         </div>
 
         <div class="flex items-start justify-between w-full min-w-0 mt-auto">
+          
           <div class="flex flex-col min-w-0 flex-1 pr-2">
-            <h3 class="text-[var(--text-main)] font-black truncate text-base lg:text-lg group-hover:text-[var(--accent)] transition-colors uppercase tracking-tight leading-tight">
+            <h3 class="text-[var(--text-main)] font-black truncate text-base lg:text-lg group-hover:text-[var(--accent)] transition-colors uppercase tracking-tight leading-tight w-full">
                 {liste.isim}
             </h3>
             <div class="flex items-center gap-2 mt-2 text-[var(--text-dim)]/70">
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
-              <p class="text-[9px] font-black uppercase tracking-[0.2em]">{liste.sarkilar.length} Parça</p>
+              <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+              <p class="text-[9px] font-black uppercase tracking-[0.2em] truncate w-full">{liste.sarkilar.length} Parça</p>
             </div>
           </div>
           
           <button 
             type="button" 
             onclick={(e) => handlePlaylistSil(liste.id, liste.isim, e)} 
-            class="text-[var(--text-dim)]/30 hover:text-red-500 transition-all p-1.5 shrink-0 opacity-0 group-hover:opacity-100 -mr-1" 
+            class="text-[var(--text-dim)]/30 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all p-1.5 shrink-0 opacity-0 group-hover:opacity-100 -mr-1" 
             aria-label="{liste.isim} listesini sil"
             title="Listeyi Sil"
           >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
                 <polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
             </svg>
           </button>
+          
         </div>
       </a>
     {/each}

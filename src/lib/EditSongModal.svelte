@@ -52,9 +52,13 @@
                 yil: formVerisi.yil ? parseInt(formVerisi.yil.toString()) : null
             });
 
-            playerState.sarkiListesi = playerState.sarkiListesi.map(s => 
-                s.id === formVerisi.id ? guncelSarki : s
-            );
+            const yeniListe = [...playerState.sarkiListesi];
+            const index = yeniListe.findIndex(s => s.id === formVerisi.id);
+            
+            if (index !== -1) {
+                yeniListe[index] = guncelSarki;
+                playerState.sarkiListesi = yeniListe; 
+            }
             
             if (playerState.aktifSarki?.id === formVerisi.id) {
                 playerState.aktifSarki = guncelSarki;
@@ -64,7 +68,7 @@
             
         } catch (error) {
             console.error("Rust Güncelleme Hatası:", error);
-            alert("Veriler kaydedilemedi. Rust konsolunu kontrol edin: " + error);
+            alert("Veriler kaydedilemedi: " + error);
         } finally {
             yukleniyor = false;
         }
