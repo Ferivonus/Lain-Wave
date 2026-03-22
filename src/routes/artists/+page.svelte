@@ -4,14 +4,13 @@
   import { fly, fade } from 'svelte/transition';
   import { playerState, initializePlayer, sarkiCal } from '../../store.svelte';
 
-  // Kütüphanenin yüklenip yüklenmediğini takip etmek için state ekledik
   let yukleniyor = $state(playerState.sarkiListesi.length === 0);
 
   onMount(async () => {
     if (playerState.sarkiListesi.length === 0) {
       await initializePlayer();
     }
-    yukleniyor = false; // Yükleme bitti
+    yukleniyor = false;
   });
 
   let sanatciListesi = $derived.by(() => {
@@ -34,12 +33,10 @@
     return Array.from(artistMap.values()).sort((a, b) => a.isim.localeCompare(b.isim));
   });
 
-  // Oynat butonuna basıldığında çalışacak fonksiyon
   function sanatciyiCal(isim: string, event: Event) {
-    event.preventDefault(); // Sayfa yönlendirmesini (<a> etiketini) durdur
-    event.stopPropagation(); // Tıklamanın üst elementlere yayılmasını engelle
+    event.preventDefault(); r
+    event.stopPropagation(); 
     
-    // Sanatçının şarkılarını bul ve ilkini çal
     const sanatcininSarkilari = playerState.sarkiListesi.filter(s => (s.sarkici || "Bilinmeyen Sanatçı") === isim);
     if (sanatcininSarkilari.length > 0) {
         sarkiCal(sanatcininSarkilari[0]);

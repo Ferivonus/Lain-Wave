@@ -1072,7 +1072,6 @@ fn playlist_sirasi_guncelle(
 fn yedek_al(app: tauri::AppHandle, hedef_yol: String) -> Result<(), String> {
     let mut yedek_verisi = serde_json::Map::new();
 
-    // Mevcut dosyaları oku
     let db_yolu = db_yolunu_bul(&app);
     let pl_yolu = playlists_yolunu_bul(&app);
     let fav_yolu = favorites_yolunu_bul(&app);
