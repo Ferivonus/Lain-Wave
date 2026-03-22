@@ -532,347 +532,270 @@ fn playlist_sil(app: AppHandle, playlist_id: String) -> Result<(), String> {
         .map_err(|e| e.to_string())?;
     Ok(())
 }
-
 #[tauri::command]
-fn youtube_indir(app: tauri::AppHandle, url: String, tarz: String) -> Result<Sarki, String> {
-    let db_yolu = db_yolunu_bul(&app);
-    let songs_klasoru = songs_klasoru_bul(&app);
+async fn youtube_indir(app: tauri::AppHandle, url: String, tarz: String) -> Result<Sarki, String> {
+    let app_clone = app.clone();
 
-    let mut temiz_url = url.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let db_yolu = db_yolunu_bul(&app_clone);
+        let songs_klasoru = songs_klasoru_bul(&app_clone);
 
-    if let Some(pos) = temiz_url.find("&list=") {
-        temiz_url.truncate(pos);
-    }
-    if let Some(pos) = temiz_url.find("?list=") {
-        temiz_url.truncate(pos);
-    }
-    if let Some(pos) = temiz_url.find("&index=") {
-        temiz_url.truncate(pos);
-    }
-
-    let (yt_dlp_path, ffmpeg_path) = {
-        let exe_path = std::env::current_exe()
-            .map(|p| p.parent().map(|parent| parent.to_path_buf()))
-            .ok()
-            .flatten()
-            .unwrap_or_default();
-        let resource_dir = app.path().resource_dir().unwrap_or_default();
-        let current_dir = std::env::current_dir().unwrap_or_default();
-
-        let olasi_yollar = vec![
-            exe_path.join("binaries").join("yt-dlp.exe"),
-            resource_dir.join("binaries").join("yt-dlp.exe"),
-            current_dir.join("binaries").join("yt-dlp.exe"),
-            current_dir
-                .join("src-tauri")
-                .join("binaries")
-                .join("yt-dlp.exe"),
-        ];
-
-        let found = olasi_yollar.into_iter().find(|p| p.exists());
-        match found {
-            Some(yt_path) => {
-                let ff_path = yt_path.parent().unwrap().join("ffmpeg.exe");
-                (yt_path, ff_path)
-            }
-            None => return Err("İndirme araçları bulunamadı!".into()),
+        let mut temiz_url = url.clone();
+        if let Some(pos) = temiz_url.find("&list=") {
+            temiz_url.truncate(pos);
         }
-    };
-
-    if !ffmpeg_path.exists() {
-        return Err("ffmpeg.exe bulunamadı!".into());
-    }
-
-    let id = format!(
-        "yt_{}",
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_nanos()
-    );
-    let yt_dlp_hedef = songs_klasoru.join(format!("{}.%(ext)s", id));
-    let hedef_ses_yolu = songs_klasoru.join(format!("{}.wav", id));
-    let hedef_kapak_yolu = songs_klasoru.join(format!("{}.jpg", id));
-
-    let mut cmd = std::process::Command::new(&yt_dlp_path);
-
-    cmd.env("PYTHONIOENCODING", "utf-8");
-
-    cmd.arg("--quiet")
-        .arg("--no-warnings")
-        .arg("--no-playlist")
-        .arg("--newline")
-        .arg("--progress")
-        .arg("--no-simulate")
-        .arg("-f")
-        .arg("bestaudio/best")
-        .arg("-x")
-        .arg("--audio-format")
-        .arg("wav")
-        .arg("--audio-quality")
-        .arg("0")
-        .arg("--write-thumbnail")
-        .arg("--ppa")
-        .arg("ThumbnailsConvertor:-q:v 2")
-        .arg("--convert-thumbnails")
-        .arg("jpg")
-        .arg("--ffmpeg-location")
-        .arg(&ffmpeg_path)
-        .arg("--print")
-        .arg("%(title)s|*|%(uploader)s|*|%(duration)s")
-        .arg("-o")
-        .arg(&yt_dlp_hedef)
-        .arg(&temiz_url)
-        .stdout(std::process::Stdio::piped())
-        .stderr(std::process::Stdio::piped());
-
-    #[cfg(target_os = "windows")]
-    use std::os::windows::process::CommandExt;
-
-    #[cfg(target_os = "windows")]
-    cmd.creation_flags(0x08000000);
-
-    let mut child = cmd
-        .spawn()
-        .map_err(|e| format!("Süreç başlatılamadı: {}", e))?;
-
-    let stdout = child.stdout.take().ok_or("Stdout alınamadı")?;
-    let mut reader = std::io::BufReader::new(stdout);
-    let mut metadata_line = String::new();
-    let mut buf = Vec::new();
-
-    use std::io::BufRead;
-    while let Ok(bytes_read) = reader.read_until(b'\n', &mut buf) {
-        if bytes_read == 0 {
-            break;
+        if let Some(pos) = temiz_url.find("?list=") {
+            temiz_url.truncate(pos);
+        }
+        if let Some(pos) = temiz_url.find("&index=") {
+            temiz_url.truncate(pos);
         }
 
-        let l = String::from_utf8_lossy(&buf).to_string();
+        let (yt_dlp_path, ffmpeg_path) = {
+            let exe_path = std::env::current_exe()
+                .map(|p| p.parent().map(|parent| parent.to_path_buf()))
+                .ok()
+                .flatten()
+                .unwrap_or_default();
+            let resource_dir = app_clone.path().resource_dir().unwrap_or_default();
+            let current_dir = std::env::current_dir().unwrap_or_default();
 
-        if l.contains("|*|") {
-            metadata_line = l.clone();
+            let olasi_yollar = vec![
+                resource_dir.join("binaries").join("yt-dlp.exe"),
+                exe_path.join("binaries").join("yt-dlp.exe"),
+                current_dir
+                    .join("src-tauri")
+                    .join("binaries")
+                    .join("yt-dlp.exe"),
+                current_dir.join("binaries").join("yt-dlp.exe"),
+            ];
+
+            let yt_path = olasi_yollar
+                .into_iter()
+                .find(|p| p.exists())
+                .ok_or_else(|| "İndirme araçları (yt-dlp) bulunamadı!".to_string())?;
+
+            let ff_path = yt_path.parent().unwrap().join("ffmpeg.exe");
+            (yt_path, ff_path)
+        };
+
+        if !ffmpeg_path.exists() {
+            return Err("ffmpeg.exe bulunamadı!".into());
         }
-        if l.contains("%") && l.contains("[download]") {
-            let parts: Vec<&str> = l.split_whitespace().collect();
-            if let Some(pct_str) = parts.get(1) {
-                let clean_pct = pct_str.replace("%", "");
-                if let Ok(pct) = clean_pct.parse::<f32>() {
-                    let _ = app.emit(
-                        "download-progress",
-                        serde_json::json!({
-                            "percentage": pct,
-                            "speed": parts.get(7).unwrap_or(&"0KiB/s"),
-                            "eta": parts.get(9).unwrap_or(&"00:00")
-                        }),
-                    );
-                }
-            }
-        }
-        buf.clear();
-    }
 
-    let _ = child.wait();
+        let id = format!(
+            "yt_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        );
+        let yt_dlp_hedef = songs_klasoru.join(format!("{}.%(ext)s", id));
+        let hedef_ses_yolu = songs_klasoru.join(format!("{}.wav", id));
+        let hedef_kapak_yolu = songs_klasoru.join(format!("{}.png", id));
 
-    let parcalar: Vec<&str> = metadata_line.split("|*|").collect();
-    let isim = parcalar
-        .get(0)
-        .map(|s| s.to_string())
-        .unwrap_or_else(|| "Bilinmeyen Parça".to_string());
-    let sarkici = parcalar
-        .get(1)
-        .map(|s| s.to_string())
-        .unwrap_or_else(|| "YouTube".to_string());
-    let sure: Option<u32> = parcalar
-        .get(2)
-        .and_then(|s| s.trim().parse::<f64>().ok())
-        .map(|v| v as u32);
+        let mut cmd = std::process::Command::new(&yt_dlp_path);
+        cmd.env("PYTHONIOENCODING", "utf-8");
+        cmd.current_dir(&songs_klasoru);
 
-    let mut kapak_yolu = None;
-    if hedef_kapak_yolu.exists() {
-        kapak_yolu = Some(hedef_kapak_yolu.to_string_lossy().to_string());
-    } else {
-        for uzanti in vec!["webp", "png", "jpeg"] {
-            let alternatif = songs_klasoru.join(format!("{}.{}", id, uzanti));
-            if alternatif.exists() {
-                kapak_yolu = Some(alternatif.to_string_lossy().to_string());
+        cmd.arg("--quiet")
+            .arg("--no-warnings")
+            .arg("--no-playlist")
+            .arg("--newline")
+            .arg("--progress")
+            .arg("--no-simulate")
+            .arg("-f")
+            .arg("bestaudio/best")
+            .arg("-x")
+            .arg("--audio-format")
+            .arg("wav")
+            .arg("--audio-quality")
+            .arg("0")
+            .arg("--write-thumbnail")
+            .arg("--ppa")
+            .arg("ThumbnailsConvertor:-q:v 2")
+            .arg("--convert-thumbnails")
+            .arg("png")
+            .arg("--ffmpeg-location")
+            .arg(&ffmpeg_path)
+            .arg("--print")
+            .arg("%(title)s|*|%(uploader)s|*|%(duration)s")
+            .arg("-o")
+            .arg(&yt_dlp_hedef)
+            .arg(&temiz_url)
+            .stdin(std::process::Stdio::null())
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped());
+
+        #[cfg(target_os = "windows")]
+        use std::os::windows::process::CommandExt;
+        #[cfg(target_os = "windows")]
+        cmd.creation_flags(0x08000000);
+
+        let mut child = cmd
+            .spawn()
+            .map_err(|e| format!("Süreç başlatılamadı: {}", e))?;
+
+        let stdout = child.stdout.take().ok_or("Stdout alınamadı")?;
+        let mut reader = std::io::BufReader::new(stdout);
+        let mut metadata_line = String::new();
+        let mut buf = Vec::new();
+
+        use std::io::BufRead;
+        while let Ok(bytes_read) = reader.read_until(b'\n', &mut buf) {
+            if bytes_read == 0 {
                 break;
             }
+            let l = String::from_utf8_lossy(&buf).to_string();
+
+            if l.contains("|*|") {
+                metadata_line = l.clone();
+            }
+            if l.contains("%") && l.contains("[download]") {
+                let parts: Vec<&str> = l.split_whitespace().collect();
+                if let Some(pct_str) = parts.get(1) {
+                    let clean_pct = pct_str.replace("%", "");
+                    if let Ok(pct) = clean_pct.parse::<f32>() {
+                        let _ = app_clone.emit(
+                            "download-progress",
+                            serde_json::json!({
+                                "percentage": pct,
+                                "speed": parts.get(7).unwrap_or(&"0KiB/s"),
+                                "eta": parts.get(9).unwrap_or(&"00:00")
+                            }),
+                        );
+                    }
+                }
+            }
+            buf.clear();
         }
-    }
 
-    let yeni_sarki = Sarki {
-        id,
-        isim,
-        sarkici,
-        album: "YouTube Arşivi".to_string(),
-        yol: hedef_ses_yolu.to_string_lossy().to_string(),
-        kapak_yolu,
-        tarz: Some(tarz),
-        kalite: Some("WAV (Kayıpsız)".to_string()),
-        sure,
-        dinlenme_sayisi: Some(0),
-        son_dinlenme_tarihi: None,
-        yil: None,
-        notlar: Some(temiz_url),
-    };
+        let status = child
+            .wait()
+            .map_err(|e| format!("Süreç beklenemedi: {}", e))?;
 
-    let mut sarkilar: Vec<Sarki> = if db_yolu.exists() {
-        let icerik = std::fs::read_to_string(&db_yolu).unwrap_or_else(|_| "[]".to_string());
-        serde_json::from_str(&icerik).unwrap_or_default()
-    } else {
-        Vec::new()
-    };
+        if !status.success() {
+            return Err("Ağ akışı reddedildi. İndirme veya dönüştürme başarısız!".into());
+        }
 
-    sarkilar.push(yeni_sarki.clone());
-    std::fs::write(
-        db_yolunu_bul(&app),
-        serde_json::to_string_pretty(&sarkilar).unwrap(),
-    )
-    .map_err(|e| e.to_string())?;
+        let parcalar: Vec<&str> = metadata_line.split("|*|").collect();
+        let isim = parcalar
+            .get(0)
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .unwrap_or_else(|| "Bilinmeyen Parça".to_string());
+        let sarkici = parcalar
+            .get(1)
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .unwrap_or_else(|| "YouTube".to_string());
+        let sure: Option<u32> = parcalar
+            .get(2)
+            .and_then(|s| s.trim().parse::<f64>().ok())
+            .map(|v| v as u32);
 
-    Ok(yeni_sarki)
+        let mut kapak_yolu = None;
+        if hedef_kapak_yolu.exists() {
+            kapak_yolu = Some(hedef_kapak_yolu.to_string_lossy().to_string());
+        }
+
+        let yeni_sarki = Sarki {
+            id,
+            isim,
+            sarkici,
+            album: "YouTube Arşivi".to_string(),
+            yol: hedef_ses_yolu.to_string_lossy().to_string(),
+            kapak_yolu,
+            tarz: Some(tarz),
+            kalite: Some("WAV (Kayıpsız)".to_string()),
+            sure,
+            dinlenme_sayisi: Some(0),
+            son_dinlenme_tarihi: None,
+            yil: None,
+            notlar: Some(temiz_url),
+        };
+
+        let mut sarkilar: Vec<Sarki> = if db_yolu.exists() {
+            let icerik = std::fs::read_to_string(&db_yolu).unwrap_or_else(|_| "[]".to_string());
+            serde_json::from_str(&icerik).unwrap_or_default()
+        } else {
+            Vec::new()
+        };
+
+        sarkilar.push(yeni_sarki.clone());
+        std::fs::write(
+            db_yolunu_bul(&app_clone),
+            serde_json::to_string_pretty(&sarkilar).unwrap(),
+        )
+        .map_err(|e| format!("Kütüphane yazılamadı: {}", e))?;
+
+        Ok(yeni_sarki)
+    })
+    .await
+    .map_err(|e| format!("İşlem arka plana alınamadı: {}", e))?
 }
 
 #[tauri::command]
-fn youtube_arama(app: tauri::AppHandle, sorgu: String) -> Result<Vec<YouTubeSonuc>, String> {
-    let arama_kodu = format!("ytsearch20:{}", sorgu);
+async fn youtube_arama(app: tauri::AppHandle, sorgu: String) -> Result<Vec<YouTubeSonuc>, String> {
+    let app_clone = app.clone();
 
-    let yt_dlp_path = {
-        let exe_path = std::env::current_exe()
-            .map(|p| p.parent().map(|parent| parent.to_path_buf()))
-            .ok()
-            .flatten()
-            .unwrap_or_default();
-        let resource_dir = app.path().resource_dir().unwrap_or_default();
-        let current_dir = std::env::current_dir().unwrap_or_default();
+    tauri::async_runtime::spawn_blocking(move || {
+        let arama_kodu = format!("ytsearch20:{}", sorgu);
 
-        let olasi_yollar = vec![
-            exe_path.join("binaries").join("yt-dlp.exe"),
-            resource_dir.join("binaries").join("yt-dlp.exe"),
-            current_dir.join("binaries").join("yt-dlp.exe"),
-            current_dir
-                .join("src-tauri")
-                .join("binaries")
-                .join("yt-dlp.exe"),
-        ];
+        let yt_dlp_path = {
+            let exe_path = std::env::current_exe()
+                .map(|p| p.parent().map(|p| p.to_path_buf()))
+                .ok()
+                .flatten()
+                .unwrap_or_default();
+            let resource_dir = app_clone.path().resource_dir().unwrap_or_default();
+            let current_dir = std::env::current_dir().unwrap_or_default();
 
-        olasi_yollar
-            .into_iter()
-            .find(|p| p.exists())
-            .ok_or_else(|| "Arama motoru (yt-dlp) bulunamadı!".to_string())?
-    };
+            let olasi_yollar = vec![
+                resource_dir.join("binaries").join("yt-dlp.exe"),
+                exe_path.join("binaries").join("yt-dlp.exe"),
+                current_dir
+                    .join("src-tauri")
+                    .join("binaries")
+                    .join("yt-dlp.exe"),
+                current_dir.join("binaries").join("yt-dlp.exe"),
+            ];
 
-    let mut cmd = std::process::Command::new(&yt_dlp_path);
+            olasi_yollar
+                .into_iter()
+                .find(|p| p.exists())
+                .ok_or_else(|| "Arama motoru (yt-dlp) bulunamadı!".to_string())?
+        };
 
-    cmd.env("PYTHONIOENCODING", "utf-8");
+        let mut cmd = std::process::Command::new(&yt_dlp_path);
+        cmd.env("PYTHONIOENCODING", "utf-8");
+        cmd.args([
+            "--dump-json",
+            "--default-search",
+            "ytsearch",
+            "--no-playlist",
+            &arama_kodu,
+        ]);
+        cmd.stdin(std::process::Stdio::null());
 
-    cmd.args([
-        "--dump-json",
-        "--default-search",
-        "ytsearch",
-        "--no-playlist",
-        &arama_kodu,
-    ]);
+        #[cfg(target_os = "windows")]
+        use std::os::windows::process::CommandExt;
+        #[cfg(target_os = "windows")]
+        cmd.creation_flags(0x08000000);
 
-    #[cfg(target_os = "windows")]
-    use std::os::windows::process::CommandExt;
+        let output = cmd
+            .output()
+            .map_err(|e| format!("Arama başlatılamadı: {}", e))?;
 
-    #[cfg(target_os = "windows")]
-    cmd.creation_flags(0x08000000);
-
-    let output = cmd
-        .output()
-        .map_err(|e| format!("Arama başlatılamadı: {}", e))?;
-
-    if !output.status.success() {
-        return Err("Arama sırasında bir hata oluştu.".to_string());
-    }
-
-    let output_str = String::from_utf8_lossy(&output.stdout);
-    let mut sonuclar = Vec::new();
-
-    for line in output_str.lines() {
-        if let Ok(json) = serde_json::from_str::<serde_json::Value>(line) {
-            sonuclar.push(YouTubeSonuc {
-                title: json["title"].as_str().unwrap_or("Bilinmeyen").to_string(),
-                channel: json["uploader"]
-                    .as_str()
-                    .unwrap_or("Bilinmeyen")
-                    .to_string(),
-                duration_string: json["duration_string"]
-                    .as_str()
-                    .unwrap_or("0:00")
-                    .to_string(),
-                thumbnail: json["thumbnail"].as_str().unwrap_or("").to_string(),
-                webpage_url: json["webpage_url"].as_str().unwrap_or("").to_string(),
-            });
+        if !output.status.success() {
+            return Err("Arama sırasında bir hata oluştu.".to_string());
         }
-    }
 
-    Ok(sonuclar)
-}
+        let output_str = String::from_utf8_lossy(&output.stdout);
+        let mut sonuclar = Vec::new();
 
-#[tauri::command]
-fn youtube_playlist_getir(app: tauri::AppHandle, url: String) -> Result<Vec<YouTubeSonuc>, String> {
-    let yt_dlp_path = {
-        let exe_path = std::env::current_exe()
-            .map(|p| p.parent().map(|parent| parent.to_path_buf()))
-            .ok()
-            .flatten()
-            .unwrap_or_default();
-        let resource_dir = app.path().resource_dir().unwrap_or_default();
-        let current_dir = std::env::current_dir().unwrap_or_default();
-
-        let olasi_yollar = vec![
-            exe_path.join("binaries").join("yt-dlp.exe"),
-            resource_dir.join("binaries").join("yt-dlp.exe"),
-            current_dir.join("binaries").join("yt-dlp.exe"),
-            current_dir
-                .join("src-tauri")
-                .join("binaries")
-                .join("yt-dlp.exe"),
-        ];
-
-        olasi_yollar
-            .into_iter()
-            .find(|p| p.exists())
-            .ok_or_else(|| "Arama motoru (yt-dlp) bulunamadı!".to_string())?
-    };
-
-    let mut cmd = std::process::Command::new(&yt_dlp_path);
-    cmd.env("PYTHONIOENCODING", "utf-8");
-    cmd.args(["--dump-json", "--flat-playlist", &url]);
-
-    #[cfg(target_os = "windows")]
-    use std::os::windows::process::CommandExt;
-
-    #[cfg(target_os = "windows")]
-    cmd.creation_flags(0x08000000);
-
-    let output = cmd
-        .output()
-        .map_err(|e| format!("Playlist okunamadı: {}", e))?;
-
-    if !output.status.success() {
-        return Err("Playlist bilgileri alınamadı.".to_string());
-    }
-
-    let output_str = String::from_utf8_lossy(&output.stdout);
-    let mut sonuclar = Vec::new();
-
-    for line in output_str.lines() {
-        if let Ok(json) = serde_json::from_str::<serde_json::Value>(line) {
-            if json["url"].is_string() || json["id"].is_string() {
-                let video_url = json["url"]
-                    .as_str()
-                    .map(|s| s.to_string())
-                    .unwrap_or_else(|| {
-                        format!(
-                            "https://www.youtube.com/watch?v={}",
-                            json["id"].as_str().unwrap_or("")
-                        )
-                    });
-
+        for line in output_str.lines() {
+            if let Ok(json) = serde_json::from_str::<serde_json::Value>(line) {
                 sonuclar.push(YouTubeSonuc {
                     title: json["title"].as_str().unwrap_or("Bilinmeyen").to_string(),
                     channel: json["uploader"]
@@ -881,30 +804,121 @@ fn youtube_playlist_getir(app: tauri::AppHandle, url: String) -> Result<Vec<YouT
                         .to_string(),
                     duration_string: json["duration_string"]
                         .as_str()
-                        .map(|s| s.to_string())
-                        .unwrap_or_else(|| {
-                            json["duration"]
-                                .as_f64()
-                                .map(|d| {
-                                    let mins = (d / 60.0).floor();
-                                    let secs = d % 60.0;
-                                    format!("{}:{:02.0}", mins, secs)
-                                })
-                                .unwrap_or_else(|| "0:00".to_string())
-                        }),
-                    thumbnail: json["thumbnails"]
-                        .as_array()
-                        .and_then(|t| t.last())
-                        .and_then(|t| t["url"].as_str())
-                        .unwrap_or("")
+                        .unwrap_or("0:00")
                         .to_string(),
-                    webpage_url: video_url,
+                    thumbnail: json["thumbnail"].as_str().unwrap_or("").to_string(),
+                    webpage_url: json["webpage_url"].as_str().unwrap_or("").to_string(),
                 });
             }
         }
-    }
+        Ok(sonuclar)
+    })
+    .await
+    .map_err(|e| format!("İşlem arka plana alınamadı: {}", e))?
+}
 
-    Ok(sonuclar)
+#[tauri::command]
+async fn youtube_playlist_getir(
+    app: tauri::AppHandle,
+    url: String,
+) -> Result<Vec<YouTubeSonuc>, String> {
+    let app_clone = app.clone();
+
+    tauri::async_runtime::spawn_blocking(move || {
+        let yt_dlp_path = {
+            let exe_path = std::env::current_exe()
+                .map(|p| p.parent().map(|p| p.to_path_buf()))
+                .ok()
+                .flatten()
+                .unwrap_or_default();
+            let resource_dir = app_clone.path().resource_dir().unwrap_or_default();
+            let current_dir = std::env::current_dir().unwrap_or_default();
+
+            let olasi_yollar = vec![
+                resource_dir.join("binaries").join("yt-dlp.exe"),
+                exe_path.join("binaries").join("yt-dlp.exe"),
+                current_dir
+                    .join("src-tauri")
+                    .join("binaries")
+                    .join("yt-dlp.exe"),
+                current_dir.join("binaries").join("yt-dlp.exe"),
+            ];
+
+            olasi_yollar
+                .into_iter()
+                .find(|p| p.exists())
+                .ok_or_else(|| "Arama motoru (yt-dlp) bulunamadı!".to_string())?
+        };
+
+        let mut cmd = std::process::Command::new(&yt_dlp_path);
+        cmd.env("PYTHONIOENCODING", "utf-8");
+        cmd.args(["--dump-json", "--flat-playlist", &url]);
+        cmd.stdin(std::process::Stdio::null());
+
+        #[cfg(target_os = "windows")]
+        use std::os::windows::process::CommandExt;
+        #[cfg(target_os = "windows")]
+        cmd.creation_flags(0x08000000);
+
+        let output = cmd
+            .output()
+            .map_err(|e| format!("Playlist okunamadı: {}", e))?;
+
+        if !output.status.success() {
+            return Err("Playlist bilgileri alınamadı.".to_string());
+        }
+
+        let output_str = String::from_utf8_lossy(&output.stdout);
+        let mut sonuclar = Vec::new();
+
+        for line in output_str.lines() {
+            if let Ok(json) = serde_json::from_str::<serde_json::Value>(line) {
+                if json["url"].is_string() || json["id"].is_string() {
+                    let video_url =
+                        json["url"]
+                            .as_str()
+                            .map(|s| s.to_string())
+                            .unwrap_or_else(|| {
+                                format!(
+                                    "https://www.youtube.com/watch?v={}",
+                                    json["id"].as_str().unwrap_or("")
+                                )
+                            });
+
+                    sonuclar.push(YouTubeSonuc {
+                        title: json["title"].as_str().unwrap_or("Bilinmeyen").to_string(),
+                        channel: json["uploader"]
+                            .as_str()
+                            .unwrap_or("Bilinmeyen")
+                            .to_string(),
+                        duration_string: json["duration_string"]
+                            .as_str()
+                            .map(|s| s.to_string())
+                            .unwrap_or_else(|| {
+                                json["duration"]
+                                    .as_f64()
+                                    .map(|d| {
+                                        let mins = (d / 60.0).floor();
+                                        let secs = d % 60.0;
+                                        format!("{}:{:02.0}", mins, secs)
+                                    })
+                                    .unwrap_or_else(|| "0:00".to_string())
+                            }),
+                        thumbnail: json["thumbnails"]
+                            .as_array()
+                            .and_then(|t| t.last())
+                            .and_then(|t| t["url"].as_str())
+                            .unwrap_or("")
+                            .to_string(),
+                        webpage_url: video_url,
+                    });
+                }
+            }
+        }
+        Ok(sonuclar)
+    })
+    .await
+    .map_err(|e| format!("İşlem arka plana alınamadı: {}", e))?
 }
 
 #[tauri::command]
