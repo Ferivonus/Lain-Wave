@@ -1,8 +1,16 @@
 <script lang="ts">
-    import { invoke } from '@tauri-apps/api/core';
-    import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+    import { listen, type UnlistenFn, type Event as TauriEvent } from '@tauri-apps/api/event';
     import { open } from '@tauri-apps/plugin-dialog';
-    import { playerState, type Sarki, sarkiPlaylisteEkle } from '../store.svelte';
+    import { 
+        playerState, 
+        type Sarki, 
+        sarkiPlaylisteEkle,
+        sarkiMetadataOkuAPI,
+        sarkiKaydetAPI,
+        youtubeAramaAPI,
+        youtubeIndirAPI,
+        type YouTubeSonuc
+    } from '../store.svelte';
     import { fade, scale, fly, slide } from 'svelte/transition';
     import { cubicOut } from 'svelte/easing';
 
@@ -27,9 +35,15 @@
         eta: "00:00"
     });
 
+    interface DownloadProgressPayload {
+        percentage: number;
+        speed: string;
+        eta: string;
+    }
+
     let aramaSorgusu = $state("");
     let aramaYapiliyor = $state(false);
-    let aramaSonuclari = $state<any[]>([]);
+    let aramaSonuclari = $state<YouTubeSonuc[]>([]);
     let aramaMesaji = $state("");
 
     let sonEklenenSarkiId = $state<string | null>(null);
@@ -40,7 +54,7 @@
     $effect(() => {
         let unlistenFn: UnlistenFn;
         
-        listen("download-progress", (event: any) => {
+        listen<DownloadProgressPayload>("download-progress", (event: TauriEvent<DownloadProgressPayload>) => {
             downloadInfo.pct = event.payload.percentage;
             downloadInfo.speed = event.payload.speed;
             downloadInfo.eta = event.payload.eta;
@@ -87,7 +101,7 @@
             secilenDosyaPath = path;
             yukleniyor = true;
             try {
-                const meta: any = await invoke('sarki_metadata_oku', { yol: path });
+                const meta = await sarkiMetadataOkuAPI(path);
                 formVerisi.isim = meta.isim || path.split(/[\\/]/).pop()?.replace(/\.[^/.]+$/, "") || "Yeni Şarkı";
                 formVerisi.sarkici = meta.sarkici || "Bilinmeyen Sanatçı";
                 formVerisi.album = meta.album || "Bilinmeyen Albüm";
@@ -114,7 +128,7 @@
         aramaMesaji = "Ağ taranıyor...";
 
         try {
-            const sonuclar = await invoke<any[]>('youtube_arama', { sorgu: aramaSorgusu });
+            const sonuclar = await youtubeAramaAPI(aramaSorgusu);
             aramaSonuclari = sonuclar;
             if (sonuclar.length === 0) aramaMesaji = "Sinyal bulunamadı.";
             else aramaMesaji = "";
@@ -131,9 +145,9 @@
         try {
             let sarki: Sarki;
             if (gorunum === 'youtube' && hedefUrl) {
-                sarki = await invoke('youtube_indir', { url: hedefUrl, tarz: secilenTarz });
+                sarki = await youtubeIndirAPI(hedefUrl, secilenTarz);
             } else {
-                sarki = await invoke('sarki_kaydet', {
+                sarki = await sarkiKaydetAPI({
                     isim: formVerisi.isim,
                     sarkici: formVerisi.sarkici,
                     album: formVerisi.album,
@@ -143,7 +157,6 @@
                     notlar: formVerisi.notlar
                 });
             }
-            playerState.sarkiListesi = [...playerState.sarkiListesi, sarki];
             formVerisi.isim = sarki.isim;
             sonEklenenSarkiId = sarki.id;
             gorunum = 'basarili';

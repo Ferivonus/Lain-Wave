@@ -21,16 +21,16 @@
     });
 
     const istasyonTanimlari = [
-        { id: "pop", isim: "Pop", ikon: "✨", color: "var(--accent)", keywords: ["pop"] },
-        { id: "rock", isim: "Rock", ikon: "🎸", color: "#ef4444", keywords: ["rock", "metal"] },
-        { id: "lofi", isim: "Lo-Fi", ikon: "☕", color: "#8b5cf6", keywords: ["lofi", "lo-fi", "chill"] },
-        { id: "cyber", isim: "Cyberpunk", ikon: "🤖", color: "#06b6d4", keywords: ["cyberpunk", "electronic", "synthwave", "synth"] },
-        { id: "ghibli", isim: "Ghibli", ikon: "🌳", color: "#83c5be", keywords: ["ghibli", "anime", "soundtrack"] },
-        { id: "acoustic", isim: "Acoustic", ikon: "🎸", color: "#f59e0b", keywords: ["acoustic", "akustik"] },
-        { id: "jazz", isim: "Jazz", ikon: "🎷", color: "#10b981", keywords: ["jazz", "blues"] },
-        { id: "hiphop", isim: "Hip-Hop", ikon: "🎤", color: "#6366f1", keywords: ["hip-hop", "rap", "hiphop"] },
-        { id: "classic", isim: "Classical", ikon: "🎻", color: "#71717a", keywords: ["classical", "klasik"] },
-        { id: "podcast", isim: "Podcast", ikon: "🎙️", color: "#ec4899", keywords: ["podcast", "oturum"] }
+        { id: "pop", isim: "Pop", ikon: '<svg viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>', color: "var(--color-pop)", keywords: ["pop"] },
+        { id: "rock", isim: "Rock", ikon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-12 h-12"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>', color: "var(--color-rock)", keywords: ["rock", "metal"] },
+        { id: "lofi", isim: "Lo-Fi", ikon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-12 h-12"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3"/></svg>', color: "var(--color-lofi)", keywords: ["lofi", "lo-fi", "chill"] },
+        { id: "cyber", isim: "Cyberpunk", ikon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-12 h-12"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4M8 16h.01M16 16h.01"/></svg>', color: "var(--color-cyber)", keywords: ["cyberpunk", "electronic", "synthwave", "synth"] },
+        { id: "ghibli", isim: "Ghibli", ikon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-12 h-12"><path d="M12 21V3M12 3c-4 0-7 3-7 7s7 11 7 11M12 3c4 0 7 3 7 7s-7 11-7 11"/></svg>', color: "var(--color-ghibli)", keywords: ["ghibli", "anime", "soundtrack"] },
+        { id: "acoustic", isim: "Acoustic", ikon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-12 h-12"><path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM12 14v6M8 8l8 8"/></svg>', color: "var(--color-acoustic)", keywords: ["acoustic", "akustik"] },
+        { id: "jazz", isim: "Jazz", ikon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-12 h-12"><path d="M9 18V5l12-2v13M6 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM18 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/></svg>', color: "var(--color-jazz)", keywords: ["jazz", "blues"] },
+        { id: "hiphop", isim: "Hip-Hop", ikon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-12 h-12"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/></svg>', color: "var(--color-hiphop)", keywords: ["hip-hop", "rap", "hiphop"] },
+        { id: "classic", isim: "Classical", ikon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-12 h-12"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>', color: "var(--color-classic)", keywords: ["classical", "klasik"] },
+        { id: "podcast", isim: "Podcast", ikon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-12 h-12"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><circle cx="12" cy="14" r="4"/><line x1="12" y1="6" x2="12.01" y2="6"/></svg>', color: "var(--color-podcast)", keywords: ["podcast", "oturum"] }
     ];
 
     let aktifIstasyonlar = $derived(
@@ -121,8 +121,8 @@
                         <div class="absolute -bottom-10 -right-10 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-20 transition-opacity" style="background: {ist.color}"></div>
 
                         <div class="absolute inset-0 p-6 flex flex-col justify-between z-10">
-                            <div class="text-5xl transition-all duration-500 group-hover:scale-110 group-hover:-rotate-6 group-hover:-translate-x-2 drop-shadow-lg">
-                                {ist.ikon}
+                            <div class="transition-all duration-500 group-hover:scale-110 group-hover:-rotate-6 group-hover:-translate-x-2 drop-shadow-lg" style="color: {ist.color};">
+                                {@html ist.ikon}
                             </div>
                             
                             <div class="max-w-[70%]">
@@ -150,7 +150,7 @@
                             <button 
                                 type="button"
                                 aria-label="{tarz} frekansını aç"
-                                onclick={() => istasyonAc(tarz, "📻", "var(--accent)", [tarz], true)}
+                                onclick={() => istasyonAc(tarz, '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-12 h-12"><path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM12 14v6M8 8l8 8"/></svg>', "var(--accent)", [tarz], true)}
                                 class="px-5 py-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-dim)] hover:text-white hover:border-[var(--accent)] hover:bg-[var(--accent)] transition-all text-[10px] font-black uppercase tracking-widest shadow-sm hover:shadow-[0_0_15px_var(--accent-glow)] active:scale-95"
                             >
                                 {tarz}
@@ -175,8 +175,8 @@
             </button>
 
             <header class="flex items-end gap-6 mb-10 border-b border-[var(--border)] pb-8 relative">
-                <div class="text-7xl lg:text-8xl drop-shadow-[0_0_20px_var(--accent-glow)]" style="color: {seciliIstasyon.color}">
-                    {seciliIstasyon.ikon}
+                <div class="drop-shadow-[0_0_20px_var(--accent-glow)]" style="color: {seciliIstasyon.color};">
+                    {@html seciliIstasyon.ikon.replace('w-12 h-12', 'w-24 h-24 lg:w-32 lg:h-32')}
                 </div>
                 <div>
                     <h2 class="text-[10px] font-black tracking-[0.4em] uppercase opacity-70 mb-2" style="color: {seciliIstasyon.color}">Yayın Akışı Aktif</h2>

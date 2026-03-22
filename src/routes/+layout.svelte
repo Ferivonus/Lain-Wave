@@ -150,12 +150,12 @@
       {@render children()}
     </main>
 
-    <RightPanel {sagMenuAcik} onClose={() => sagMenuAcik = false} />
+    <RightPanel {sagMenuAcik} onClose={() => { sagMenuAcik = false; }} />
   </div>
 
   <FooterPlayer 
     {sagMenuAcik} 
-    onToggleRightPanel={() => sagMenuAcik = !sagMenuAcik} 
+    onToggleRightPanel={() => { sagMenuAcik = !sagMenuAcik; }} 
   />
 
   <AddMusicModal /> 

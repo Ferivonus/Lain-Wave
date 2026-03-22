@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { fade, fly, scale } from 'svelte/transition';
-  import { playerState, initializePlayer, yeniPlaylistOlustur, playlistSil } from '../../store.svelte';
+  import { playerState, initializePlayer, yeniPlaylistOlustur, playlistSil, sarkiCal, type Playlist } from '../../store.svelte';
 
   onMount(async () => {
     if (playerState.playlistler.length === 0) {
@@ -18,12 +18,28 @@
     }
   }
 
-  const gradientler = [
-    "from-indigo-500/80 to-purple-700/80",
-    "from-pink-500/80 to-rose-700/80",
-    "from-emerald-500/80 to-teal-700/80",
-    "from-blue-500/80 to-cyan-700/80",
-    "from-amber-500/80 to-orange-700/80"
+  function listeyiCal(liste: Playlist, event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (liste.sarkilar && liste.sarkilar.length > 0) {
+        const ilkSarkiId = liste.sarkilar[0];
+        const sarki = playerState.sarkiListesi.find(s => s.id === ilkSarkiId);
+        if (sarki) {
+            sarkiCal(sarki);
+        } else {
+            alert("Şarkı kütüphanede bulunamadı.");
+        }
+    } else {
+        alert("Bu çalma listesi henüz boş. Önce birkaç şarkı eklemelisin.");
+    }
+  }
+
+  const temaGradientleri = [
+    "background: linear-gradient(135deg, var(--accent) 0%, var(--bg-surface) 100%);",
+    "background: linear-gradient(135deg, var(--accent-sec) 0%, var(--bg-card) 100%);",
+    "background: linear-gradient(135deg, var(--bg-card-hover) 0%, var(--accent) 100%);",
+    "background: linear-gradient(135deg, var(--bg-surface) 0%, var(--accent-sec) 100%);"
   ];
 </script>
 
@@ -88,16 +104,24 @@
         in:scale={{ duration: 400, start: 0.95, delay: i * 30 }}
         class="group flex flex-col bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] rounded-[var(--radius)] p-4 lg:p-5 transition-all duration-500 shadow-lg border border-[var(--border)] hover:border-[var(--accent)]/30 text-left relative overflow-hidden h-full w-full min-w-0"
       >
-        <div class="w-full aspect-square shrink-0 bg-gradient-to-br {gradientler[i % gradientler.length]} rounded-[calc(var(--radius)-0.5rem)] mb-5 flex items-center justify-center relative overflow-hidden transition-all duration-500 group-hover:shadow-xl border border-white/10">
+        <div 
+          class="w-full aspect-square shrink-0 rounded-[calc(var(--radius)-0.5rem)] mb-5 flex items-center justify-center relative overflow-hidden transition-all duration-500 group-hover:shadow-xl border border-white/10"
+          style="{temaGradientleri[i % temaGradientleri.length]} opacity: 0.8;"
+        >
           <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-500"></div>
           
           <svg class="w-20 h-20 text-white/40 group-hover:text-white group-hover:scale-110 transition-all duration-700 drop-shadow-2xl" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M15 4v8.5c-.59-.35-1.27-.5-2-.5-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V4h-6zM3 4h8v2H3zm0 4h8v2H3zm0 4h4v2H3z"/>
           </svg>
 
-          <div class="absolute bottom-3 right-3 w-12 h-12 bg-white text-black rounded-full flex items-center justify-center opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-2xl hover:scale-110">
+          <button 
+            type="button"
+            aria-label="Listeyi Oynat"
+            onclick={(e) => listeyiCal(liste, e)}
+            class="absolute bottom-3 right-3 w-12 h-12 bg-white text-black rounded-full flex items-center justify-center opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-2xl hover:scale-110 border-none"
+          >
             <svg class="w-6 h-6 fill-current ml-1" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          </div>
+          </button>
         </div>
 
         <div class="flex items-start justify-between w-full min-w-0 mt-auto">

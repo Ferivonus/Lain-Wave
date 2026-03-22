@@ -33,6 +33,10 @@
       .slice(0, 5)
   );
 
+  let tumSarkilarSirali = $derived(
+    [...playerState.sarkiListesi].sort((a, b) => (b.dinlenme_sayisi || 0) - (a.dinlenme_sayisi || 0))
+  );
+
   async function handlePlaylistEkle(sarkiId: string, event: Event) {
     const selectElement = event.target as HTMLSelectElement;
     const playlistId = selectElement.value;
@@ -59,13 +63,19 @@
     }
   }
 
+  function editModaliAc(sarki: Sarki, event: Event) {
+    event.stopPropagation();
+    playerState.duzenlenecekSarki = sarki;
+    playerState.isEditModalOpen = true;
+  }
+
   const kategoriler = [
-    { isim: "Pop", renk: "from-blue-600/40 to-blue-900/40 border-blue-500/30" },
-    { isim: "Rock", renk: "from-red-600/40 to-red-900/40 border-red-500/30" },
-    { isim: "Lofi", renk: "from-indigo-600/40 to-indigo-900/40 border-indigo-500/30" },
-    { isim: "Electronic", renk: "from-emerald-600/40 to-emerald-900/40 border-emerald-500/30" },
-    { isim: "Jazz", renk: "from-amber-600/40 to-amber-900/40 border-amber-500/30" },
-    { isim: "Classical", renk: "from-zinc-600/40 to-zinc-900/40 border-zinc-500/30" },
+    { isim: "Pop", renk: "var(--color-pop)", ikon: '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>' },
+    { isim: "Rock", renk: "var(--color-rock)", ikon: '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>' },
+    { isim: "Lo-Fi", renk: "var(--color-lofi)", ikon: '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>' },
+    { isim: "Cyberpunk", renk: "var(--color-cyber)", ikon: '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>' },
+    { isim: "Jazz", renk: "var(--color-jazz)", ikon: '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>' },
+    { isim: "Classical", renk: "var(--color-classic)", ikon: '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>' }
   ];
 </script>
 
@@ -104,14 +114,110 @@
         <h2 class="text-xs font-black text-[var(--text-dim)] mb-6 uppercase tracking-[0.3em] flex items-center gap-4">
           Frekans Kategorileri <div class="h-px flex-1 bg-[var(--border)]"></div>
         </h2>
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 lg:gap-6">
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 lg:gap-6 mb-16">
           {#each kategoriler as kategori, i}
             <a href="/search?q={kategori.isim}" 
-               class="relative aspect-square rounded-[var(--radius)] bg-gradient-to-br {kategori.renk} border p-5 cursor-pointer hover:scale-[1.03] transition-all duration-300 flex flex-col justify-end group shadow-lg overflow-hidden"
+               class="relative aspect-square rounded-[var(--radius)] bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border)] p-5 cursor-pointer hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col justify-end group overflow-hidden"
+               style="border-bottom-color: {kategori.renk};"
                in:scale={{ duration: 400, delay: i * 50 }}>
-              <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-500"></div>
-              <span class="relative z-10 text-xl lg:text-2xl font-black tracking-tighter uppercase italic drop-shadow-md group-hover:translate-x-1 transition-transform">{kategori.isim}</span>
+              <div class="absolute -bottom-10 -right-10 w-32 h-32 rounded-full blur-3xl opacity-10 group-hover:opacity-30 transition-opacity" style="background: {kategori.renk}"></div>
+              
+              <div class="absolute top-4 right-4 opacity-50 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500" style="color: {kategori.renk}">
+                  {@html kategori.ikon}
+              </div>
+              
+              <span class="relative z-10 text-lg lg:text-xl font-black tracking-tighter uppercase italic drop-shadow-md group-hover:translate-x-1 transition-transform" style="color: {kategori.renk}">
+                  {kategori.isim}
+              </span>
             </a>
+          {/each}
+        </div>
+
+        <h2 class="text-xs font-black text-[var(--text-dim)] mb-6 uppercase tracking-[0.3em] flex items-center gap-4">
+          Tüm Kayıtlar <span class="text-[9px] opacity-50 tracking-widest">(Popülerliğe Göre)</span> <div class="h-px flex-1 bg-[var(--border)]"></div>
+        </h2>
+
+        <div class="flex items-center text-[10px] font-black text-[var(--text-dim)] border-b border-[var(--border)] pb-3 mb-4 px-4 sm:px-6 tracking-[0.2em] uppercase shrink-0">
+          <span class="w-8 sm:w-10 shrink-0">#</span>
+          <span class="flex-1 min-w-0 ml-2 sm:ml-4">KİMLİK & BİLGİ</span>
+          <span class="w-auto max-w-[200px] xl:max-w-[280px] shrink-0 hidden lg:flex justify-end pr-4">METRİKLER</span> 
+          <span class="w-32 sm:w-48 xl:w-56 shrink-0 text-right pr-2">İŞLEMLER</span> 
+        </div>
+
+        <div class="flex flex-col gap-2">
+          {#each tumSarkilarSirali as sarki, index}
+            <div 
+              role="button" tabindex="0" 
+              onclick={() => sarkiCal(sarki)} 
+              onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && sarkiCal(sarki)} 
+              aria-label="{sarki.isim} çal"
+              class="flex items-center p-2.5 px-4 sm:px-6 rounded-2xl hover:bg-[var(--bg-card-hover)] transition-all duration-300 cursor-pointer group border-t-2
+              {playerState.aktifSarki?.id === sarki.id ? 'bg-[var(--accent)]/10 shadow-inner border-transparent' : 'border-transparent'}"
+            >
+              
+              <div class="w-8 sm:w-10 shrink-0 flex items-center justify-start font-mono text-xs text-[var(--text-dim)]/40 relative">
+                 {#if playerState.aktifSarki?.id === sarki.id && playerState.suAnOynuyorMu}
+                    <div class="flex items-end gap-0.5 h-3">
+                       <div class="w-1 bg-[var(--accent)] animate-[bounce_1s_infinite]"></div>
+                       <div class="w-1 bg-[var(--accent)] animate-[bounce_1.2s_infinite]"></div>
+                    </div>
+                 {:else}
+                    <span class="group-hover:hidden">{index + 1}</span>
+                    <svg class="w-4 h-4 hidden group-hover:block text-[var(--accent)]" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                 {/if}
+              </div>
+              
+              <div class="flex-1 min-w-0 flex items-center gap-3 sm:gap-4 ml-2 sm:ml-4">
+                <div class="w-10 h-10 sm:w-11 sm:h-11 bg-[var(--bg-card)] rounded-lg overflow-hidden shrink-0 shadow-md border border-[var(--border)]">
+                  {#if sarki.kapak_yolu}
+                    <img src={convertFileSrc(sarki.kapak_yolu)} alt="" class="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                  {:else}
+                    <div class="w-full h-full flex items-center justify-center text-[var(--text-dim)]/20 bg-[var(--bg-surface)] font-black text-[10px] italic">LW</div>
+                  {/if}
+                </div>
+                
+                <div class="flex flex-col min-w-0 flex-1 pr-2">
+                  <span class="font-black truncate text-sm lg:text-base tracking-tight {playerState.aktifSarki?.id === sarki.id ? 'text-[var(--accent)]' : 'text-[var(--text-main)]'}">
+                    {sarki.isim}
+                  </span>
+                  <div class="flex items-center gap-2 mt-0.5 overflow-hidden">
+                      <a href="/artist/{encodeURIComponent(sarki.sarkici)}" onclick={(e) => e.stopPropagation()} class="text-[10px] text-[var(--text-dim)] truncate font-bold uppercase tracking-widest opacity-80 group-hover:text-[var(--accent)] transition-colors inline-block max-w-max text-left">
+                        {sarki.sarkici}
+                      </a>
+                      {#if sarki.album}
+                          <span class="w-1 h-1 rounded-full bg-[var(--border)] shrink-0 hidden sm:block"></span>
+                          <span class="text-[9px] text-[var(--text-dim)]/50 uppercase font-bold truncate hidden sm:block">
+                            {sarki.album}
+                          </span>
+                      {/if}
+                  </div>
+                </div>
+              </div>
+
+              <div class="w-auto max-w-[200px] xl:max-w-[280px] shrink-0 hidden lg:flex items-center justify-end pr-4 pl-2 min-w-0">
+                <SongStats {sarki} />
+              </div>
+
+              <div class="w-32 sm:w-48 xl:w-56 shrink-0 flex items-center justify-end gap-1 sm:gap-2 pr-2" role="presentation" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
+                
+                <select aria-label="Listeye Ekle" onchange={(e) => handlePlaylistEkle(sarki.id, e)} class="bg-[var(--bg-surface)] text-[9px] text-[var(--text-dim)] rounded-lg px-1.5 sm:px-2 py-1.5 outline-none border border-[var(--border)] hover:border-[var(--accent)]/50 cursor-pointer w-16 sm:w-20 font-bold uppercase transition-all focus:border-[var(--accent)] opacity-70 hover:opacity-100 hidden sm:block truncate">
+                  <option value="">➕ LİSTE</option>
+                  {#each playerState.playlistler as pl}
+                    {#if !pl.sarkilar.includes(sarki.id)}<option value={pl.id}>{pl.isim.toUpperCase()}</option>{/if}
+                  {/each}
+                </select>
+
+                <button type="button" aria-label="Düzenle" title="Bilgileri Düzenle" onclick={(e) => editModaliAc(sarki, e)} class="p-1.5 sm:p-2 text-[var(--text-dim)]/50 hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 rounded-lg transition-all hidden sm:block shrink-0">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                </button>
+
+                <FavoriteButton sarkiId={sarki.id} />
+                
+                <button type="button" aria-label="Sil" title="Kalıcı Olarak Sil" onclick={(e) => handleSarkiSil(sarki, e)} class="text-[var(--text-dim)]/50 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all p-1.5 sm:p-2 shrink-0">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+              </div>
+            </div>
           {/each}
         </div>
       </div>
@@ -125,70 +231,87 @@
         </div>
 
         <div>
-          <h4 class="text-[10px] font-black text-[var(--accent)] mb-6 uppercase tracking-[0.3em]">Alternatif Olarak Bunları Dinleyebilirsin</h4>
+          <h4 class="text-[10px] font-black text-[var(--accent)] mb-6 uppercase tracking-[0.3em] flex items-center gap-4">
+            Alternatif Olarak Bunları Dinleyebilirsin <div class="h-px flex-1 bg-[var(--border)]"></div>
+          </h4>
           
-          <div class="flex flex-col gap-1.5">
+          <div class="flex items-center text-[10px] font-black text-[var(--text-dim)] border-b border-[var(--border)] pb-3 mb-4 px-4 sm:px-6 tracking-[0.2em] uppercase shrink-0">
+            <span class="w-8 sm:w-10 shrink-0">#</span>
+            <span class="flex-1 min-w-0 ml-2 sm:ml-4">KİMLİK & BİLGİ</span>
+            <span class="w-auto max-w-[200px] xl:max-w-[280px] shrink-0 hidden lg:flex justify-end pr-4">METRİKLER</span> 
+            <span class="w-32 sm:w-48 xl:w-56 shrink-0 text-right pr-2">İŞLEMLER</span> 
+          </div>
+
+          <div class="flex flex-col gap-2">
             {#each enPopulerler as sarki, index}
               <div 
                 role="button" tabindex="0" 
                 onclick={() => sarkiCal(sarki)} 
                 onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && sarkiCal(sarki)} 
                 aria-label="{sarki.isim} çal"
-                class="flex items-center text-sm p-2.5 rounded-2xl hover:bg-[var(--bg-card-hover)] transition-all duration-300 cursor-pointer group 
-                {playerState.aktifSarki?.id === sarki.id ? 'bg-[var(--accent)]/10 shadow-inner border border-[var(--accent)]/20' : 'border border-transparent'}"
+                class="flex items-center p-2.5 px-4 sm:px-6 rounded-2xl hover:bg-[var(--bg-card-hover)] transition-all duration-300 cursor-pointer group border-t-2
+                {playerState.aktifSarki?.id === sarki.id ? 'bg-[var(--accent)]/10 shadow-inner border-transparent' : 'border-transparent'}"
               >
-                <div class="w-10 text-center shrink-0">
+                
+                <div class="w-8 sm:w-10 shrink-0 flex items-center justify-start font-mono text-xs text-[var(--text-dim)]/40 relative">
                    {#if playerState.aktifSarki?.id === sarki.id && playerState.suAnOynuyorMu}
-                      <div class="flex items-end justify-center gap-0.5 h-3.5 mb-1">
+                      <div class="flex items-end gap-0.5 h-3">
                          <div class="w-1 bg-[var(--accent)] animate-[bounce_1s_infinite]"></div>
                          <div class="w-1 bg-[var(--accent)] animate-[bounce_1.2s_infinite]"></div>
-                         <div class="w-1 bg-[var(--accent)] animate-[bounce_0.8s_infinite]"></div>
                       </div>
                    {:else}
-                      <span class="text-[var(--text-dim)]/40 group-hover:hidden font-mono text-xs">{index + 1}</span>
-                      <svg class="w-4 h-4 mx-auto hidden group-hover:block text-[var(--accent)]" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                      <span class="group-hover:hidden">{index + 1}</span>
+                      <svg class="w-4 h-4 hidden group-hover:block text-[var(--accent)]" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                    {/if}
                 </div>
                 
-                <div class="flex-1 flex items-center gap-4 min-w-0 ml-4">
-                  <div class="w-11 h-11 bg-[var(--bg-card)] rounded-lg overflow-hidden shrink-0 shadow-md border border-[var(--border)]">
+                <div class="flex-1 min-w-0 flex items-center gap-3 sm:gap-4 ml-2 sm:ml-4">
+                  <div class="w-10 h-10 sm:w-11 sm:h-11 bg-[var(--bg-card)] rounded-lg overflow-hidden shrink-0 shadow-md border border-[var(--border)]">
                     {#if sarki.kapak_yolu}
                       <img src={convertFileSrc(sarki.kapak_yolu)} alt="" class="w-full h-full object-cover transition-transform group-hover:scale-110" />
                     {:else}
-                      <div class="w-full h-full flex items-center justify-center text-[var(--text-dim)]/20 bg-[var(--bg-surface)]">🎵</div>
+                      <div class="w-full h-full flex items-center justify-center text-[var(--text-dim)]/20 bg-[var(--bg-surface)] font-black text-[10px] italic">LW</div>
                     {/if}
                   </div>
-                  <div class="flex flex-col min-w-0 pr-2">
-                    <span class="font-bold text-sm truncate {playerState.aktifSarki?.id === sarki.id ? 'text-[var(--accent)]' : 'text-[var(--text-main)]'}">{sarki.isim}</span>
-                    <a href="/artist/{encodeURIComponent(sarki.sarkici)}" onclick={(e) => e.stopPropagation()} class="text-[11px] text-[var(--text-dim)] truncate font-bold uppercase tracking-tight hover:text-[var(--accent)] transition-colors opacity-70 inline-block max-w-max">{sarki.sarkici}</a>
+                  
+                  <div class="flex flex-col min-w-0 flex-1 pr-2">
+                    <span class="font-black truncate text-sm lg:text-base tracking-tight {playerState.aktifSarki?.id === sarki.id ? 'text-[var(--accent)]' : 'text-[var(--text-main)]'}">
+                      {sarki.isim}
+                    </span>
+                    <div class="flex items-center gap-2 mt-0.5 overflow-hidden">
+                        <a href="/artist/{encodeURIComponent(sarki.sarkici)}" onclick={(e) => e.stopPropagation()} class="text-[10px] text-[var(--text-dim)] truncate font-bold uppercase tracking-widest opacity-80 group-hover:text-[var(--accent)] transition-colors inline-block max-w-max text-left">
+                          {sarki.sarkici}
+                        </a>
+                        {#if sarki.album}
+                            <span class="w-1 h-1 rounded-full bg-[var(--border)] shrink-0 hidden sm:block"></span>
+                            <span class="text-[9px] text-[var(--text-dim)]/50 uppercase font-bold truncate hidden sm:block">
+                              {sarki.album}
+                            </span>
+                        {/if}
+                    </div>
                   </div>
                 </div>
 
-                <div class="w-48 shrink-0 hidden md:flex items-center">
+                <div class="w-auto max-w-[200px] xl:max-w-[280px] shrink-0 hidden lg:flex items-center justify-end pr-4 pl-2 min-w-0">
                   <SongStats {sarki} />
                 </div>
-                
-                <span class="w-1/4 text-[var(--text-dim)] truncate font-black text-[10px] uppercase tracking-tighter pl-6 shrink-0 hidden lg:block opacity-60">
-                  {sarki.album || "Single"}
-                </span>
 
-                <div class="w-48 flex items-center justify-end gap-3 shrink-0 pr-2" role="presentation" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
-                  <FavoriteButton sarkiId={sarki.id} />
+                <div class="w-32 sm:w-48 xl:w-56 shrink-0 flex items-center justify-end gap-1 sm:gap-2 pr-2" role="presentation" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
                   
-                  <select 
-                      aria-label="Listeye Ekle" 
-                      onchange={(e) => handlePlaylistEkle(sarki.id, e)} 
-                      class="bg-[var(--bg-surface)] text-[10px] text-[var(--text-dim)] rounded-lg px-2 py-1.5 outline-none border border-[var(--border)] hover:border-[var(--accent)]/50 cursor-pointer w-24 focus:border-[var(--accent)] transition-all font-bold uppercase opacity-0 group-hover:opacity-100 hidden sm:block"
-                  >
-                    <option value="">➕ EKLE</option>
+                  <select aria-label="Listeye Ekle" onchange={(e) => handlePlaylistEkle(sarki.id, e)} class="bg-[var(--bg-surface)] text-[9px] text-[var(--text-dim)] rounded-lg px-1.5 sm:px-2 py-1.5 outline-none border border-[var(--border)] hover:border-[var(--accent)]/50 cursor-pointer w-16 sm:w-20 font-bold uppercase transition-all focus:border-[var(--accent)] opacity-70 hover:opacity-100 hidden sm:block truncate">
+                    <option value="">➕ LİSTE</option>
                     {#each playerState.playlistler as pl}
-                      {#if !pl.sarkilar.includes(sarki.id)}
-                        <option value={pl.id}>{pl.isim.toUpperCase()}</option>
-                      {/if}
+                      {#if !pl.sarkilar.includes(sarki.id)}<option value={pl.id}>{pl.isim.toUpperCase()}</option>{/if}
                     {/each}
                   </select>
 
-                  <button type="button" aria-label="Sil" title="Kalıcı Olarak Sil" onclick={(e) => handleSarkiSil(sarki, e)} class="text-[var(--text-dim)]/30 hover:text-red-500 transition-all p-1 opacity-0 group-hover:opacity-100">
+                  <button type="button" aria-label="Düzenle" title="Bilgileri Düzenle" onclick={(e) => editModaliAc(sarki, e)} class="p-1.5 sm:p-2 text-[var(--text-dim)]/50 hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 rounded-lg transition-all hidden sm:block shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                  </button>
+
+                  <FavoriteButton sarkiId={sarki.id} />
+                  
+                  <button type="button" aria-label="Sil" title="Kalıcı Olarak Sil" onclick={(e) => handleSarkiSil(sarki, e)} class="text-[var(--text-dim)]/50 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all p-1.5 sm:p-2 shrink-0">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                   </button>
                 </div>
@@ -200,82 +323,87 @@
 
     {:else}
       <div class="mt-4" in:fade>
-        <div class="flex text-[10px] font-black text-[var(--text-dim)] border-b border-[var(--border)] pb-3 mb-4 px-4 tracking-[0.2em] uppercase">
-          <span class="w-10 text-center shrink-0">#</span>
-          <span class="flex-1 min-w-0 ml-4">BAŞLIK</span>
-          <span class="w-48 shrink-0 hidden md:block">İSTATİSTİK</span> 
-          <span class="w-1/4 shrink-0 pl-6 hidden lg:block">ALBÜM</span>
-          <span class="w-48 text-right pr-4 shrink-0">İŞLEMLER</span>
+        
+        <div class="flex items-center text-[10px] font-black text-[var(--text-dim)] border-b border-[var(--border)] pb-3 mb-4 px-4 sm:px-6 tracking-[0.2em] uppercase shrink-0">
+          <span class="w-8 sm:w-10 shrink-0">#</span>
+          <span class="flex-1 min-w-0 ml-2 sm:ml-4">KİMLİK & BİLGİ</span>
+          <span class="w-auto max-w-[200px] xl:max-w-[280px] shrink-0 hidden lg:flex justify-end pr-4">METRİKLER</span> 
+          <span class="w-32 sm:w-48 xl:w-56 shrink-0 text-right pr-2">İŞLEMLER</span> 
         </div>
 
-        <div class="flex flex-col gap-1.5">
+        <div class="flex flex-col gap-2">
           {#each aramaSonuclari as sarki, index}
             <div 
               role="button" tabindex="0" 
               onclick={() => sarkiCal(sarki)} 
               onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && sarkiCal(sarki)} 
               aria-label="{sarki.isim} çal"
-              class="flex items-center text-sm p-2.5 rounded-2xl hover:bg-[var(--bg-card-hover)] transition-all duration-300 cursor-pointer group 
-              {playerState.aktifSarki?.id === sarki.id ? 'bg-[var(--accent)]/10 shadow-inner border border-[var(--accent)]/20' : 'border border-transparent'}"
+              class="flex items-center p-2.5 px-4 sm:px-6 rounded-2xl hover:bg-[var(--bg-card-hover)] transition-all duration-300 cursor-pointer group border-t-2
+              {playerState.aktifSarki?.id === sarki.id ? 'bg-[var(--accent)]/10 shadow-inner border-transparent' : 'border-transparent'}"
             >
               
-              <div class="w-10 text-center shrink-0">
+              <div class="w-8 sm:w-10 shrink-0 flex items-center justify-start font-mono text-xs text-[var(--text-dim)]/40 relative">
                  {#if playerState.aktifSarki?.id === sarki.id && playerState.suAnOynuyorMu}
-                    <div class="flex items-end justify-center gap-0.5 h-3.5 mb-1">
+                    <div class="flex items-end gap-0.5 h-3">
                        <div class="w-1 bg-[var(--accent)] animate-[bounce_1s_infinite]"></div>
                        <div class="w-1 bg-[var(--accent)] animate-[bounce_1.2s_infinite]"></div>
-                       <div class="w-1 bg-[var(--accent)] animate-[bounce_0.8s_infinite]"></div>
                     </div>
                  {:else}
-                    <span class="text-[var(--text-dim)]/40 group-hover:hidden font-mono text-xs">{index + 1}</span>
-                    <svg class="w-4 h-4 mx-auto hidden group-hover:block text-[var(--accent)]" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    <span class="group-hover:hidden">{index + 1}</span>
+                    <svg class="w-4 h-4 hidden group-hover:block text-[var(--accent)]" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                  {/if}
               </div>
               
-              <div class="flex-1 flex items-center gap-4 min-w-0 ml-4">
-                <div class="w-11 h-11 bg-[var(--bg-card)] rounded-lg overflow-hidden shrink-0 shadow-md border border-[var(--border)]">
+              <div class="flex-1 min-w-0 flex items-center gap-3 sm:gap-4 ml-2 sm:ml-4">
+                <div class="w-10 h-10 sm:w-11 sm:h-11 bg-[var(--bg-card)] rounded-lg overflow-hidden shrink-0 shadow-md border border-[var(--border)]">
                   {#if sarki.kapak_yolu}
                     <img src={convertFileSrc(sarki.kapak_yolu)} alt="" class="w-full h-full object-cover transition-transform group-hover:scale-110" />
                   {:else}
-                    <div class="w-full h-full flex items-center justify-center text-[var(--text-dim)]/20 bg-[var(--bg-surface)]">🎵</div>
+                    <div class="w-full h-full flex items-center justify-center text-[var(--text-dim)]/20 bg-[var(--bg-surface)] font-black text-[10px] italic">LW</div>
                   {/if}
                 </div>
-                <div class="flex flex-col min-w-0 pr-2">
-                  <span class="font-bold text-sm truncate {playerState.aktifSarki?.id === sarki.id ? 'text-[var(--accent)]' : 'text-[var(--text-main)]'}">{sarki.isim}</span>
-                  <a href="/artist/{encodeURIComponent(sarki.sarkici)}" onclick={(e) => e.stopPropagation()} class="text-[11px] text-[var(--text-dim)] truncate font-bold uppercase tracking-tight hover:text-[var(--accent)] transition-colors opacity-70 inline-block max-w-max">{sarki.sarkici}</a>
+                
+                <div class="flex flex-col min-w-0 flex-1 pr-2">
+                  <span class="font-black truncate text-sm lg:text-base tracking-tight {playerState.aktifSarki?.id === sarki.id ? 'text-[var(--accent)]' : 'text-[var(--text-main)]'}">
+                    {sarki.isim}
+                  </span>
+                  <div class="flex items-center gap-2 mt-0.5 overflow-hidden">
+                      <a href="/artist/{encodeURIComponent(sarki.sarkici)}" onclick={(e) => e.stopPropagation()} class="text-[10px] text-[var(--text-dim)] truncate font-bold uppercase tracking-widest opacity-80 group-hover:text-[var(--accent)] transition-colors inline-block max-w-max text-left">
+                        {sarki.sarkici}
+                      </a>
+                      {#if sarki.album}
+                          <span class="w-1 h-1 rounded-full bg-[var(--border)] shrink-0 hidden sm:block"></span>
+                          <span class="text-[9px] text-[var(--text-dim)]/50 uppercase font-bold truncate hidden sm:block">
+                            {sarki.album}
+                          </span>
+                      {/if}
+                  </div>
                 </div>
               </div>
 
-              <div class="w-48 shrink-0 hidden md:flex items-center">
+              <div class="w-auto max-w-[200px] xl:max-w-[280px] shrink-0 hidden lg:flex items-center justify-end pr-4 pl-2 min-w-0">
                 <SongStats {sarki} />
               </div>
-              
-              <span class="w-1/4 text-[var(--text-dim)] truncate font-black text-[10px] uppercase tracking-tighter pl-6 shrink-0 hidden lg:block opacity-60">
-                {sarki.album || "Single"}
-              </span>
 
-              <div class="w-48 flex items-center justify-end gap-3 shrink-0 pr-2" role="presentation" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
+              <div class="w-32 sm:w-48 xl:w-56 shrink-0 flex items-center justify-end gap-1 sm:gap-2 pr-2" role="presentation" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
                 
-                <FavoriteButton sarkiId={sarki.id} />
-                
-                <select 
-                    aria-label="Listeye Ekle" 
-                    onchange={(e) => handlePlaylistEkle(sarki.id, e)} 
-                    class="bg-[var(--bg-surface)] text-[10px] text-[var(--text-dim)] rounded-lg px-2 py-1.5 outline-none border border-[var(--border)] hover:border-[var(--accent)]/50 cursor-pointer w-24 focus:border-[var(--accent)] transition-all font-bold uppercase opacity-0 group-hover:opacity-100 hidden sm:block"
-                >
-                  <option value="">➕ EKLE</option>
+                <select aria-label="Listeye Ekle" onchange={(e) => handlePlaylistEkle(sarki.id, e)} class="bg-[var(--bg-surface)] text-[9px] text-[var(--text-dim)] rounded-lg px-1.5 sm:px-2 py-1.5 outline-none border border-[var(--border)] hover:border-[var(--accent)]/50 cursor-pointer w-16 sm:w-20 font-bold uppercase transition-all focus:border-[var(--accent)] opacity-70 hover:opacity-100 hidden sm:block truncate">
+                  <option value="">➕ LİSTE</option>
                   {#each playerState.playlistler as pl}
-                    {#if !pl.sarkilar.includes(sarki.id)}
-                      <option value={pl.id}>{pl.isim.toUpperCase()}</option>
-                    {/if}
+                    {#if !pl.sarkilar.includes(sarki.id)}<option value={pl.id}>{pl.isim.toUpperCase()}</option>{/if}
                   {/each}
                 </select>
 
-                <button type="button" aria-label="Sil" title="Kalıcı Olarak Sil" onclick={(e) => handleSarkiSil(sarki, e)} class="text-[var(--text-dim)]/30 hover:text-red-500 transition-all p-1 opacity-0 group-hover:opacity-100">
+                <button type="button" aria-label="Düzenle" title="Bilgileri Düzenle" onclick={(e) => editModaliAc(sarki, e)} class="p-1.5 sm:p-2 text-[var(--text-dim)]/50 hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 rounded-lg transition-all hidden sm:block shrink-0">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                </button>
+
+                <FavoriteButton sarkiId={sarki.id} />
+                
+                <button type="button" aria-label="Sil" title="Kalıcı Olarak Sil" onclick={(e) => handleSarkiSil(sarki, e)} class="text-[var(--text-dim)]/50 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all p-1.5 sm:p-2 shrink-0">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                 </button>
               </div>
-              
             </div>
           {/each}
         </div>

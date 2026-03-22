@@ -12,7 +12,7 @@
     initializePlayer, 
     playlisttenSarkiCikar, 
     sarkiSil,
-    siraGuncelle
+    playlistSirasiGuncelleAPI
   } from '../../../store.svelte';
   import { fade } from 'svelte/transition';
 
@@ -89,9 +89,10 @@
       
       aktifPlaylist.sarkilar = yeniSira;
       
-      const sarkiYeniListe = yeniSira.map(id => playerState.sarkiListesi.find(s => s.id === id)).filter(Boolean) as Sarki[];
-      if (playerState.aktifSarki && sarkiYeniListe.some(s => s.id === playerState.aktifSarki?.id)) {
-          await siraGuncelle(sarkiYeniListe);
+      const plIndex = playerState.playlistler.findIndex(p => p.id === playlistId);
+      if (plIndex !== -1 && playlistId) {
+          playerState.playlistler[plIndex].sarkilar = yeniSira;
+          await playlistSirasiGuncelleAPI(playlistId, yeniSira);
       }
     }
     dragBitir();
@@ -119,7 +120,7 @@
     </div>
     
     <div class="flex flex-col text-center md:text-left pb-2 min-w-0 flex-1">
-      <span class="text-[10px] font-black mb-3 text-[var(--accent)] tracking-[0.4em] uppercase italic truncate">User Playlist Collection</span>
+      <span class="text-[10px] font-black mb-3 text-[var(--accent)] tracking-[0.4em] uppercase italic truncate">Kişisel Frekans Ağı</span>
       <h1 class="text-4xl lg:text-7xl font-black tracking-tighter leading-none mb-6 uppercase italic drop-shadow-md truncate">
         {aktifPlaylist?.isim || "Yükleniyor..."}
       </h1>
@@ -138,7 +139,7 @@
               <button 
                 type="button"
                 onclick={listeyiCal} 
-                class="flex items-center gap-3 bg-[var(--text-main)] text-[var(--bg-main)] hover:bg-[var(--accent)] hover:text-white px-10 py-2.5 rounded-lg font-black shadow-xl transition-all active:scale-95 uppercase text-[10px] lg:text-xs tracking-widest shrink-0"
+                class="flex items-center gap-3 bg-[var(--text-main)] text-[var(--bg-main)] hover:bg-[var(--accent)] hover:text-white px-10 py-2.5 rounded-lg font-black shadow-[0_5px_15px_rgba(0,0,0,0.3)] hover:shadow-[0_0_20px_var(--accent-glow)] transition-all active:scale-95 uppercase text-[10px] lg:text-xs tracking-widest shrink-0"
                 aria-label="Listeyi oynat"
               >
                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -152,21 +153,21 @@
 
   {#if gosterilenSarkilar.length === 0}
     <div class="flex flex-col items-center justify-center flex-1 text-center mt-10 p-16 bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] border-dashed" in:fade>
-      <div class="text-6xl mb-8 opacity-20 filter grayscale">💽</div>
+      <div class="text-6xl mb-8 opacity-20 filter grayscale animate-[pulse_4s_infinite]">💽</div>
       <h3 class="text-2xl font-bold mb-3 tracking-tight uppercase">Sinyal Bulunamadı</h3>
       <p class="text-[var(--text-dim)] font-medium text-sm max-w-sm leading-relaxed uppercase tracking-wider">
         Bu çalma listesi henüz kütüphaneden veri almamış. "Keşfet" veya "Kütüphane" sekmelerinden şarkı ekleyebilirsin.
       </p>
     </div>
   {:else}
-    <div class="flex items-center text-[10px] font-black text-[var(--text-dim)] border-b border-[var(--border)] pb-3 mb-4 px-6 tracking-[0.2em] uppercase shrink-0">
+    <div class="sticky top-0 z-20 flex items-center text-[10px] font-black text-[var(--text-dim)] border-b border-[var(--border)] pb-3 mb-4 px-6 pt-4 bg-[var(--bg-main)]/95 backdrop-blur-xl tracking-[0.2em] uppercase shrink-0 rounded-t-xl shadow-sm">
       <span class="w-12 shrink-0">#</span>
       <span class="flex-1 min-w-0 ml-4">KİMLİK & BİLGİ</span>
       <span class="w-40 lg:w-64 2xl:w-80 shrink-0 hidden md:block text-right pr-4">METRİKLER</span> 
       <span class="w-52 sm:w-64 shrink-0 text-right">YÖNETİM</span> 
     </div>
 
-    <div class="flex flex-col gap-1.5">
+    <div class="flex flex-col gap-1.5 relative z-10">
       {#each gosterilenSarkilar as sarki, index}
         <div 
             role="button" 
@@ -181,7 +182,7 @@
             aria-label="{sarki.isim} çal"
             class="flex items-center p-2.5 px-6 rounded-2xl transition-all duration-300 group cursor-pointer border-t-2
                    {playerState.aktifSarki?.id === sarki.id ? 'bg-[var(--accent)]/10 shadow-inner border-transparent' : 'border-transparent hover:bg-[var(--bg-card-hover)]'}
-                   {uzerindeGezinilenIndex === index ? '!border-[var(--accent)] bg-[var(--accent)]/5' : ''}"
+                   {uzerindeGezinilenIndex === index ? '!border-[var(--accent)] bg-[var(--accent)]/10 shadow-lg scale-[1.01]' : ''}"
         >
           <div class="w-12 shrink-0 flex items-center justify-start relative">
              <div class="mr-2 text-[var(--text-dim)]/20 hover:text-[var(--accent)] cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-all shrink-0" title="Sıralamayı Değiştir">
@@ -214,9 +215,9 @@
                 {sarki.isim}
               </span>
               <div class="flex items-center gap-2 mt-0.5 overflow-hidden">
-                <button onclick={(e) => { e.stopPropagation();  }} class="text-[10px] text-[var(--text-dim)] truncate font-bold uppercase tracking-widest hover:text-[var(--accent)] transition-colors inline-block max-w-max opacity-80 text-left">
+                <a href="/artist/{encodeURIComponent(sarki.sarkici)}" onclick={(e) => e.stopPropagation()} class="text-[10px] text-[var(--text-dim)] truncate font-bold uppercase tracking-widest hover:text-[var(--accent)] transition-colors inline-block max-w-max opacity-80 text-left">
                   {sarki.sarkici}
-                </button>
+                </a>
                 {#if sarki.album}
                   <span class="w-1 h-1 rounded-full bg-[var(--border)] shrink-0 hidden sm:block"></span>
                   <span class="text-[9px] text-[var(--text-dim)]/50 uppercase font-bold truncate hidden sm:block">

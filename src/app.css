@@ -16,6 +16,18 @@
   --selection-bg: #6366f1;
   --accent-glow: rgba(99, 102, 241, 0.3);
   --overlay: rgba(0, 0, 0, 0.6);
+
+
+  --color-pop: var(--accent);
+  --color-rock: #ef4444;
+  --color-lofi: #8b5cf6;
+  --color-cyber: #06b6d4;
+  --color-ghibli: #83c5be;
+  --color-acoustic: #f59e0b;
+  --color-jazz: #10b981;
+  --color-hiphop: #6366f1;
+  --color-classic: #a1a1aa;
+  --color-podcast: #ec4899;
 }
 
 .theme-orkun-favori {
@@ -33,6 +45,18 @@
   --bg-gradient: linear-gradient(135deg, #17030b 0%, #050505 100%);
   --accent-glow: rgba(255, 45, 129, 0.6);
   --overlay: rgba(0, 0, 0, 0.85);
+
+
+  --color-pop: var(--accent);
+  --color-rock: #ff0055;
+  --color-lofi: #ff2d81;
+  --color-cyber: #ff8ab7;
+  --color-ghibli: #ffb3d9;
+  --color-acoustic: #ff0055;
+  --color-jazz: #ff2d81;
+  --color-hiphop: #ff8ab7;
+  --color-classic: #ffb3d9;
+  --color-podcast: var(--accent-sec);
 }
 
 .theme-lofi {
@@ -50,6 +74,18 @@
   --bg-gradient: linear-gradient(180deg, #1e1b29 0%, #2d2a3d 100%);
   --accent-glow: rgba(255, 154, 158, 0.3);
   --overlay: rgba(30, 27, 41, 0.7);
+
+
+  --color-pop: var(--accent);
+  --color-rock: #ff6b6b;
+  --color-lofi: #9381ff;
+  --color-cyber: #b8b8ff;
+  --color-ghibli: #f8ad9d;
+  --color-acoustic: #fbc4ab;
+  --color-jazz: #c1b3ff;
+  --color-hiphop: #a291ff;
+  --color-classic: #dcd0ff;
+  --color-podcast: var(--accent-sec);
 }
 
 .theme-ghibli {
@@ -67,6 +103,18 @@
   --bg-gradient: linear-gradient(180deg, #232b2b 0%, #1c2222 100%);
   --accent-glow: rgba(163, 201, 168, 0.15);
   --overlay: rgba(35, 43, 43, 0.8);
+
+
+  --color-pop: var(--accent);
+  --color-rock: #d4a373;
+  --color-lofi: #b5c99a;
+  --color-cyber: #97a97c;
+  --color-ghibli: #87986a;
+  --color-acoustic: #718355;
+  --color-jazz: #cfe1b9;
+  --color-hiphop: #e9f5db;
+  --color-classic: #ccd5ae;
+  --color-podcast: var(--accent-sec);
 }
 
 .theme-retro {
@@ -84,6 +132,18 @@
   --bg-gradient: linear-gradient(135deg, #d972b3 0%, #8d6288 100%);
   --accent-glow: rgba(249, 115, 22, 0.4);
   --overlay: rgba(43, 16, 85, 0.6);
+
+
+  --color-pop: var(--accent);
+  --color-rock: #ef4444;
+  --color-lofi: #a855f7;
+  --color-cyber: #06b6d4;
+  --color-ghibli: #10b981;
+  --color-acoustic: #eab308;
+  --color-jazz: #14b8a6;
+  --color-hiphop: #8b5cf6;
+  --color-classic: #9ca3af;
+  --color-podcast: var(--accent-sec);
 }
 
 .theme-ocean {
@@ -98,6 +158,18 @@
   --radius: 0.75rem;
   --bg-gradient: linear-gradient(180deg, #021526 0%, #010b13 100%);
   --overlay: rgba(1, 11, 19, 0.7);
+
+
+  --color-pop: var(--accent);
+  --color-rock: #0284c7;
+  --color-lofi: #0369a1;
+  --color-cyber: #0ea5e9;
+  --color-ghibli: #38bdf8;
+  --color-acoustic: #7dd3fc;
+  --color-jazz: #bae6fd;
+  --color-hiphop: #0284c7;
+  --color-classic: #e0f2fe;
+  --color-podcast: var(--accent-sec);
 }
 
 .theme-sakura {
@@ -112,6 +184,18 @@
   --radius: 1.25rem;
   --bg-gradient: linear-gradient(135deg, #1a1617 0%, #120f10 100%);
   --overlay: rgba(18, 15, 16, 0.7);
+
+
+  --color-pop: var(--accent);
+  --color-rock: #e11d48;
+  --color-lofi: #be123c;
+  --color-cyber: #f43f5e;
+  --color-ghibli: #fb7185;
+  --color-acoustic: #fda4af;
+  --color-jazz: #fecdd3;
+  --color-hiphop: #e11d48;
+  --color-classic: #ffe4e6;
+  --color-podcast: var(--accent-sec);
 }
 
 .theme-oled {
@@ -127,6 +211,105 @@
   --radius: 0.5rem;
   --bg-gradient: none;
   --overlay: rgba(0, 0, 0, 0.9);
+
+
+  --color-pop: var(--accent);
+  --color-rock: #d4d4d8;
+  --color-lofi: #a1a1aa;
+  --color-cyber: #71717a;
+  --color-ghibli: #52525b;
+  --color-acoustic: #e4e4e7;
+  --color-jazz: #f4f4f5;
+  --color-hiphop: #d4d4d8;
+  --color-classic: #fafafa;
+  --color-podcast: var(--accent-sec);
+}
+
+/* 1. Aydınlık (Light) Tema: Gündüz ve ferahlık için (Apple Music tarzı) */
+.theme-light {
+  --bg-main: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-card: rgba(241, 245, 249, 0.8);
+  --bg-card-hover: rgba(226, 232, 240, 0.8);
+  --accent: #2563eb; /* Canlı Mavi */
+  --accent-sec: #0ea5e9; /* Gökyüzü Mavisi */
+  --text-main: #0f172a; /* Koyu Lacivert/Siyah (Yazılar okunabilsin diye) */
+  --text-dim: #64748b;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-hover: rgba(37, 99, 235, 0.3);
+  --radius: 1rem;
+  --bg-gradient: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+  --accent-glow: rgba(37, 99, 235, 0.2);
+  --overlay: rgba(255, 255, 255, 0.8);
+
+  --color-pop: var(--accent);
+  --color-rock: #dc2626;
+  --color-lofi: #7c3aed;
+  --color-cyber: #0891b2;
+  --color-ghibli: #059669;
+  --color-acoustic: #d97706;
+  --color-jazz: #0d9488;
+  --color-hiphop: #4f46e5;
+  --color-classic: #475569;
+  --color-podcast: #db2777;
+}
+
+/* 2. Nord (İskandinav Koyu): Göz yormayan, kod editörü tarzı yumuşak lacivert */
+.theme-nord {
+  --bg-main: #2e3440;
+  --bg-surface: #3b4252;
+  --bg-card: rgba(67, 76, 94, 0.4);
+  --bg-card-hover: rgba(76, 86, 106, 0.6);
+  --accent: #88c0d0; /* Buz Mavisi */
+  --accent-sec: #81a1c1; /* Soluk Mavi */
+  --text-main: #eceff4;
+  --text-dim: #d8dee9;
+  --border: rgba(216, 222, 233, 0.1);
+  --border-hover: #88c0d0;
+  --radius: 0.75rem;
+  --bg-gradient: linear-gradient(135deg, #3b4252 0%, #2e3440 100%);
+  --accent-glow: rgba(136, 192, 208, 0.3);
+  --overlay: rgba(46, 52, 64, 0.8);
+
+  --color-pop: var(--accent);
+  --color-rock: #bf616a; /* Nord Kırmızısı */
+  --color-lofi: #b48ead; /* Nord Moru */
+  --color-cyber: #8fbcbb; /* Nord Yeşili */
+  --color-ghibli: #a3be8c;
+  --color-acoustic: #ebcb8b; /* Nord Sarısı */
+  --color-jazz: #81a1c1;
+  --color-hiphop: #5e81ac;
+  --color-classic: #e5e9f0;
+  --color-podcast: #d08770; /* Nord Turuncusu */
+}
+
+/* 3. Cyberpunk (Neon): Hacker ve Synthwave tarzı yüksek kontrastlı renkler */
+.theme-cyberpunk {
+  --bg-main: #0c0914;
+  --bg-surface: #130e21;
+  --bg-card: rgba(255, 0, 85, 0.05);
+  --bg-card-hover: rgba(0, 240, 255, 0.1);
+  --accent: #fcee0a; /* Cyberpunk Sarısı */
+  --accent-sec: #00f0ff; /* Neon Mavi */
+  --text-main: #ffffff;
+  --text-dim: #ff0055; /* Neon Pembe */
+  --border: rgba(0, 240, 255, 0.3);
+  --border-hover: #fcee0a;
+  --radius: 0; /* Cyberpunk'ta genelde köşeler keskindir */
+  --bg-gradient: linear-gradient(135deg, #130e21 0%, #0c0914 100%);
+  --accent-glow: rgba(252, 238, 10, 0.4);
+  --overlay: rgba(12, 9, 20, 0.85);
+
+  --color-pop: var(--accent);
+  --color-rock: #ff0055;
+  --color-lofi: #b900ff;
+  --color-cyber: #00f0ff;
+  --color-ghibli: #00ff9f;
+  --color-acoustic: #fcee0a;
+  --color-jazz: #00f0ff;
+  --color-hiphop: #b900ff;
+  --color-classic: #ffffff;
+  --color-podcast: #ff0055;
 }
 
 body {

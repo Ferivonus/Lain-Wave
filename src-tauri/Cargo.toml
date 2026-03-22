@@ -1,6 +1,6 @@
 [package]
 name = "lain_wave"
-version = "0.2.1"
+version = "0.2.4"
 description = "Lain Wave is a highly optimized music management system built for speed and reliability. It is engineered to work entirely offline, ensuring that your library remains fully accessible without any internet dependency. The application includes an integrated tool to download tracks directly from YouTube, allowing you to build and maintain a permanent local archive effortlessly."
 authors = ["Fahrettin Baştürk"]
 edition = "2021"

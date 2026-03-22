@@ -1,8 +1,14 @@
 <script lang="ts">
-    import { invoke } from '@tauri-apps/api/core';
     import { open } from '@tauri-apps/plugin-dialog';
     import { readTextFile } from '@tauri-apps/plugin-fs';
-    import { playerState, type Playlist, type Sarki } from '../store.svelte';
+    import { 
+        playerState, 
+        playlistOlusturAPI, 
+        youtubeIndirAPI, 
+        sarkiPlaylisteEkle, 
+        youtubeAramaAPI,
+        type YouTubeSonuc 
+    } from '../store.svelte';
     import { fade, scale, slide } from 'svelte/transition';
     import { cubicOut } from 'svelte/easing';
 
@@ -18,14 +24,6 @@
         youtube_linki: string | null;
         tarz?: string;
         durum: ImportDurum;
-    }
-
-    interface YouTubeSonuc {
-        title: string;
-        channel: string;
-        duration_string: string;
-        thumbnail: string;
-        webpage_url: string;
     }
 
     let importListIsmi = $state("");
@@ -66,8 +64,7 @@
         yukleniyor = true;
 
         try {
-            const yeniListe = await invoke<Playlist>('playlist_olustur', { isim: isim.trim() });
-            playerState.playlistler = [...playerState.playlistler, yeniListe];
+            await playlistOlusturAPI(isim.trim());
             kapat();
         } catch (hata) {
             alert("Liste oluşturulurken bir sorun oluştu.");
@@ -111,9 +108,8 @@
 
         try {
             if (!yaratilanListeId) {
-                const yeniListe = await invoke<Playlist>('playlist_olustur', { isim: importListIsmi });
+                const yeniListe = await playlistOlusturAPI(importListIsmi);
                 yaratilanListeId = yeniListe.id;
-                playerState.playlistler = [...playerState.playlistler, yeniListe];
             }
 
             for (let i = 0; i < importSarkilar.length; i++) {
@@ -121,27 +117,22 @@
                     importSarkilar[i].durum = 'indiriliyor';
 
                     try {
-                        const yeniSarki = await invoke<Sarki>('youtube_indir', {
-                            url: importSarkilar[i].youtube_linki,
-                            tarz: importSarkilar[i].tarz || "Bilinmiyor"
-                        });
+                        const yeniSarki = await youtubeIndirAPI(
+                            importSarkilar[i].youtube_linki as string, 
+                            importSarkilar[i].tarz || "Bilinmiyor"
+                        );
 
-                        await invoke('playliste_sarki_ekle', {
-                            playlist_id: yaratilanListeId,
-                            sarki_id: yeniSarki.id
-                        });
+                        await sarkiPlaylisteEkle(yeniSarki.id, yaratilanListeId);
 
                         importSarkilar[i].durum = 'tamamlandi';
-                        playerState.sarkiListesi = [...playerState.sarkiListesi, yeniSarki];
-                        
-                        const guncelListeler = await invoke<Playlist[]>('playlistleri_getir');
-                        playerState.playlistler = guncelListeler;
                     } catch (err) {
+                        console.error("Şarkı indirme/ekleme hatası:", err);
                         importSarkilar[i].durum = 'hata';
                     }
                 }
             }
         } catch (e) {
+            console.error("Import hatası:", e);
             alert("İşlem sırasında genel bir hata oluştu.");
         } finally {
             isImporting = false;
@@ -166,8 +157,7 @@
         secilenSonuc = null;
 
         try {
-            const sonuclar = await invoke<YouTubeSonuc[]>('youtube_arama', { sorgu: aramaSorgusu });
-            aramaSonuclari = sonuclar;
+            aramaSonuclari = await youtubeAramaAPI(aramaSorgusu);
         } catch (e) {
             alert("Arama başarısız: " + e);
         } finally {
@@ -313,7 +303,7 @@
                                         <span class="text-orange-400">BEKLEYEN: {bekleyenSayi}</span>
                                     </p>
                                 </div>
-                                <button type="button" onclick={() => { importSarkilar = []; importListIsmi = ''; isImporting = false; }} disabled={isImporting} class="text-[10px] text-[var(--text-dim)] hover:text-red-400 uppercase font-black transition-colors disabled:opacity-30 shrink-0 bg-[var(--bg-card)] px-3 py-1.5 rounded-lg border border-[var(--border)]">
+                                <button type="button" onclick={() => { importSarkilar = []; importListIsmi = ''; isImporting = false; yaratilanListeId = null; }} disabled={isImporting} class="text-[10px] text-[var(--text-dim)] hover:text-red-400 uppercase font-black transition-colors disabled:opacity-30 shrink-0 bg-[var(--bg-card)] px-3 py-1.5 rounded-lg border border-[var(--border)]">
                                     Dosyayı İptal Et
                                 </button>
                             </div>
@@ -372,6 +362,7 @@
 {/if}
 
 <style>
+    div[role="dialog"]:focus { outline: none; }
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--accent); }

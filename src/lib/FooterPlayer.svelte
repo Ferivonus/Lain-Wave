@@ -123,6 +123,16 @@
     playerState.sesSeviyesi = yeniSes;
     localStorage.setItem('lainwave_ses', yeniSes.toString());
   }
+
+  function toggleTekrarModu() {
+    if (playerState.tekrarModu === 'kapali') {
+        playerState.tekrarModu = 'liste';
+    } else if (playerState.tekrarModu === 'liste') {
+        playerState.tekrarModu = 'tek_sarki';
+    } else {
+        playerState.tekrarModu = 'kapali';
+    }
+  }
 </script>
 
 <footer class="h-20 lg:h-24 bg-[var(--bg-surface)] border-t border-[var(--border)] flex items-center justify-between px-4 lg:px-8 z-40 shadow-[0_-10px_30px_rgba(0,0,0,0.3)] relative transition-all duration-500 backdrop-blur-md">
@@ -159,7 +169,7 @@
   </div>
 
   <div class="flex flex-col items-center w-1/3 lg:max-w-xl">
-    <div class="flex items-center gap-6 mb-2">
+    <div class="flex items-center gap-4 md:gap-6 mb-2">
       <button 
         type="button" 
         aria-label="Karışık Çal" 
@@ -174,7 +184,7 @@
         aria-label="Önceki Şarkı" 
         onclick={oncekiSarki} 
         disabled={!playerState.aktifSarki}
-        class="text-[var(--text-main)] hover:scale-110 transition-transform active:scale-95 disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed"
+        class="text-[var(--text-main)] hover:scale-110 transition-transform active:scale-95 disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed shrink-0"
       >
         <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
       </button>
@@ -184,7 +194,7 @@
         onclick={oynatDuraklatToggle} 
         aria-label={playerState.suAnOynuyorMu ? "Duraklat" : "Oynat"}
         disabled={!playerState.aktifSarki}
-        class="w-10 h-10 lg:w-12 lg:h-12 bg-[var(--text-main)] text-[var(--bg-main)] rounded-full flex items-center justify-center hover:scale-105 transition-all shadow-[0_5px_15px_rgba(0,0,0,0.3)] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed"
+        class="w-10 h-10 lg:w-12 lg:h-12 shrink-0 bg-[var(--text-main)] text-[var(--bg-main)] rounded-full flex items-center justify-center hover:scale-105 transition-all shadow-[0_5px_15px_rgba(0,0,0,0.3)] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed"
       >
         {#if playerState.suAnOynuyorMu} 
           <svg class="w-5 h-5 lg:w-6 lg:h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
@@ -198,23 +208,41 @@
         aria-label="Sonraki Şarkı" 
         onclick={sonrakiSarki} 
         disabled={!playerState.aktifSarki}
-        class="text-[var(--text-main)] hover:scale-110 transition-transform active:scale-95 disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed"
+        class="text-[var(--text-main)] hover:scale-110 transition-transform active:scale-95 disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed shrink-0"
       >
         <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
       </button>
 
       <button 
         type="button" 
-        aria-label="Tekrarla" 
+        aria-label="Tekrar Modu" 
+        onclick={toggleTekrarModu}
         disabled={!playerState.aktifSarki}
-        class="hidden sm:block text-[var(--text-dim)] hover:text-[var(--accent)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        class="hidden sm:block transition-all disabled:opacity-30 disabled:cursor-not-allowed 
+               {playerState.tekrarModu !== 'kapali' ? 'text-[var(--accent)] drop-shadow-[0_0_5px_var(--accent-glow)]' : 'text-[var(--text-dim)] hover:text-[var(--text-main)]'}"
+        title={playerState.tekrarModu === 'tek_sarki' ? "Şarkıyı Tekrarla" : playerState.tekrarModu === 'liste' ? "Listeyi Tekrarla" : "Tekrar Kapalı"}
       >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path></svg>
+        {#if playerState.tekrarModu === 'tek_sarki'}
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <polyline points="17 1 21 5 17 9"></polyline>
+            <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+            <polyline points="7 23 3 19 7 15"></polyline>
+            <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+            <path d="M11 10h1v4"></path>
+          </svg>
+        {:else}
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <polyline points="17 1 21 5 17 9"></polyline>
+            <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+            <polyline points="7 23 3 19 7 15"></polyline>
+            <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+          </svg>
+        {/if}
       </button>
     </div>
     
     <div class="hidden sm:flex items-center gap-3 w-full text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-widest">
-      <span class="w-10 text-right">{formatZaman(playerState.suAnkiZaman)}</span>
+      <span class="w-10 text-right shrink-0">{formatZaman(playerState.suAnkiZaman)}</span>
       <div 
         bind:this={zamanCubuguRef}
         role="slider" 
@@ -237,11 +265,11 @@
           <div class="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
         </div>
       </div>
-      <span class="w-10">{formatZaman(playerState.toplamZaman)}</span>
+      <span class="w-10 shrink-0">{formatZaman(playerState.toplamZaman)}</span>
     </div>
   </div>
 
-  <div class="flex items-center justify-end gap-4 w-1/3 text-[var(--text-dim)]">
+  <div class="flex items-center justify-end gap-4 w-1/3 text-[var(--text-dim)] min-w-0">
     <div class="hidden md:flex items-center gap-3 group">
       
       <button 

@@ -56,6 +56,11 @@
             <span class="hidden lg:block uppercase tracking-wider text-[10px] lg:text-[11px]">Ana Sayfa</span>
         </a>
 
+        <a href="/discover" class="flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all {aktifYol === '/discover' ? 'bg-[var(--accent)]/10 text-[var(--accent)] shadow-sm' : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card)]'}">
+            <svg class="w-6 h-6 lg:w-5 lg:h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path><line x1="2" y1="12" x2="22" y2="12"></line></svg>
+            <span class="hidden lg:block uppercase tracking-wider text-[10px] lg:text-[11px]">Ağ Tarayıcısı</span>
+        </a>
+
         <a href="/library" class="flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all {aktifYol === '/library' ? 'bg-[var(--accent)]/10 text-[var(--accent)] shadow-sm' : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card)]'}">
             <svg class="w-6 h-6 lg:w-5 lg:h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
             <span class="hidden lg:block uppercase tracking-wider text-[10px] lg:text-[11px]">Kütüphane</span>
@@ -64,11 +69,6 @@
         <a href="/search" class="flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all {aktifYol === '/search' ? 'bg-[var(--accent)]/10 text-[var(--accent)] shadow-sm' : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card)]'}">
             <svg class="w-6 h-6 lg:w-5 lg:h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> 
             <span class="hidden lg:block uppercase tracking-wider text-[10px] lg:text-[11px]">Ara</span>
-        </a>
-
-        <a href="/discover" class="flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all {aktifYol === '/discover' ? 'bg-[var(--accent)]/10 text-[var(--accent)] shadow-sm' : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card)]'}">
-            <svg class="w-6 h-6 lg:w-5 lg:h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path><line x1="2" y1="12" x2="22" y2="12"></line></svg>
-            <span class="hidden lg:block uppercase tracking-wider text-[10px] lg:text-[11px]">Ağ Tarayıcısı</span>
         </a>
 
         <a href="/favorites" class="flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all {aktifYol === '/favorites' ? 'bg-[var(--accent)]/10 text-[var(--accent)] shadow-sm' : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card)]'}">

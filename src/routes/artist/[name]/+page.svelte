@@ -4,8 +4,15 @@
   import { page } from '$app/state';
   import FavoriteButton from '$lib/FavoriteButton.svelte';
   import SongStats from '$lib/SongStats.svelte';
-  import { playerState, sarkiCal, initializePlayer, sarkiSil, type Sarki } from '../../../store.svelte';
-  import { fade, fly, scale } from 'svelte/transition';
+  import { 
+      playerState, 
+      sarkiCal, 
+      initializePlayer, 
+      sarkiSil, 
+      sarkiPlaylisteEkle,
+      type Sarki 
+  } from '../../../store.svelte';
+  import { fade, fly } from 'svelte/transition';
 
   onMount(async () => {
     if (playerState.sarkiListesi.length === 0) {
@@ -46,11 +53,24 @@
     if (confirm(mesaj)) {
         try {
             await sarkiSil(sarki);
-            console.log(`${sarki.isim} başarıyla silindi.`);
         } catch (hata) {
             alert("Silme işlemi sırasında bir hata oluştu.");
         }
     }
+  }
+
+  async function handlePlaylistEkle(sarkiId: string, event: Event) {
+    const select = event.target as HTMLSelectElement;
+    if (select.value) {
+        await sarkiPlaylisteEkle(sarkiId, select.value);
+        select.value = ""; 
+    }
+  }
+
+  function editModaliAc(sarki: Sarki, event: Event) {
+      event.stopPropagation();
+      playerState.duzenlenecekSarki = sarki;
+      playerState.isEditModalOpen = true;
   }
 </script>
 
@@ -81,7 +101,7 @@
           <span class="text-[10px] lg:text-xs font-black tracking-[0.2em] uppercase">Onaylanmış Sanatçı</span>
         </div>
         
-        <h1 class="text-5xl lg:text-7xl font-black italic tracking-tighter uppercase mb-6 leading-none">
+        <h1 class="text-5xl lg:text-7xl font-black italic tracking-tighter uppercase mb-6 leading-none truncate w-full">
           {sanatciAdi}
         </h1>
         
@@ -145,11 +165,28 @@
               <SongStats {sarki} />
             </div>
 
-            <div class="flex items-center gap-3 px-2 shrink-0" 
+            <div class="flex items-center justify-end gap-2 px-2 shrink-0 w-48 sm:w-64" 
                  role="presentation"
                  onclick={(e) => e.stopPropagation()} 
                  onkeydown={(e) => e.stopPropagation()}>
                  
+              <select aria-label="Listeye Ekle" onchange={(e) => handlePlaylistEkle(sarki.id, e)} class="bg-[var(--bg-surface)] text-[9px] text-[var(--text-dim)] rounded-lg px-1 py-1 outline-none border border-[var(--border)] w-16 focus:border-[var(--accent)] opacity-0 group-hover:opacity-100 hidden sm:block transition-all cursor-pointer font-bold">
+                <option value="">➕</option>
+                {#each playerState.playlistler as pl}
+                  {#if !pl.sarkilar.includes(sarki.id)}<option value={pl.id}>{pl.isim.toUpperCase()}</option>{/if}
+                {/each}
+              </select>
+
+              <button 
+                  type="button" 
+                  aria-label="Düzenle" 
+                  title="Bilgileri Düzenle" 
+                  onclick={(e) => editModaliAc(sarki, e)} 
+                  class="p-2 text-[var(--text-dim)]/60 hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 rounded-lg transition-all opacity-0 group-hover:opacity-100 hidden sm:block"
+              >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+              </button>
+
               <FavoriteButton sarkiId={sarki.id} />
               
               <button 
@@ -157,7 +194,7 @@
                   aria-label="Kütüphaneden Sil" 
                   title="Kalıcı Olarak Sil" 
                   onclick={(e) => handleSarkiSil(sarki, e)} 
-                  class="text-[var(--text-dim)]/30 hover:text-red-500 transition-all p-1 opacity-0 group-hover:opacity-100"
+                  class="text-[var(--text-dim)]/30 hover:text-red-500 transition-all p-2 opacity-0 group-hover:opacity-100"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
               </button>
@@ -172,25 +209,21 @@
       <div class="grid grid-cols-2 lg:grid-cols-1 gap-6">
         {#each albumler as album}
           {@const albumKapak = sanatciSarkilari.find(s => s.album === album)?.kapak_yolu}
-          <button 
-            type="button"
-            class="flex flex-col lg:flex-row items-center lg:items-start gap-4 group text-left outline-none border-none bg-transparent p-0 w-full"
-            aria-label="{album} albüm detayları"
-          >
-            <div class="w-full lg:w-20 aspect-square bg-[var(--bg-card)] rounded-2xl overflow-hidden relative border border-[var(--border)] group-hover:border-[var(--accent)]/50 transition-all shadow-lg shrink-0">
+          <div class="flex flex-col lg:flex-row items-center lg:items-start gap-4 group text-left w-full cursor-default">
+            <div class="w-full lg:w-20 aspect-square bg-[var(--bg-card)] rounded-2xl overflow-hidden relative border border-[var(--border)] transition-all shadow-lg shrink-0">
               {#if albumKapak}
-                <img src={convertFileSrc(albumKapak)} alt={album} class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                <img src={convertFileSrc(albumKapak)} alt={album} class="w-full h-full object-cover opacity-80" />
               {:else}
                 <div class="w-full h-full flex items-center justify-center text-2xl opacity-10">💿</div>
               {/if}
             </div>
-            <div class="flex flex-col min-w-0 py-1">
-                <span class="text-[11px] font-black text-[var(--text-main)] truncate w-full uppercase tracking-tighter mb-1 group-hover:text-[var(--accent)] transition-colors">{album}</span>
+            <div class="flex flex-col min-w-0 py-1 items-center lg:items-start">
+                <span class="text-[11px] font-black text-[var(--text-main)] truncate w-full uppercase tracking-tighter mb-1 text-center lg:text-left">{album}</span>
                 <span class="text-[9px] text-[var(--text-dim)] font-bold uppercase tracking-widest">
-                  {sanatciSarkilari.filter(s => s.album === album).length} Parça Kayıtlı
+                  {sanatciSarkilari.filter(s => s.album === album).length} Parça
                 </span>
             </div>
-          </button>
+          </div>
         {/each}
       </div>
     </div>

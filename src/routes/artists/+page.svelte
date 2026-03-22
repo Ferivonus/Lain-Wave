@@ -2,12 +2,16 @@
   import { onMount } from 'svelte';
   import { convertFileSrc } from '@tauri-apps/api/core';
   import { fly, fade } from 'svelte/transition';
-  import { playerState, initializePlayer } from '../../store.svelte';
+  import { playerState, initializePlayer, sarkiCal } from '../../store.svelte';
+
+  // Kütüphanenin yüklenip yüklenmediğini takip etmek için state ekledik
+  let yukleniyor = $state(playerState.sarkiListesi.length === 0);
 
   onMount(async () => {
     if (playerState.sarkiListesi.length === 0) {
       await initializePlayer();
     }
+    yukleniyor = false; // Yükleme bitti
   });
 
   let sanatciListesi = $derived.by(() => {
@@ -29,6 +33,18 @@
 
     return Array.from(artistMap.values()).sort((a, b) => a.isim.localeCompare(b.isim));
   });
+
+  // Oynat butonuna basıldığında çalışacak fonksiyon
+  function sanatciyiCal(isim: string, event: Event) {
+    event.preventDefault(); // Sayfa yönlendirmesini (<a> etiketini) durdur
+    event.stopPropagation(); // Tıklamanın üst elementlere yayılmasını engelle
+    
+    // Sanatçının şarkılarını bul ve ilkini çal
+    const sanatcininSarkilari = playerState.sarkiListesi.filter(s => (s.sarkici || "Bilinmeyen Sanatçı") === isim);
+    if (sanatcininSarkilari.length > 0) {
+        sarkiCal(sanatcininSarkilari[0]);
+    }
+  }
 </script>
 
 <div class="p-8 lg:p-12 w-full min-h-full pb-32 flex flex-col relative min-w-0 bg-transparent text-[var(--text-main)] transition-colors duration-500 overflow-y-auto custom-scrollbar">
@@ -43,10 +59,16 @@
     <div class="h-1 w-16 bg-[var(--accent)] mt-5 rounded-full"></div>
   </header>
 
-  {#if sanatciListesi.length === 0}
+  {#if yukleniyor}
     <div class="flex-1 flex flex-col items-center justify-center opacity-30 py-20" in:fade>
       <div class="w-20 h-20 border-2 border-t-[var(--accent)] border-[var(--border)] rounded-full animate-spin mb-6"></div>
       <p class="text-xl font-bold uppercase tracking-[0.2em]">Veri Tabanı taranıyor...</p>
+    </div>
+  {:else if sanatciListesi.length === 0}
+    <div class="flex-1 flex flex-col items-center justify-center opacity-50 py-20 text-center" in:fade>
+      <div class="text-6xl mb-6 grayscale">🎤</div>
+      <p class="text-xl font-bold uppercase tracking-[0.2em] mb-2">Sinyal Yok</p>
+      <p class="text-sm font-medium tracking-widest uppercase text-[var(--text-dim)]">Kütüphanende henüz hiç sanatçı bulunmuyor.</p>
     </div>
   {:else}
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 lg:gap-8">
@@ -71,13 +93,18 @@
             
             <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             
-            <div class="absolute bottom-2 right-2 lg:bottom-4 lg:right-4 z-20 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-out">
+            <button 
+                type="button"
+                onclick={(e) => sanatciyiCal(sanatci.isim, e)}
+                class="absolute bottom-2 right-2 lg:bottom-4 lg:right-4 z-20 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-out border-none outline-none bg-transparent p-0"
+                aria-label="{sanatci.isim} çal"
+            >
                 <div class="w-10 h-10 lg:w-12 lg:h-12 bg-[var(--accent)] text-white rounded-full flex items-center justify-center shadow-[0_8px_20px_rgba(0,0,0,0.4)] hover:scale-110 active:scale-95 transition-transform">
                     <svg class="w-5 h-5 lg:w-6 lg:h-6 fill-current ml-0.5" viewBox="0 0 24 24">
                         <path d="M8 5v14l11-7z"/>
                     </svg>
                 </div>
-            </div>
+            </button>
           </div>
 
           <div class="min-w-0 w-full px-1">

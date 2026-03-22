@@ -3,8 +3,15 @@
   import { convertFileSrc } from '@tauri-apps/api/core'; 
   import FavoriteButton from '$lib/FavoriteButton.svelte';
   import SongStats from '$lib/SongStats.svelte';
-  import { playerState, sarkiCal, initializePlayer, sarkiSil, type Sarki } from '../../store.svelte';
-  import { fade, fly } from 'svelte/transition';
+  import { 
+      playerState, 
+      sarkiCal, 
+      initializePlayer, 
+      sarkiSil, 
+      sarkiPlaylisteEkle, 
+      type Sarki 
+  } from '../../store.svelte';
+  import { fade, fly, scale } from 'svelte/transition';
 
   let favoriSarkilar = $derived(
     playerState.sarkiListesi.filter(sarki => playerState.favoriler.includes(sarki.id))
@@ -35,6 +42,20 @@
             alert("Silme işlemi sırasında bir hata oluştu.");
         }
     }
+  }
+
+  async function handlePlaylistEkle(sarkiId: string, event: Event) {
+    const select = event.target as HTMLSelectElement;
+    if (select.value) {
+        await sarkiPlaylisteEkle(sarkiId, select.value);
+        select.value = ""; 
+    }
+  }
+
+  function editModaliAc(sarki: Sarki, event: Event) {
+      event.stopPropagation();
+      playerState.duzenlenecekSarki = sarki;
+      playerState.isEditModalOpen = true;
   }
 </script>
 
@@ -84,23 +105,23 @@
       </p>
     </div>
   {:else}
-    <div class="flex text-[10px] font-black text-[var(--text-dim)] border-b border-[var(--border)] pb-3 mb-4 px-4 tracking-[0.2em] uppercase">
+    <div class="flex items-center text-[10px] font-black text-[var(--text-dim)] border-b border-[var(--border)] pb-3 mb-4 px-4 tracking-[0.2em] uppercase shrink-0">
       <span class="w-10 text-center shrink-0">#</span>
       <span class="flex-1 min-w-0 ml-4">BAŞLIK</span>
-      <span class="w-48 shrink-0 hidden md:block">İSTATİSTİK</span> 
-      <span class="w-1/4 shrink-0 pl-6 hidden lg:block">ALBÜM</span>
-      <span class="w-24 text-right pr-4 shrink-0">İŞLEMLER</span>
+      <span class="w-40 lg:w-56 xl:w-64 shrink-0 hidden md:block text-right pr-4">İSTATİSTİK</span> 
+      <span class="w-32 xl:w-48 shrink-0 hidden lg:block pl-4">ALBÜM</span>
+      <span class="w-48 sm:w-56 text-right pr-2 shrink-0">İŞLEMLER</span>
     </div>
 
-    <div class="flex flex-col gap-1.5">
+    <div class="flex flex-col gap-2">
       {#each favoriSarkilar as sarki, index}
         <div 
             role="button" tabindex="0" 
             onclick={() => sarkiCal(sarki)} 
             onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && sarkiCal(sarki)} 
             aria-label="{sarki.isim} çal"
-            class="flex items-center text-sm p-2.5 rounded-2xl hover:bg-[var(--bg-card-hover)] transition-all duration-300 cursor-pointer group 
-            {playerState.aktifSarki?.id === sarki.id ? 'bg-[var(--accent)]/10 shadow-inner border border-[var(--accent)]/20' : 'border border-transparent'}"
+            class="flex items-center text-sm p-3 rounded-2xl hover:bg-[var(--bg-card-hover)] transition-all duration-300 cursor-pointer group border
+            {playerState.aktifSarki?.id === sarki.id ? 'bg-[var(--accent)]/10 shadow-inner border-[var(--accent)]/20' : 'border-transparent'}"
         >
           
           <div class="w-10 text-center shrink-0">
@@ -117,39 +138,56 @@
           </div>
           
           <div class="flex-1 flex items-center gap-4 min-w-0 ml-4">
-            <div class="w-11 h-11 bg-[var(--bg-card)] rounded-lg overflow-hidden shrink-0 shadow-md border border-[var(--border)]">
+            <div class="w-12 h-12 bg-[var(--bg-card)] rounded-xl overflow-hidden shrink-0 shadow-md border border-[var(--border)]">
               {#if sarki.kapak_yolu}
                 <img src={convertFileSrc(sarki.kapak_yolu)} alt="" class="w-full h-full object-cover transition-transform group-hover:scale-110" />
               {:else}
-                <div class="w-full h-full flex items-center justify-center text-[var(--text-dim)]/20 bg-[var(--bg-surface)]">🎵</div>
+                <div class="w-full h-full flex items-center justify-center text-[var(--text-dim)]/20 bg-[var(--bg-surface)] font-black text-[10px] italic">LW</div>
               {/if}
             </div>
             
-            <div class="flex flex-col min-w-0 pr-2">
-              <span class="font-bold text-sm truncate {playerState.aktifSarki?.id === sarki.id ? 'text-[var(--accent)]' : 'text-[var(--text-main)]'}">
+            <div class="flex flex-col min-w-0 flex-1 pr-4">
+              <span class="font-bold text-sm lg:text-base truncate {playerState.aktifSarki?.id === sarki.id ? 'text-pink-500' : 'text-[var(--text-main)]'}">
                 {sarki.isim}
               </span>
               <a href="/artist/{encodeURIComponent(sarki.sarkici)}" 
-                 class="text-[11px] text-[var(--text-dim)] truncate font-bold uppercase tracking-tight hover:text-pink-500 transition-colors opacity-70" 
+                 class="text-[11px] text-[var(--text-dim)] truncate font-bold uppercase tracking-tight hover:text-pink-500 transition-colors opacity-80 inline-block max-w-max mt-0.5" 
                  onclick={(e) => e.stopPropagation()}>
                 {sarki.sarkici}
               </a>
             </div>
           </div>
 
-          <div class="w-48 shrink-0 hidden md:flex items-center">
+          <div class="w-40 lg:w-56 xl:w-64 shrink-0 hidden md:flex items-center justify-end pr-4">
             <SongStats {sarki} />
           </div>
           
-          <span class="w-1/4 text-[var(--text-dim)] truncate font-black text-[10px] uppercase tracking-tighter pl-6 shrink-0 hidden lg:block opacity-60">
+          <div class="w-32 xl:w-48 text-[var(--text-dim)] truncate font-black text-[10px] uppercase tracking-tighter pl-4 shrink-0 hidden lg:block opacity-60">
             {sarki.album || "Single"}
-          </span>
+          </div>
           
-          <div class="w-24 flex items-center justify-end gap-3 pr-2 shrink-0" 
+          <div class="w-48 sm:w-56 flex items-center justify-end gap-2 pr-2 shrink-0" 
                onclick={(e) => e.stopPropagation()} 
                onkeydown={(e) => e.stopPropagation()} 
                role="presentation">
             
+            <select aria-label="Listeye Ekle" onchange={(e) => handlePlaylistEkle(sarki.id, e)} class="bg-[var(--bg-surface)] text-[9px] text-[var(--text-dim)] rounded-lg px-2 py-1.5 outline-none border border-[var(--border)] w-20 focus:border-pink-500 transition-all cursor-pointer font-bold uppercase hidden sm:block">
+              <option value="">➕ LİSTE</option>
+              {#each playerState.playlistler as pl}
+                {#if !pl.sarkilar.includes(sarki.id)}<option value={pl.id}>{pl.isim.toUpperCase()}</option>{/if}
+              {/each}
+            </select>
+
+            <button 
+                type="button" 
+                aria-label="Düzenle" 
+                title="Bilgileri Düzenle" 
+                onclick={(e) => editModaliAc(sarki, e)} 
+                class="p-2 text-[var(--text-dim)]/60 hover:text-pink-500 hover:bg-pink-500/10 rounded-lg transition-all hidden sm:block"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+            </button>
+
             <FavoriteButton sarkiId={sarki.id} />
             
             <button 
@@ -157,7 +195,7 @@
                 aria-label="Kütüphaneden Sil" 
                 title="Kalıcı Olarak Sil" 
                 onclick={(e) => handleSarkiSil(sarki, e)} 
-                class="text-[var(--text-dim)]/30 hover:text-red-500 transition-all p-1 opacity-0 group-hover:opacity-100"
+                class="text-[var(--text-dim)]/40 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all p-2"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
             </button>

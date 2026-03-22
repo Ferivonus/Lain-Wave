@@ -30,7 +30,7 @@
     <button 
         type="button" 
         onclick={duzenleModaliAc}
-        class="opacity-0 group-hover:opacity-100 p-2 rounded-lg hover:bg-[var(--accent)]/10 hover:text-[var(--accent)] transition-all shrink-0"
+        class="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] p-2 rounded-lg hover:bg-[var(--accent)]/10 hover:text-[var(--accent)] transition-all shrink-0"
         aria-label="Verileri Düzenle"
         title="Verileri Düzenle"
     >

@@ -1,10 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { convertFileSrc } from '@tauri-apps/api/core';
+  import { open } from '@tauri-apps/plugin-dialog';
   import { fly, fade, scale } from 'svelte/transition';
   import SongStats from '$lib/SongStats.svelte';
   import FavoriteButton from '$lib/FavoriteButton.svelte';
-  import { playerState, sarkiCal, initializePlayer, sarkiSil, sarkiPlaylisteEkle, type Sarki } from '../../store.svelte';
+  import { playerState, sarkiCal, initializePlayer, sarkiSil, sarkiPlaylisteEkle, youtubeIndirAPI, sarkiKaydetAPI, type Sarki } from '../../store.svelte';
 
   onMount(async () => {
     if (playerState.sarkiListesi.length === 0) {
@@ -19,6 +20,15 @@
   let sonPodcastler = $derived(
     [...podcastListesi].reverse().slice(0, 3)
   );
+
+  let isPodcastModalOpen = $state(false);
+  let podcastEklemeModu = $state<'url' | 'yerel'>('url');
+  let pcUrl = $state('');
+  let pcIsim = $state('');
+  let pcSunucu = $state('');
+  let pcDosyaYolu = $state('');
+  let islemDurumu = $state('');
+  let islemAktif = $state(false);
 
   function formatTarih() {
     return new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -49,16 +59,89 @@
         selectElement.value = ""; 
     }
   }
+
+  async function dosyaSec() {
+    try {
+        const secilen = await open({
+            multiple: false,
+            filters: [{ name: 'Ses Dosyası', extensions: ['mp3', 'wav', 'flac', 'm4a', 'ogg'] }]
+        });
+        if (secilen && typeof secilen === 'string') {
+            pcDosyaYolu = secilen;
+        }
+    } catch (e) {}
+  }
+
+  async function yerelPodcastKaydet() {
+    if (!pcDosyaYolu || !pcIsim.trim() || !pcSunucu.trim()) {
+        islemDurumu = "Lütfen tüm alanları eksiksiz doldurun.";
+        setTimeout(() => islemDurumu = "", 3000);
+        return;
+    }
+    
+    islemAktif = true;
+    islemDurumu = "Yerel veri işleniyor...";
+    
+    try {
+        await sarkiKaydetAPI({
+            isim: pcIsim.trim(),
+            sarkici: pcSunucu.trim(),
+            album: "Özel Oturum",
+            yol: pcDosyaYolu,
+            manuel_tarz: "Podcast",
+            yil: new Date().getFullYear(),
+            notlar: ""
+        });
+        
+        islemDurumu = "Oturum başarıyla arşive eklendi!";
+        setTimeout(() => {
+            islemDurumu = "";
+            isPodcastModalOpen = false;
+            pcIsim = "";
+            pcSunucu = "";
+            pcDosyaYolu = "";
+        }, 1500);
+    } catch (e) {
+        islemDurumu = "Kayıt hatası oluştu.";
+    } finally {
+        islemAktif = false;
+    }
+  }
+
+  async function urlPodcastIndir() {
+    if (!pcUrl.trim()) {
+        islemDurumu = "Lütfen geçerli bir bağlantı adresi girin.";
+        setTimeout(() => islemDurumu = "", 3000);
+        return;
+    }
+
+    islemAktif = true;
+    islemDurumu = "Ağ üzerinden veri çekiliyor, lütfen bekleyin...";
+
+    try {
+        await youtubeIndirAPI(pcUrl.trim(), "Podcast");
+        islemDurumu = "Oturum başarıyla indirildi ve sisteme işlendi!";
+        setTimeout(() => {
+            islemDurumu = "";
+            isPodcastModalOpen = false;
+            pcUrl = "";
+        }, 1500);
+    } catch (e) {
+        islemDurumu = "Bağlantı kopukluğu veya veri hatası.";
+    } finally {
+        islemAktif = false;
+    }
+  }
 </script>
 
 <div class="p-8 lg:p-12 w-full min-h-full pb-32 flex flex-col relative min-w-0 bg-transparent text-[var(--text-main)] transition-colors duration-500 overflow-y-auto custom-scrollbar">
   
-  <header class="mb-12 relative group" in:fly={{ y: -20, duration: 600 }}>
+  <header class="mb-12 relative group flex flex-col md:flex-row md:items-end justify-between gap-6" in:fly={{ y: -20, duration: 600 }}>
     <div class="absolute -inset-4 bg-gradient-to-r from-[var(--accent)]/10 to-transparent blur-2xl opacity-50 rounded-3xl -z-10"></div>
     
     <div class="flex items-center gap-6">
       <div class="w-16 h-16 lg:w-20 lg:h-20 bg-[var(--accent)] rounded-2xl flex items-center justify-center shadow-2xl rotate-3 group-hover:rotate-0 transition-all duration-500">
-        <svg class="w-8 h-8 lg:w-10 lg:h-10 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
+        <svg class="w-8 h-8 lg:w-10 lg:h-10 text-[var(--bg-main)]" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
           <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
           <line x1="12" y1="19" x2="12" y2="23"></line>
@@ -73,6 +156,15 @@
         </p>
       </div>
     </div>
+
+    <button 
+        type="button" 
+        onclick={() => isPodcastModalOpen = true}
+        class="flex items-center justify-center gap-2 bg-[var(--bg-surface)] hover:bg-[var(--accent)] border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-main)] px-8 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:shadow-[0_0_20px_var(--accent-glow)] transition-all active:scale-95 shrink-0"
+    >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Yeni Oturum Ekle
+    </button>
   </header>
 
   {#if podcastListesi.length === 0}
@@ -82,7 +174,7 @@
       </div>
       <h3 class="text-xl font-bold uppercase italic mb-2">Henüz Kayıt Bulunamadı</h3>
       <p class="text-[var(--text-dim)] max-w-sm mx-auto text-sm leading-relaxed font-medium">
-        Kütüphanene eklediğin dosyalardan tarzı <span class="text-[var(--accent)] font-bold">"Podcast"</span> olarak belirlenenler burada otomatik olarak listelenir.
+        "Yeni Oturum Ekle" butonunu kullanarak bağlantı adreslerinden veya bilgisayarındaki dosyalardan arşivine yayın ekleyebilirsin.
       </p>
     </div>
   {:else}
@@ -108,7 +200,7 @@
             <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-500"></div>
 
             <div class="absolute inset-0 flex items-center justify-center">
-              <div class="w-14 h-14 bg-[var(--accent)] text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 scale-50 group-hover:scale-110 transition-all duration-300 shadow-[0_8px_20px_rgba(0,0,0,0.4)]">
+              <div class="w-14 h-14 bg-[var(--accent)] text-[var(--bg-main)] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 scale-50 group-hover:scale-110 transition-all duration-300 shadow-[0_8px_20px_rgba(0,0,0,0.4)]">
                 <svg class="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
               </div>
             </div>
@@ -210,6 +302,133 @@
     </div>
   {/if}
 </div>
+
+{#if isPodcastModalOpen}
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" in:fade={{ duration: 200 }} out:fade={{ duration: 200 }}>
+        <div class="bg-[var(--bg-main)] border border-[var(--border)] rounded-2xl w-full max-w-lg shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden" in:scale={{ duration: 300, start: 0.95 }} out:scale={{ duration: 200, start: 0.95 }}>
+            
+            <div class="flex items-center justify-between p-6 border-b border-[var(--border)] bg-[var(--bg-surface)]">
+                <div>
+                    <h2 class="text-xl font-black uppercase italic tracking-tight text-[var(--text-main)]">Yeni Oturum Ekle</h2>
+                    <p class="text-[10px] text-[var(--text-dim)] font-bold uppercase tracking-widest mt-1">Sisteme podcast verisi tanımla</p>
+                </div>
+              <button 
+                  type="button" 
+                  aria-label="Kapat"
+                  onclick={() => { if(!islemAktif) isPodcastModalOpen = false; }}
+                  class="p-2 text-[var(--text-dim)] hover:text-white hover:bg-white/10 rounded-lg transition-colors disabled:opacity-30"
+                  disabled={islemAktif}
+              >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            </div>
+
+            <div class="p-6">
+                <div class="flex bg-[var(--bg-surface)] rounded-xl p-1 mb-8 border border-[var(--border)]">
+                    <button 
+                        type="button" 
+                        onclick={() => { if(!islemAktif) podcastEklemeModu = 'url'; }}
+                        class="flex-1 py-2.5 text-xs font-black uppercase tracking-widest rounded-lg transition-all {podcastEklemeModu === 'url' ? 'bg-[var(--accent)] text-[var(--bg-main)] shadow-md' : 'text-[var(--text-dim)] hover:text-[var(--text-main)]'}"
+                        disabled={islemAktif}
+                    >
+                        Ağ Bağlantısı
+                    </button>
+                    <button 
+                        type="button" 
+                        onclick={() => { if(!islemAktif) podcastEklemeModu = 'yerel'; }}
+                        class="flex-1 py-2.5 text-xs font-black uppercase tracking-widest rounded-lg transition-all {podcastEklemeModu === 'yerel' ? 'bg-[var(--accent)] text-[var(--bg-main)] shadow-md' : 'text-[var(--text-dim)] hover:text-[var(--text-main)]'}"
+                        disabled={islemAktif}
+                    >
+                        Yerel Dosya
+                    </button>
+                </div>
+
+                {#if podcastEklemeModu === 'url'}
+                    <div class="flex flex-col gap-4" in:fade={{ duration: 150 }}>
+                        <div class="space-y-1.5">
+                            <label for="url-input" class="text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-widest ml-1">İçerik Bağlantısı (URL)</label>
+                            <input 
+                                id="url-input"
+                                type="text" 
+                                bind:value={pcUrl} 
+                                disabled={islemAktif}
+                                placeholder="YouTube veya yayın adresi..." 
+                                class="w-full bg-[var(--bg-surface)] text-[var(--text-main)] px-4 py-3 rounded-xl border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all text-sm font-medium disabled:opacity-50"
+                            />
+                        </div>
+                        <button 
+                            type="button" 
+                            onclick={urlPodcastIndir}
+                            disabled={islemAktif}
+                            class="w-full mt-2 bg-[var(--accent)] text-[var(--bg-main)] font-black py-4 rounded-xl hover:shadow-[0_0_15px_var(--accent-glow)] transition-all active:scale-95 uppercase tracking-widest text-[10px] disabled:opacity-50 disabled:active:scale-100 disabled:hover:shadow-none"
+                        >
+                            {islemAktif ? 'İşleniyor...' : 'Ağdan Çek ve Ekle'}
+                        </button>
+                    </div>
+                {:else}
+                    <div class="flex flex-col gap-4" in:fade={{ duration: 150 }}>
+                  <div class="space-y-1.5">
+                      <span class="block text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-widest ml-1">Ses Dosyası</span>
+                      <button 
+                          type="button" 
+                          onclick={dosyaSec}
+                          disabled={islemAktif}
+                          class="w-full flex items-center justify-between px-4 py-3 bg-[var(--bg-surface)] border border-[var(--border)] hover:border-[var(--accent)]/50 rounded-xl transition-all group disabled:opacity-50"
+                      >
+                          <span class="text-sm font-medium truncate {pcDosyaYolu ? 'text-[var(--accent)]' : 'text-[var(--text-dim)]'}">
+                              {pcDosyaYolu ? pcDosyaYolu.split('\\').pop()?.split('/').pop() : 'Bilgisayardan dosya seç...'}
+                          </span>
+                          <svg class="w-4 h-4 text-[var(--text-dim)] group-hover:text-[var(--accent)]" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                      </button>
+                  </div>
+                        
+                        <div class="space-y-1.5">
+                            <label for="isim-input" class="text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-widest ml-1">Oturum Başlığı</label>
+                            <input 
+                                id="isim-input"
+                                type="text" 
+                                bind:value={pcIsim} 
+                                disabled={islemAktif}
+                                placeholder="Örn: Teknoloji Gündemi Bölüm 1" 
+                                class="w-full bg-[var(--bg-surface)] text-[var(--text-main)] px-4 py-3 rounded-xl border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all text-sm font-medium disabled:opacity-50"
+                            />
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label for="sunucu-input" class="text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-widest ml-1">Sunucu / Konuk</label>
+                            <input 
+                                id="sunucu-input"
+                                type="text" 
+                                bind:value={pcSunucu} 
+                                disabled={islemAktif}
+                                placeholder="Yayıncı isimleri..." 
+                                class="w-full bg-[var(--bg-surface)] text-[var(--text-main)] px-4 py-3 rounded-xl border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all text-sm font-medium disabled:opacity-50"
+                            />
+                        </div>
+
+                        <button 
+                            type="button" 
+                            onclick={yerelPodcastKaydet}
+                            disabled={islemAktif}
+                            class="w-full mt-2 bg-[var(--accent)] text-[var(--bg-main)] font-black py-4 rounded-xl hover:shadow-[0_0_15px_var(--accent-glow)] transition-all active:scale-95 uppercase tracking-widest text-[10px] disabled:opacity-50 disabled:active:scale-100 disabled:hover:shadow-none"
+                        >
+                            {islemAktif ? 'İşleniyor...' : 'Sisteme Kaydet'}
+                        </button>
+                    </div>
+                {/if}
+
+                {#if islemDurumu}
+                    <div class="mt-6 p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border)] flex items-center justify-center gap-3" in:fade>
+                        {#if islemAktif}
+                            <div class="w-4 h-4 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin"></div>
+                        {/if}
+                        <p class="text-[10px] font-black uppercase tracking-widest text-[var(--accent)] text-center">{islemDurumu}</p>
+                    </div>
+                {/if}
+            </div>
+        </div>
+    </div>
+{/if}
 
 <style>
   @keyframes bounce {

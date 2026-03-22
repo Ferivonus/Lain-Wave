@@ -3,6 +3,7 @@
     import { convertFileSrc } from '@tauri-apps/api/core';
     import { playerState, sarkiCal, initializePlayer } from '../store.svelte';
     import { fade, fly } from 'svelte/transition';
+    import FavoriteButton from '$lib/FavoriteButton.svelte';
 
     let saat = new Date().getHours();
     
@@ -36,18 +37,23 @@
             .slice(0, 6)
     );
 
-    let favoriSanatcilar = $derived(
-        Object.entries(
-            playerState.sarkiListesi.reduce((acc, sarki) => {
-                const sanatci = sarki.sarkici || "Bilinmeyen Sanatçı";
-                acc[sanatci] = (acc[sanatci] || 0) + (sarki.dinlenme_sayisi || 0);
-                return acc;
-            }, {} as Record<string, number>)
-        )
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 6)
-        .map(entry => ({ isim: entry[0], skor: entry[1] }))
-    );
+    let favoriSanatcilar = $derived.by(() => {
+        const sanatciMap = playerState.sarkiListesi.reduce((acc, sarki) => {
+            const sanatci = sarki.sarkici || "Bilinmeyen Sanatçı";
+            if (!acc[sanatci]) {
+                acc[sanatci] = { isim: sanatci, skor: 0, kapak: sarki.kapak_yolu };
+            }
+            acc[sanatci].skor += (sarki.dinlenme_sayisi || 0);
+            if (!acc[sanatci].kapak && sarki.kapak_yolu) {
+                acc[sanatci].kapak = sarki.kapak_yolu;
+            }
+            return acc;
+        }, {} as Record<string, {isim: string, skor: number, kapak: string | undefined}>);
+
+        return Object.values(sanatciMap)
+            .sort((a, b) => b.skor - a.skor)
+            .slice(0, 6);
+    });
 
     let yeniEklenenler = $derived(
         [...playerState.sarkiListesi].reverse().slice(0, 5)
@@ -117,10 +123,15 @@
                         <h2 class="text-4xl md:text-5xl lg:text-6xl font-black mb-3 truncate leading-none uppercase italic tracking-tighter drop-shadow-xl">{gununSarkisi.isim}</h2>
                         <p class="text-lg text-[var(--text-dim)] font-bold mb-8 uppercase tracking-widest">{gununSarkisi.sarkici}</p>
                         
-                        <button onclick={() => sarkiCal(gununSarkisi!)} class="bg-[var(--text-main)] text-[var(--bg-main)] hover:bg-[var(--accent)] hover:text-white w-fit mx-auto md:mx-0 px-10 py-4 rounded-full font-black shadow-2xl transition-all hover:scale-105 active:scale-95 flex items-center gap-3 uppercase tracking-[0.2em] text-[10px]">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                            Şimdi Dinle
-                        </button>
+                        <div class="flex items-center justify-center md:justify-start gap-4">
+                            <button onclick={() => sarkiCal(gununSarkisi!)} class="bg-[var(--text-main)] text-[var(--bg-main)] hover:bg-[var(--accent)] hover:text-white px-10 py-4 rounded-full font-black shadow-2xl transition-all hover:scale-105 active:scale-95 flex items-center gap-3 uppercase tracking-[0.2em] text-[10px]">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                Şimdi Dinle
+                            </button>
+                            <div class="bg-[var(--bg-surface)] p-2 rounded-full border border-[var(--border)]">
+                                <FavoriteButton sarkiId={gununSarkisi.id} />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -152,9 +163,12 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex flex-col px-4 min-w-0">
+                            <div class="flex flex-col px-4 min-w-0 flex-1">
                                 <span class="font-bold text-sm truncate group-hover:text-[var(--accent)] transition-colors leading-tight">{sarki.isim}</span>
                                 <span class="text-[var(--text-dim)] font-bold text-[9px] uppercase tracking-widest truncate opacity-70 mt-0.5">{sarki.sarkici}</span>
+                            </div>
+                            <div class="px-4 opacity-0 group-hover:opacity-100 transition-opacity" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()} role="presentation">
+                                <FavoriteButton sarkiId={sarki.id} />
                             </div>
                         </div>
                     {/each}
@@ -172,8 +186,12 @@
                     {#each favoriSanatcilar as sanatci}
                         <a href="/artist/{encodeURIComponent(sanatci.isim)}" class="flex flex-col items-center gap-4 group min-w-[130px] cursor-pointer">
                             <div class="w-32 h-32 rounded-full bg-[var(--bg-card)] border-2 border-[var(--border)] group-hover:border-[var(--accent-sec)] shadow-lg flex items-center justify-center overflow-hidden transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-[0_15px_30px_var(--accent-glow)] relative">
-                                <svg class="w-12 h-12 text-[var(--text-dim)]/30 group-hover:text-[var(--accent-sec)] transition-colors relative z-10" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                                <div class="absolute inset-0 bg-gradient-to-t from-[var(--bg-main)] to-transparent opacity-0 group-hover:opacity-50 transition-opacity"></div>
+                                {#if sanatci.kapak}
+                                    <img src={convertFileSrc(sanatci.kapak)} alt={sanatci.isim} class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                {:else}
+                                    <svg class="w-12 h-12 text-[var(--text-dim)]/30 group-hover:text-[var(--accent-sec)] transition-colors relative z-10" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                                {/if}
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             </div>
                             <span class="font-bold text-sm text-center truncate w-full group-hover:text-[var(--accent-sec)] transition-colors tracking-tight">{sanatci.isim}</span>
                         </a>
@@ -191,8 +209,12 @@
                             role="button" tabindex="0" 
                             onclick={() => sarkiCal(sarki)}
                             onkeydown={(e) => e.key === 'Enter' && sarkiCal(sarki)}
-                            class="bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border)] hover:border-[var(--accent)]/40 p-4 lg:p-5 rounded-2xl group transition-all duration-300 cursor-pointer shadow-lg flex flex-col active:scale-95"
+                            class="bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border)] hover:border-[var(--accent)]/40 p-4 lg:p-5 rounded-2xl group transition-all duration-300 cursor-pointer shadow-lg flex flex-col active:scale-95 relative"
                         >
+                            <div class="absolute top-6 right-6 z-20 opacity-0 group-hover:opacity-100 transition-opacity" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()} role="presentation">
+                                <FavoriteButton sarkiId={sarki.id} />
+                            </div>
+
                             <div class="w-full aspect-square bg-[var(--bg-surface)] rounded-xl mb-4 relative overflow-hidden shadow-inner border border-[var(--border)] group-hover:border-[var(--accent)]/30 transition-colors">
                                 {#if sarki.kapak_yolu}
                                     <img src={convertFileSrc(sarki.kapak_yolu)} alt="" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100" />
@@ -229,8 +251,12 @@
                             role="button" tabindex="0" 
                             onclick={() => sarkiCal(sarki)}
                             onkeydown={(e) => e.key === 'Enter' && sarkiCal(sarki)}
-                            class="bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border)] hover:border-[var(--accent-sec)]/40 p-4 lg:p-5 rounded-2xl group transition-all duration-300 cursor-pointer shadow-lg flex flex-col active:scale-95"
+                            class="bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border)] hover:border-[var(--accent-sec)]/40 p-4 lg:p-5 rounded-2xl group transition-all duration-300 cursor-pointer shadow-lg flex flex-col active:scale-95 relative"
                         >
+                            <div class="absolute top-6 right-6 z-20 opacity-0 group-hover:opacity-100 transition-opacity" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()} role="presentation">
+                                <FavoriteButton sarkiId={sarki.id} />
+                            </div>
+
                             <div class="w-full aspect-square bg-[var(--bg-surface)] rounded-xl mb-4 relative overflow-hidden shadow-inner border border-[var(--border)] group-hover:border-[var(--accent-sec)]/30 transition-colors">
                                 {#if sarki.kapak_yolu}
                                     <img src={convertFileSrc(sarki.kapak_yolu)} alt="" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100" />

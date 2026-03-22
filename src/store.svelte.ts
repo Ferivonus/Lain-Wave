@@ -1,4 +1,5 @@
 import { invoke, convertFileSrc } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 
 export type Sarki = { 
     id: string; 
@@ -29,6 +30,14 @@ export type Ayarlar = {
     tema: string;
 };
 
+export type YouTubeSonuc = {
+    title: string;
+    channel: string;
+    duration_string: string;
+    thumbnail: string;
+    webpage_url: string;
+};
+
 export const playerState = $state({
     aktifSarki: null as Sarki | null,
     suAnOynuyorMu: false,
@@ -46,7 +55,18 @@ export const playerState = $state({
     duzenlenecekSarki: null as Sarki | null,
     isCreatePlaylistModalOpen: false,
     username: "",
+
+    aramaSorgusu: "",
+    aramaYapiliyor: false,
+    aramaSonuclari: [] as YouTubeSonuc[],
+    indirmeMesaji: "",
+    gosterilenSayi: 5,
+    aktifIndirmeler: new Set<string>(),
+    topluIndirmeAktif: false,
+    tekrarModu: 'liste' as 'kapali' | 'liste' | 'tek_sarki',
 });
+
+const appStartTime = Math.floor(Date.now() / 1000);
 
 export async function discordGuncelle(durum: 'caliyor' | 'duraklatildi' | 'bosta' = 'caliyor') {
     try {
@@ -54,7 +74,8 @@ export async function discordGuncelle(durum: 'caliyor' | 'duraklatildi' | 'bosta
             await invoke('update_discord_status', {
                 detay: "Lain Wave Ağına Bağlı",
                 durum: "Kütüphanede geziniyor...",
-                toplamSaniye: 0 
+                startTimestamp: appStartTime,
+                endTimestamp: null
             });
             return;
         }
@@ -63,14 +84,22 @@ export async function discordGuncelle(durum: 'caliyor' | 'duraklatildi' | 'bosta
             await invoke('update_discord_status', {
                 detay: playerState.aktifSarki.isim,
                 durum: `⏸️ Duraklatıldı - ${playerState.aktifSarki.sarkici}`,
-                toplamSaniye: 0 
+                startTimestamp: null,
+                endTimestamp: null
             });
         } else {
-            const kalanSure = playerState.audioRef ? Math.floor((playerState.aktifSarki.sure || 0) - playerState.audioRef.currentTime) : 0;
+            const currentTime = playerState.audioRef ? playerState.audioRef.currentTime : 0;
+            const totalSure = playerState.aktifSarki.sure || 0;
+            const simdi = Math.floor(Date.now() / 1000);
+            
+            const sarkiBaslamaZamani = simdi - Math.floor(currentTime);
+            const sarkiBitisZamani = totalSure > 0 ? sarkiBaslamaZamani + totalSure : null;
+
             await invoke('update_discord_status', {
                 detay: playerState.aktifSarki.isim,
                 durum: `▶️ Çalıyor - ${playerState.aktifSarki.sarkici}`,
-                toplamSaniye: Math.max(0, kalanSure)
+                startTimestamp: sarkiBaslamaZamani,
+                endTimestamp: sarkiBitisZamani
             });
         }
     } catch (e) {
@@ -111,6 +140,20 @@ export async function sarkiCal(sarki: Sarki) {
     playerState.audioRef.src = convertFileSrc(sarki.yol);
     playerState.aktifSarki = sarki;
     playerState.suAnOynuyorMu = true;
+
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: sarki.isim,
+            artist: sarki.sarkici,
+            album: sarki.album,
+            artwork: sarki.kapak_yolu ? [{ src: convertFileSrc(sarki.kapak_yolu), sizes: '512x512' }] : []
+        });
+
+        navigator.mediaSession.setActionHandler('play', oynatDuraklatToggle);
+        navigator.mediaSession.setActionHandler('pause', oynatDuraklatToggle);
+        navigator.mediaSession.setActionHandler('previoustrack', oncekiSarki);
+        navigator.mediaSession.setActionHandler('nexttrack', sonrakiSarki);
+    }
     
     playerState.audioRef.play()
         .then(() => {
@@ -137,14 +180,31 @@ export async function oynatDuraklatToggle() {
 }
 
 export function sonrakiSarki() {
-    const { aktifSarki, sarkiListesi } = playerState;
+    const { aktifSarki, sarkiListesi, tekrarModu } = playerState;
     if (!aktifSarki || sarkiListesi.length === 0) return;
 
+    if (tekrarModu === 'tek_sarki') {
+        if (playerState.audioRef) {
+            playerState.audioRef.currentTime = 0;
+            playerState.audioRef.play().catch(() => {});
+            return;
+        }
+    }
     const index = sarkiListesi.findIndex(s => s.id === aktifSarki.id);
     if (index === -1) return;
     
-    const sonrakiIndex = (index + 1) % sarkiListesi.length;
-    sarkiCal(sarkiListesi[sonrakiIndex]);
+    if (index === sarkiListesi.length - 1) {
+        if (tekrarModu === 'kapali') {
+            if (playerState.audioRef) playerState.audioRef.pause();
+            playerState.suAnOynuyorMu = false;
+            playerState.suAnkiZaman = 0;
+            discordGuncelle('duraklatildi');
+            return;
+        }
+        sarkiCal(sarkiListesi[0]);
+    } else {
+        sarkiCal(sarkiListesi[index + 1]);
+    }
 }
 
 export function oncekiSarki() {
@@ -172,9 +232,7 @@ export async function initializePlayer() {
                     playerState.currentTheme = ayarlar.tema;
                 }
             }
-        } catch (ayarHata) {
-            console.warn("Ayarlar yüklenemedi:", ayarHata);
-        }
+        } catch (ayarHata) {}
 
         const sonSarkiId = localStorage.getItem('lainwave_son_sarki');
         if (sonSarkiId && playerState.sarkiListesi.length > 0) {
@@ -187,6 +245,10 @@ export async function initializePlayer() {
             }
         }
 
+        listen('media-toggle', oynatDuraklatToggle);
+        listen('media-next', sonrakiSarki);
+        listen('media-prev', oncekiSarki);
+
         if (!playerState.suAnOynuyorMu) {
             discordGuncelle('bosta');
         }
@@ -196,6 +258,14 @@ export async function initializePlayer() {
     }
 }
 
+export function sarkiyiSardir(saniye: number) {
+    if (playerState.audioRef) {
+        playerState.audioRef.currentTime = saniye;
+        if (playerState.suAnOynuyorMu) {
+            discordGuncelle('caliyor');
+        }
+    }
+}
 export function yeniPlaylistOlustur() {
     playerState.isCreatePlaylistModalOpen = true;
 }
@@ -294,5 +364,142 @@ export async function toggleFavori(sarkiId: string) {
     } catch (err) {
         console.error("Favori işlemi başarısız:", err);
         playerState.favoriler = eskiFavoriler;
+    }
+}
+
+export async function youtubeAramaAPI(sorgu: string): Promise<YouTubeSonuc[]> {
+    return await invoke<YouTubeSonuc[]>('youtube_arama', { sorgu });
+}
+
+export async function youtubePlaylistGetirAPI(url: string): Promise<YouTubeSonuc[]> {
+    return await invoke<YouTubeSonuc[]>('youtube_playlist_getir', { url });
+}
+
+export async function youtubeIndirAPI(url: string, tarz: string = "Pop"): Promise<Sarki> {
+    const sarki = await invoke<Sarki>('youtube_indir', { url, tarz });
+    playerState.sarkiListesi = [...playerState.sarkiListesi, sarki];
+    return sarki;
+}
+
+export async function muzikAra() {
+    if (!playerState.aramaSorgusu.trim()) return;
+
+    if (playerState.aramaSorgusu.includes("http://") || playerState.aramaSorgusu.includes("https://")) {
+        if (playerState.aramaSorgusu.includes("list=")) {
+            await playlistTarama(playerState.aramaSorgusu);
+        } else {
+            await youtubeIndir(playerState.aramaSorgusu);
+        }
+        return;
+    }
+
+    playerState.aramaYapiliyor = true;
+    playerState.aramaSonuclari = [];
+    playerState.gosterilenSayi = 5; 
+    playerState.indirmeMesaji = "Ağda frekanslar taranıyor...";
+
+    try {
+        const sonuclar = await youtubeAramaAPI(playerState.aramaSorgusu);
+        playerState.aramaSonuclari = sonuclar;
+        playerState.indirmeMesaji = sonuclar.length > 0 ? `${sonuclar.length} sinyal tespit edildi.` : "Sinyal bulunamadı.";
+    } catch (e) {
+        playerState.indirmeMesaji = "Tarama başarısız: " + e;
+    } finally {
+        playerState.aramaYapiliyor = false;
+    }
+}
+
+export async function playlistTarama(url: string) {
+    playerState.aramaYapiliyor = true;
+    playerState.aramaSonuclari = [];
+    playerState.gosterilenSayi = 5;
+    playerState.indirmeMesaji = "Playlist frekansları çözümleniyor...";
+
+    try {
+        const sonuclar = await youtubePlaylistGetirAPI(url);
+        playerState.aramaSonuclari = sonuclar;
+        playerState.indirmeMesaji = sonuclar.length > 0 ? `Liste çözümlendi: ${sonuclar.length} parça.` : "Liste boş veya okunamadı.";
+    } catch (e) {
+        playerState.indirmeMesaji = "Liste hatası: " + e;
+    } finally {
+        playerState.aramaYapiliyor = false;
+    }
+}
+
+export async function youtubeIndir(hedefUrl: string) {
+    if (!hedefUrl.trim() || playerState.aktifIndirmeler.has(hedefUrl)) return;
+
+    playerState.aktifIndirmeler = new Set(playerState.aktifIndirmeler).add(hedefUrl);
+    playerState.indirmeMesaji = "Veri akışı sağlanıyor...";
+
+    try {
+        await youtubeIndirAPI(hedefUrl, "Pop");
+        playerState.indirmeMesaji = "Veri başarıyla arşive eklendi.";
+    } catch (e) {
+        playerState.indirmeMesaji = "Bağlantı koptu: " + e;
+    } finally {
+        const yeniSet = new Set(playerState.aktifIndirmeler);
+        yeniSet.delete(hedefUrl);
+        playerState.aktifIndirmeler = yeniSet;
+
+        setTimeout(() => { 
+            if (playerState.aktifIndirmeler.size === 0 && !playerState.aramaYapiliyor && !playerState.topluIndirmeAktif) playerState.indirmeMesaji = ""; 
+        }, 5000);
+    }
+}
+
+export async function tumunuIndir() {
+    if (playerState.aramaSonuclari.length === 0 || playerState.topluIndirmeAktif) return;
+    
+    playerState.topluIndirmeAktif = true;
+    playerState.gosterilenSayi = playerState.aramaSonuclari.length;
+    playerState.indirmeMesaji = "Toplu veri akışı başlatıldı...";
+
+    for (const sonuc of playerState.aramaSonuclari) {
+        if (!playerState.aktifIndirmeler.has(sonuc.webpage_url)) {
+            await youtubeIndir(sonuc.webpage_url);
+        }
+    }
+    
+    playerState.topluIndirmeAktif = false;
+    playerState.indirmeMesaji = "Toplu aktarım tamamlandı.";
+}
+
+export type MetadataBilgisi = {
+    isim: string | null;
+    sarkici: string | null;
+    album: string | null;
+    tarz: string | null;
+};
+
+export async function sarkiMetadataOkuAPI(yol: string): Promise<MetadataBilgisi> {
+    return await invoke<MetadataBilgisi>('sarki_metadata_oku', { yol });
+}
+
+export async function sarkiKaydetAPI(veri: { 
+    isim: string; 
+    sarkici: string; 
+    album: string; 
+    yol: string; 
+    manuel_tarz: string | null; 
+    yil: number | null; 
+    notlar: string;
+}): Promise<Sarki> {
+    const sarki = await invoke<Sarki>('sarki_kaydet', veri);
+    playerState.sarkiListesi = [...playerState.sarkiListesi, sarki];
+    return sarki;
+}
+
+export async function playlistOlusturAPI(isim: string): Promise<Playlist> {
+    const yeniListe = await invoke<Playlist>('playlist_olustur', { isim });
+    playerState.playlistler = [...playerState.playlistler, yeniListe];
+    return yeniListe;
+}
+
+export async function playlistSirasiGuncelleAPI(playlistId: string, yeniSarkiSiralari: string[]) {
+    try {
+        await invoke('playlist_sirasi_guncelle', { playlistId, yeniSarkiSiralari });
+    } catch (e) {
+        console.error("Liste sırası kaydedilemedi:", e);
     }
 }

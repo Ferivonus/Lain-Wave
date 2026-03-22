@@ -44,7 +44,6 @@
     }
   }
 
-  // --- Sürükle Bırak Mantığı ---
   let suruklenenIndex = $state<number | null>(null);
   let uzerindeGezinilenIndex = $state<number | null>(null);
 

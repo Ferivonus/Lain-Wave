@@ -1,8 +1,19 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { convertFileSrc, invoke } from '@tauri-apps/api/core';
+  import { convertFileSrc } from '@tauri-apps/api/core';
   import FavoriteButton from '$lib/FavoriteButton.svelte';
-  import { playerState, sarkiCal, initializePlayer, sarkiSil, sarkiPlaylisteEkle, type Sarki } from '../../store.svelte';
+  import SongStats from '$lib/SongStats.svelte';
+  import { 
+      playerState, 
+      sarkiCal, 
+      initializePlayer, 
+      sarkiSil, 
+      sarkiPlaylisteEkle, 
+      muzikAra,
+      youtubeIndir,
+      tumunuIndir,
+      type Sarki
+  } from '../../store.svelte';
   import { fade, fly, scale, slide } from 'svelte/transition';
 
   onMount(async () => {
@@ -11,7 +22,6 @@
     }
   });
 
-  // --- KÜTÜPHANE STATE'LERİ ---
   let kategoriler = $derived.by(() => {
     const map = new Map();
     playerState.sarkiListesi.forEach(s => {
@@ -35,70 +45,15 @@
   );
 
   const tarzIkonlari: Record<string, string> = {
-    "Pop": "✨", "Rock": "🎸", "Lofi": "☕", "Cyberpunk": "🤖", 
-    "Ghibli": "🌳", "Electronic": "⚡", "Jazz": "🎷", "Podcast": "🎙️"
+    "Pop": '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>',
+    "Rock": '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>',
+    "Lofi": '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 110 8h-1"/><path d="M3 8h14v9a4 4 0 01-4 4H7a4 4 0 01-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>',
+    "Cyberpunk": '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>',
+    "Ghibli": '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>',
+    "Electronic": '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+    "Jazz": '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>',
+    "Podcast": '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>'
   };
-
-  // --- YOUTUBE ARAMA & İNDİRME STATE'LERİ ---
-  let aramaSorgusu = $state("");
-  let aramaYapiliyor = $state(false);
-  let aramaSonuclari = $state<any[]>([]);
-  let indirmeMesaji = $state("");
-
-  // YENİ: Gösterilen sonuç sayısı ve aktif indirilenler listesi
-  let gosterilenSayi = $state(5);
-  let aktifIndirmeler = $state<Set<string>>(new Set());
-
-  async function muzikAra() {
-      if (!aramaSorgusu.trim()) return;
-
-      // Direkt URL girildiyse
-      if (aramaSorgusu.includes("http://") || aramaSorgusu.includes("https://")) {
-          await youtubeIndir(aramaSorgusu);
-          return;
-      }
-
-      aramaYapiliyor = true;
-      aramaSonuclari = [];
-      gosterilenSayi = 5; // Yeni aramada gösterim sayısını sıfırla
-      indirmeMesaji = "Ağda frekanslar taranıyor...";
-
-      try {
-          const sonuclar = await invoke<any[]>('youtube_arama', { sorgu: aramaSorgusu });
-          aramaSonuclari = sonuclar;
-          indirmeMesaji = sonuclar.length > 0 ? `${sonuclar.length} sinyal tespit edildi.` : "Sinyal bulunamadı.";
-      } catch (e) {
-          indirmeMesaji = "Tarama başarısız: " + e;
-      } finally {
-          aramaYapiliyor = false;
-      }
-  }
-
-  async function youtubeIndir(hedefUrl: string) {
-      if (!hedefUrl.trim() || aktifIndirmeler.has(hedefUrl)) return;
-
-      // İndirme listesine ekle (Reaktivite için yeni set oluşturuyoruz)
-      aktifIndirmeler = new Set(aktifIndirmeler).add(hedefUrl);
-      indirmeMesaji = "Veri akışı sağlanıyor...";
-
-      try {
-          await invoke<Sarki>('youtube_indir', { url: hedefUrl, tarz: "Pop" });
-          indirmeMesaji = "Veri başarıyla arşive eklendi.";
-          // NOT: Arama sonuçlarını veya sorguyu SIFIRLAMIYORUZ!
-          await initializePlayer();
-      } catch (e) {
-          indirmeMesaji = "Bağlantı koptu: " + e;
-      } finally {
-          // İndirme bitince listeden çıkar
-          const yeniSet = new Set(aktifIndirmeler);
-          yeniSet.delete(hedefUrl);
-          aktifIndirmeler = yeniSet;
-
-          setTimeout(() => { 
-              if (aktifIndirmeler.size === 0 && !aramaYapiliyor) indirmeMesaji = ""; 
-          }, 5000);
-      }
-  }
 
   async function handleSarkiSil(sarki: Sarki, event: Event) {
     event.stopPropagation();
@@ -153,37 +108,49 @@
       <div class="flex flex-col md:flex-row gap-4 relative z-10 mb-4">
           <input 
               type="text" 
-              bind:value={aramaSorgusu}
-              onkeydown={(e) => e.key === 'Enter' && !aramaYapiliyor && muzikAra()}
-              placeholder="Şarkı veya sanatçı adı yazın..." 
+              bind:value={playerState.aramaSorgusu}
+              onkeydown={(e) => e.key === 'Enter' && !playerState.aramaYapiliyor && muzikAra()}
+              placeholder="Şarkı adı, link veya playlist adresi yazın..." 
               class="flex-1 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl px-6 py-4 outline-none text-sm text-[var(--text-main)] focus:border-red-500/50 transition-colors placeholder:text-[var(--text-dim)]/50 font-mono"
-              disabled={aramaYapiliyor}
+              disabled={playerState.aramaYapiliyor}
           />
           <button 
               type="button"
               onclick={muzikAra}
-              disabled={aramaYapiliyor || !aramaSorgusu.trim()}
+              disabled={playerState.aramaYapiliyor || !playerState.aramaSorgusu.trim()}
               aria-label="Aramayı Başlat"
               class="bg-red-500 hover:bg-red-600 text-white font-black uppercase tracking-[0.2em] text-[10px] px-10 py-4 rounded-xl transition-all shadow-lg active:scale-95 disabled:opacity-50 shrink-0 min-w-[160px]"
           >
-              {#if aramaYapiliyor}
+              {#if playerState.aramaYapiliyor}
                   <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
               {:else} Ağı Tara {/if}
           </button>
       </div>
       
-      {#if indirmeMesaji}
-          <div class="mb-2 text-[10px] font-mono font-bold uppercase tracking-widest {indirmeMesaji.includes('başarı') ? 'text-[var(--accent)]' : 'text-red-400'}" in:slide>> {indirmeMesaji}</div>
+      {#if playerState.indirmeMesaji}
+          <div class="mb-2 text-[10px] font-mono font-bold uppercase tracking-widest {playerState.indirmeMesaji.includes('başarı') || playerState.indirmeMesaji.includes('tamamlandı') ? 'text-[var(--accent)]' : 'text-red-400'}" in:slide>> {playerState.indirmeMesaji}</div>
       {/if}
 
-      {#if aramaSonuclari.length > 0}
+      {#if playerState.aramaSonuclari.length > 0}
           <div class="flex flex-col gap-2 mt-6" in:fade>
-              <h3 class="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.3em] mb-2 border-b border-[var(--border)] pb-2">
-                  Bulunan Sinyaller ({aramaSonuclari.length})
-              </h3>
+              <div class="flex justify-between items-end border-b border-[var(--border)] pb-2 mb-2">
+                  <h3 class="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.3em]">
+                      Bulunan Sinyaller ({playerState.aramaSonuclari.length})
+                  </h3>
+                  {#if playerState.aramaSonuclari.length > 1}
+                      <button
+                          type="button"
+                          onclick={tumunuIndir}
+                          disabled={playerState.topluIndirmeAktif}
+                          class="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border transition-all {playerState.topluIndirmeAktif ? 'bg-red-500/10 text-red-500 border-red-500/30 cursor-not-allowed' : 'text-[var(--text-main)] border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--accent)]'}"
+                      >
+                          {#if playerState.topluIndirmeAktif} Veri Çekiliyor... {:else} Tümünü İndir {/if}
+                      </button>
+                  {/if}
+              </div>
               
-              {#each aramaSonuclari.slice(0, gosterilenSayi) as sonuc}
-                  {@const isDownloading = aktifIndirmeler.has(sonuc.webpage_url)}
+              {#each playerState.aramaSonuclari.slice(0, playerState.gosterilenSayi) as sonuc}
+                  {@const isDownloading = playerState.aktifIndirmeler.has(sonuc.webpage_url)}
                   <div class="flex items-center gap-4 p-3 bg-[var(--bg-surface)] border border-[var(--border)] hover:border-red-500/30 rounded-xl group transition-all w-full min-w-0">
                       <div class="w-16 h-10 bg-black rounded-lg overflow-hidden shrink-0 relative">
                           <img src={sonuc.thumbnail} alt="" class="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity" />
@@ -200,7 +167,7 @@
                       <button 
                           type="button"
                           onclick={() => youtubeIndir(sonuc.webpage_url)}
-                          disabled={isDownloading}
+                          disabled={isDownloading || playerState.topluIndirmeAktif}
                           aria-label="{sonuc.title} indir"
                           class="p-3 text-[var(--text-dim)] hover:text-white hover:bg-red-500 rounded-lg transition-all disabled:opacity-50 shrink-0 {isDownloading ? 'text-red-500 bg-red-500/10' : ''}"
                       >
@@ -213,13 +180,13 @@
                   </div>
               {/each}
 
-              {#if gosterilenSayi < aramaSonuclari.length}
+              {#if playerState.gosterilenSayi < playerState.aramaSonuclari.length}
                   <button 
                       type="button" 
-                      onclick={() => gosterilenSayi += 5}
+                      onclick={() => playerState.gosterilenSayi += 5}
                       class="mt-4 py-3 w-full rounded-xl border border-dashed border-[var(--border)] text-[10px] font-black uppercase tracking-widest text-[var(--text-dim)] hover:text-[var(--accent)] hover:border-[var(--accent)]/50 hover:bg-[var(--accent)]/5 transition-all"
                   >
-                      Daha Fazla Göster ({aramaSonuclari.length - gosterilenSayi} Kaldı)
+                      Daha Fazla Göster ({playerState.aramaSonuclari.length - playerState.gosterilenSayi} Kaldı)
                   </button>
               {/if}
           </div>
@@ -231,7 +198,9 @@
     <div class="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
       {#each kategoriler as kat, i}
         <a href="/search?q={kat.isim}" class="flex-shrink-0 w-36 h-44 bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] p-5 flex flex-col justify-between hover:bg-[var(--bg-card-hover)] hover:border-[var(--accent)]/50 transition-all group shadow-lg" in:scale={{ duration: 400, delay: i * 50 }}>
-          <span class="text-4xl group-hover:scale-110 transition-transform">{tarzIkonlari[kat.isim] || "🎵"}</span>
+          <span class="text-4xl group-hover:scale-110 transition-transform">
+             {@html tarzIkonlari[kat.isim] || '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>'}
+          </span>
           <div class="min-w-0">
             <p class="font-black text-sm uppercase tracking-tight group-hover:text-[var(--accent)] transition-colors truncate">{kat.isim}</p>
             <p class="text-[9px] font-bold text-[var(--text-dim)] uppercase">{kat.adet} Parça</p>
@@ -280,18 +249,22 @@
                 {sarki.sarkici}
               </button>
             </div>
+            
             <div class="shrink-0 flex items-center gap-1" onclick={(e) => e.stopPropagation()} role="presentation">
-              <select aria-label="Listeye Ekle" onchange={(e) => handlePlaylistEkle(sarki.id, e)} class="bg-[var(--bg-surface)] text-[9px] text-[var(--text-dim)] rounded-lg px-1 py-1 outline-none border border-[var(--border)] w-16 focus:border-[var(--accent)] opacity-0 group-hover:opacity-100 hidden sm:block transition-all cursor-pointer font-bold">
-                <option value="">➕</option>
+              <select aria-label="Listeye Ekle" onchange={(e) => handlePlaylistEkle(sarki.id, e)} class="bg-[var(--bg-surface)] text-[9px] text-[var(--text-dim)] rounded-lg px-1 py-1 outline-none border border-[var(--border)] w-16 focus:border-[var(--accent)] opacity-70 hover:opacity-100 hidden sm:block transition-all cursor-pointer font-bold">
+                <option value="">➕ LİSTE</option>
                 {#each playerState.playlistler as pl}
                   {#if !pl.sarkilar.includes(sarki.id)}<option value={pl.id}>{pl.isim.toUpperCase()}</option>{/if}
                 {/each}
               </select>
-              <button type="button" aria-label="Düzenle" title="Bilgileri Düzenle" onclick={(e) => editModaliAc(sarki, e)} class="text-[var(--text-dim)]/30 hover:text-[var(--accent)] p-1 opacity-0 group-hover:opacity-100 transition-all">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+              
+              <button type="button" aria-label="Düzenle" title="Bilgileri Düzenle" onclick={(e) => editModaliAc(sarki, e)} class="text-[var(--text-dim)]/50 hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 p-1.5 rounded-lg transition-all hidden sm:block">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
               </button>
+              
               <FavoriteButton sarkiId={sarki.id} />
-              <button type="button" aria-label="Sil" title="Sil" onclick={(e) => handleSarkiSil(sarki, e)} class="text-[var(--text-dim)]/30 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition-all">
+              
+              <button type="button" aria-label="Sil" title="Sil" onclick={(e) => handleSarkiSil(sarki, e)} class="text-[var(--text-dim)]/50 hover:text-red-500 hover:bg-red-500/10 p-1.5 rounded-lg transition-all">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
               </button>
             </div>
@@ -324,12 +297,15 @@
               <span class="text-xs font-bold text-[var(--text-main)] truncate block leading-tight group-hover:text-[var(--accent)] transition-colors">{sarki.isim}</span>
               <span class="text-[9px] text-[var(--text-dim)] font-bold truncate uppercase tracking-widest opacity-80 block">{sarki.sarkici}</span>
             </div>
+            
             <div onclick={(e) => e.stopPropagation()} role="presentation" class="shrink-0 flex items-center gap-1">
-               <button type="button" aria-label="Düzenle" title="Düzenle" onclick={(e) => editModaliAc(sarki, e)} class="text-[var(--text-dim)]/30 hover:text-[var(--accent)] p-1 opacity-0 group-hover:opacity-100 transition-all">
+               <button type="button" aria-label="Düzenle" title="Düzenle" onclick={(e) => editModaliAc(sarki, e)} class="text-[var(--text-dim)]/50 hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 p-1.5 rounded-lg transition-all">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                </button>
+               
                <FavoriteButton sarkiId={sarki.id} />
-               <button type="button" aria-label="Sil" title="Sil" onclick={(e) => handleSarkiSil(sarki, e)} class="text-[var(--text-dim)]/30 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition-all">
+               
+               <button type="button" aria-label="Sil" title="Sil" onclick={(e) => handleSarkiSil(sarki, e)} class="text-[var(--text-dim)]/50 hover:text-red-500 hover:bg-red-500/10 p-1.5 rounded-lg transition-all">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                </button>
             </div>
