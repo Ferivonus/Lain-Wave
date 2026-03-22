@@ -592,7 +592,7 @@ async fn youtube_indir(app: tauri::AppHandle, url: String, tarz: String) -> Resu
         );
         let yt_dlp_hedef = songs_klasoru.join(format!("{}.%(ext)s", id));
         let hedef_ses_yolu = songs_klasoru.join(format!("{}.wav", id));
-        let hedef_kapak_yolu = songs_klasoru.join(format!("{}.png", id));
+        let hedef_kapak_yolu = songs_klasoru.join(format!("{}.jpg", id));
 
         let mut cmd = std::process::Command::new(&yt_dlp_path);
         cmd.env("PYTHONIOENCODING", "utf-8");
@@ -615,7 +615,7 @@ async fn youtube_indir(app: tauri::AppHandle, url: String, tarz: String) -> Resu
             .arg("--ppa")
             .arg("ThumbnailsConvertor:-q:v 2")
             .arg("--convert-thumbnails")
-            .arg("png")
+            .arg("jpg")
             .arg("--ffmpeg-location")
             .arg(&ffmpeg_path)
             .arg("--print")
@@ -634,9 +634,19 @@ async fn youtube_indir(app: tauri::AppHandle, url: String, tarz: String) -> Resu
 
         let mut child = cmd
             .spawn()
-            .map_err(|e| format!("Süreç başlatılamadı: {}", e))?;
+            .map_err(|e| format!("yt-dlp süreci başlatılamadı: {}", e))?;
 
         let stdout = child.stdout.take().ok_or("Stdout alınamadı")?;
+        let stderr = child.stderr.take().ok_or("Stderr alınamadı")?;
+
+        let stderr_thread = std::thread::spawn(move || {
+            let mut error_text = String::new();
+            use std::io::Read;
+            let mut reader = std::io::BufReader::new(stderr);
+            let _ = reader.read_to_string(&mut error_text);
+            error_text
+        });
+
         let mut reader = std::io::BufReader::new(stdout);
         let mut metadata_line = String::new();
         let mut buf = Vec::new();
@@ -672,10 +682,18 @@ async fn youtube_indir(app: tauri::AppHandle, url: String, tarz: String) -> Resu
 
         let status = child
             .wait()
-            .map_err(|e| format!("Süreç beklenemedi: {}", e))?;
+            .map_err(|e| format!("Süreç beklenirken hata oluştu: {}", e))?;
+
+        let mut error_details = stderr_thread.join().unwrap_or_default();
 
         if !status.success() {
-            return Err("Ağ akışı reddedildi. İndirme veya dönüştürme başarısız!".into());
+            if error_details.trim().is_empty() {
+                error_details = "İndirme işlemi başarısız oldu (yt-dlp hatası).".to_string();
+            }
+            return Err(format!(
+                "Ağ akışı reddedildi!\nDetay: {}",
+                error_details.trim()
+            ));
         }
 
         let parcalar: Vec<&str> = metadata_line.split("|*|").collect();
@@ -697,6 +715,14 @@ async fn youtube_indir(app: tauri::AppHandle, url: String, tarz: String) -> Resu
         let mut kapak_yolu = None;
         if hedef_kapak_yolu.exists() {
             kapak_yolu = Some(hedef_kapak_yolu.to_string_lossy().to_string());
+        } else {
+            for uzanti in vec!["webp", "png", "jpeg", "jpg"] {
+                let alternatif = songs_klasoru.join(format!("{}.{}", id, uzanti));
+                if alternatif.exists() {
+                    kapak_yolu = Some(alternatif.to_string_lossy().to_string());
+                    break;
+                }
+            }
         }
 
         let yeni_sarki = Sarki {
@@ -716,23 +742,26 @@ async fn youtube_indir(app: tauri::AppHandle, url: String, tarz: String) -> Resu
         };
 
         let mut sarkilar: Vec<Sarki> = if db_yolu.exists() {
-            let icerik = std::fs::read_to_string(&db_yolu).unwrap_or_else(|_| "[]".to_string());
-            serde_json::from_str(&icerik).unwrap_or_default()
+            match std::fs::read_to_string(&db_yolu) {
+                Ok(icerik) => serde_json::from_str(&icerik).unwrap_or_default(),
+                Err(e) => return Err(format!("Veritabanı okunamadı: {}", e)),
+            }
         } else {
             Vec::new()
         };
 
         sarkilar.push(yeni_sarki.clone());
-        std::fs::write(
-            db_yolunu_bul(&app_clone),
-            serde_json::to_string_pretty(&sarkilar).unwrap(),
-        )
-        .map_err(|e| format!("Kütüphane yazılamadı: {}", e))?;
 
-        Ok(yeni_sarki)
+        match std::fs::write(
+            db_yolunu_bul(&app_clone),
+            serde_json::to_string_pretty(&sarkilar).unwrap_or_else(|_| "[]".to_string()),
+        ) {
+            Ok(_) => Ok(yeni_sarki),
+            Err(e) => Err(format!("Kütüphane dosyası güncellenemedi: {}", e)),
+        }
     })
     .await
-    .map_err(|e| format!("İşlem arka plana alınamadı: {}", e))?
+    .map_err(|e| format!("İşlem arka plana alınamadı (Thread Error): {}", e))?
 }
 
 #[tauri::command]
@@ -777,6 +806,7 @@ async fn youtube_arama(app: tauri::AppHandle, sorgu: String) -> Result<Vec<YouTu
             &arama_kodu,
         ]);
         cmd.stdin(std::process::Stdio::null());
+        cmd.stderr(std::process::Stdio::piped());
 
         #[cfg(target_os = "windows")]
         use std::os::windows::process::CommandExt;
@@ -785,10 +815,11 @@ async fn youtube_arama(app: tauri::AppHandle, sorgu: String) -> Result<Vec<YouTu
 
         let output = cmd
             .output()
-            .map_err(|e| format!("Arama başlatılamadı: {}", e))?;
+            .map_err(|e| format!("Arama süreci başlatılamadı: {}", e))?;
 
         if !output.status.success() {
-            return Err("Arama sırasında bir hata oluştu.".to_string());
+            let error_str = String::from_utf8_lossy(&output.stderr);
+            return Err(format!("Arama sırasında hata oluştu: {}", error_str.trim()));
         }
 
         let output_str = String::from_utf8_lossy(&output.stdout);
@@ -854,6 +885,7 @@ async fn youtube_playlist_getir(
         cmd.env("PYTHONIOENCODING", "utf-8");
         cmd.args(["--dump-json", "--flat-playlist", &url]);
         cmd.stdin(std::process::Stdio::null());
+        cmd.stderr(std::process::Stdio::piped());
 
         #[cfg(target_os = "windows")]
         use std::os::windows::process::CommandExt;
@@ -862,10 +894,14 @@ async fn youtube_playlist_getir(
 
         let output = cmd
             .output()
-            .map_err(|e| format!("Playlist okunamadı: {}", e))?;
+            .map_err(|e| format!("Playlist okuma süreci başlatılamadı: {}", e))?;
 
         if !output.status.success() {
-            return Err("Playlist bilgileri alınamadı.".to_string());
+            let error_str = String::from_utf8_lossy(&output.stderr);
+            return Err(format!(
+                "Playlist bilgileri alınamadı: {}",
+                error_str.trim()
+            ));
         }
 
         let output_str = String::from_utf8_lossy(&output.stdout);
@@ -915,6 +951,7 @@ async fn youtube_playlist_getir(
                 }
             }
         }
+
         Ok(sonuclar)
     })
     .await
