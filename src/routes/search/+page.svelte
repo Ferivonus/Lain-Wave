@@ -79,11 +79,11 @@
   ];
 </script>
 
-<div class="w-full min-h-full pb-32 flex flex-col relative bg-transparent text-[var(--text-main)] transition-colors duration-500 custom-scrollbar overflow-y-auto">
+<div class="w-full min-h-full pb-32 flex flex-col relative bg-transparent text-(--text-main) transition-colors duration-500 custom-scrollbar overflow-y-auto">
   
-  <div class="sticky top-0 z-30 px-8 lg:px-12 pt-10 pb-6 bg-gradient-to-b from-[var(--bg-main)] via-[var(--bg-main)]/90 to-transparent backdrop-blur-md">
+  <div class="sticky top-0 z-30 px-8 lg:px-12 pt-10 pb-6 bg-linear-to-b from-(--bg-main) via-(--bg-main)/90 to-transparent backdrop-blur-md">
     <div class="relative group max-w-4xl mx-auto">
-      <div class="absolute inset-y-0 left-0 flex items-center pl-6 pointer-events-none text-[var(--text-dim)] group-focus-within:text-[var(--accent)] transition-colors">
+      <div class="absolute inset-y-0 left-0 flex items-center pl-6 pointer-events-none text-(--text-dim) group-focus-within:text-(--accent) transition-colors">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
           <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
@@ -93,14 +93,14 @@
         type="text"
         bind:value={aramaMetni}
         placeholder="Şarkı, sanatçı veya albüm ara..."
-        class="w-full bg-[var(--bg-surface)] text-[var(--text-main)] placeholder-[var(--text-dim)]/50 text-lg lg:text-xl font-black rounded-2xl py-5 pl-16 pr-14 outline-none border border-[var(--border)] focus:border-[var(--accent)]/50 transition-all shadow-2xl focus:shadow-[0_10px_30px_var(--accent-glow)]"
+        class="w-full bg-(--bg-surface) text-(--text-main) placeholder-(--text-dim)/50 text-lg lg:text-xl font-black rounded-2xl py-5 pl-16 pr-14 outline-none border border-(--border) focus:border-(--accent)/50 transition-all shadow-2xl focus:shadow-[0_10px_30px_var(--accent-glow)]"
       />
 
       {#if aramaMetni.length > 0}
         <button 
           type="button"
           onclick={() => aramaMetni = ""} 
-          class="absolute inset-y-0 right-0 flex items-center pr-6 text-[var(--text-dim)] hover:text-[var(--accent)] transition-colors"
+          class="absolute inset-y-0 right-0 flex items-center pr-6 text-(--text-dim) hover:text-(--accent) transition-colors"
           aria-label="Temizle">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
@@ -111,13 +111,13 @@
   <div class="px-8 lg:px-12 flex-1 max-w-7xl mx-auto w-full">
     {#if aramaMetni.trim() === ""}
       <div class="mt-4" in:fade>
-        <h2 class="text-xs font-black text-[var(--text-dim)] mb-6 uppercase tracking-[0.3em] flex items-center gap-4">
-          Frekans Kategorileri <div class="h-px flex-1 bg-[var(--border)]"></div>
+        <h2 class="text-xs font-black text-(--text-dim) mb-6 uppercase tracking-[0.3em] flex items-center gap-4">
+          Frekans Kategorileri <div class="h-px flex-1 bg-(--border)"></div>
         </h2>
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 lg:gap-6 mb-16">
           {#each kategoriler as kategori, i}
             <a href="/search?q={kategori.isim}" 
-               class="relative aspect-square rounded-[var(--radius)] bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border)] p-5 cursor-pointer hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col justify-end group overflow-hidden"
+               class="relative aspect-square rounded-(--radius) bg-(--bg-card) hover:bg-(--bg-card-hover) border border-(--border) p-5 cursor-pointer hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col justify-end group overflow-hidden"
                style="border-bottom-color: {kategori.renk};"
                in:scale={{ duration: 400, delay: i * 50 }}>
               <div class="absolute -bottom-10 -right-10 w-32 h-32 rounded-full blur-3xl opacity-10 group-hover:opacity-30 transition-opacity" style="background: {kategori.renk}"></div>
@@ -133,14 +133,14 @@
           {/each}
         </div>
 
-        <h2 class="text-xs font-black text-[var(--text-dim)] mb-6 uppercase tracking-[0.3em] flex items-center gap-4">
+        <h2 class="text-xs font-black text-(--text-dim) mb-6 uppercase tracking-[0.3em] flex items-center gap-4">
           Tüm Kayıtlar <span class="text-[9px] opacity-50 tracking-widest">(Popülerliğe Göre)</span> <div class="h-px flex-1 bg-[var(--border)]"></div>
         </h2>
 
-        <div class="flex items-center text-[10px] font-black text-[var(--text-dim)] border-b border-[var(--border)] pb-3 mb-4 px-4 sm:px-6 tracking-[0.2em] uppercase shrink-0">
+        <div class="flex items-center text-[10px] font-black text-(--text-dim) border-b border-[var(--border)] pb-3 mb-4 px-4 sm:px-6 tracking-[0.2em] uppercase shrink-0">
           <span class="w-8 sm:w-10 shrink-0">#</span>
           <span class="flex-1 min-w-0 ml-2 sm:ml-4">KİMLİK & BİLGİ</span>
-          <span class="w-auto max-w-[200px] xl:max-w-[280px] shrink-0 hidden lg:flex justify-end pr-4">METRİKLER</span> 
+          <span class="w-auto max-w-50 xl:max-w-70 shrink-0 hidden lg:flex justify-end pr-4">METRİKLER</span> 
           <span class="w-32 sm:w-48 xl:w-56 shrink-0 text-right pr-2">İŞLEMLER</span> 
         </div>
 

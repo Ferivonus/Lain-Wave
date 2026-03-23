@@ -202,7 +202,7 @@
         aria-label="Modalı Kapat"
     >
         <div 
-            class="bg-[var(--bg-surface)] text-[var(--text-main)] w-full {mod === 'import' && importSarkilar.length > 0 ? 'max-w-2xl' : 'max-w-sm'} rounded-[var(--radius)] shadow-2xl overflow-hidden relative border border-[var(--border)] transition-all duration-500 flex flex-col max-h-[90vh]"
+            class="bg-(--bg-surface) text-(--text-main) w-full {mod === 'import' && importSarkilar.length > 0 ? 'max-w-2xl' : 'max-w-sm'} rounded-[var(--radius)] shadow-2xl overflow-hidden relative border border-[var(--border)] transition-all duration-500 flex flex-col max-h-[90vh]"
             transition:scale={{ start: 0.95, duration: 300, easing: cubicOut }}
             onclick={(e) => e.stopPropagation()}
             onkeydown={(e) => e.stopPropagation()}
@@ -258,7 +258,7 @@
                                     <div class="flex flex-col items-center justify-center p-8 border-2 border-[var(--accent)] rounded-2xl bg-[var(--accent)]/10 shadow-[0_0_30px_var(--accent-glow)]/30 transition-all" in:scale>
                                         <img src={secilenSonuc.thumbnail} alt="" class="w-40 h-24 object-cover rounded-xl shadow-2xl mb-5" />
                                         <h4 class="text-sm font-black text-center text-white mb-2 leading-tight px-4">{secilenSonuc.title}</h4>
-                                        <p class="text-[10px] text-[var(--accent)] font-bold uppercase tracking-widest mb-8 text-center">{secilenSonuc.channel} <span class="mx-2 opacity-50">•</span> {secilenSonuc.duration_string}</p>
+                                        <p class="text-[10px] text-(--accent) font-bold uppercase tracking-widest mb-8 text-center">{secilenSonuc.channel} <span class="mx-2 opacity-50">•</span> {secilenSonuc.duration_string}</p>
                                         
                                         <div class="flex gap-4 w-full max-w-sm">
                                             <button type="button" onclick={() => secilenSonuc = null} class="flex-1 py-3.5 rounded-xl border border-[var(--border)] text-[10px] font-black uppercase tracking-widest text-[var(--text-dim)] hover:text-white hover:bg-[var(--bg-card)] transition-all active:scale-95">Vazgeç</button>
@@ -271,10 +271,10 @@
                                             <button type="button" onclick={() => secilenSonuc = sonuc} class="w-full flex items-center gap-4 p-3 bg-[var(--bg-surface)] border border-[var(--border)] hover:border-[var(--accent)]/50 rounded-xl group transition-all text-left">
                                                 <img src={sonuc.thumbnail} alt="" class="w-20 h-12 object-cover rounded-lg opacity-60 group-hover:opacity-100 transition-opacity" />
                                                 <div class="flex-1 min-w-0 pr-4">
-                                                    <p class="text-xs font-bold text-[var(--text-main)] truncate group-hover:text-[var(--accent)] transition-colors">{sonuc.title}</p>
+                                                    <p class="text-xs font-bold text-(--text-main) truncate group-hover:text-[var(--accent)] transition-colors">{sonuc.title}</p>
                                                     <p class="text-[9px] font-bold uppercase tracking-widest text-[var(--text-dim)] truncate mt-1.5 opacity-80">{sonuc.channel} <span class="mx-1">•</span> {sonuc.duration_string}</p>
                                                 </div>
-                                                <svg class="w-5 h-5 text-[var(--text-dim)] group-hover:text-[var(--accent)] opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+                                                <svg class="w-5 h-5 text-(--text-dim) group-hover:text-[var(--accent)] opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
                                             </button>
                                         {/each}
                                         
@@ -290,14 +290,14 @@
                         {:else if importSarkilar.length === 0}
                             <button type="button" onclick={dosyaSec} class="w-full border-2 border-dashed border-[var(--border)] rounded-2xl p-12 flex flex-col items-center justify-center text-center hover:border-[var(--accent)]/50 hover:bg-[var(--accent)]/5 transition-all group my-auto">
                                 <svg class="w-12 h-12 text-[var(--text-dim)] group-hover:text-[var(--accent)] mb-4 transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                                <span class="text-sm font-black text-[var(--text-main)] group-hover:text-[var(--accent)] transition-colors">JSON Dosyası Seç</span>
-                                <span class="text-[10px] text-[var(--text-dim)] mt-3 uppercase tracking-[0.2em] font-bold">Dışa aktarılmış playlist dosyasını yükleyin</span>
+                                <span class="text-sm font-black text-(--text-main) group-hover:text-[var(--accent)] transition-colors">JSON Dosyası Seç</span>
+                                <span class="text-[10px] text-(--text-dim) mt-3 uppercase tracking-[0.2em] font-bold">Dışa aktarılmış playlist dosyasını yükleyin</span>
                             </button>
                         {:else}
                             <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[var(--border)] pb-4 shrink-0" in:slide>
                                 <div class="min-w-0">
-                                    <h3 class="text-xl font-black text-[var(--accent)] truncate italic">{importListIsmi}</h3>
-                                    <p class="text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-widest mt-1.5 flex gap-4">
+                                    <h3 class="text-xl font-black text-(--accent) truncate italic">{importListIsmi}</h3>
+                                    <p class="text-[10px] font-bold text-(--text-dim) uppercase tracking-widest mt-1.5 flex gap-4">
                                         <span class="text-white">TOPLAM: {importSarkilar.length}</span>
                                         <span class="text-emerald-400">TAMAM: {tamamlananSayi}</span>
                                         <span class="text-orange-400">BEKLEYEN: {bekleyenSayi}</span>

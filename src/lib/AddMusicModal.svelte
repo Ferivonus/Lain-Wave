@@ -185,7 +185,7 @@
 
 {#if playerState.isAddMusicModalOpen}
     <div 
-        class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 transition-colors duration-500" 
+        class="fixed inset-0 z-100 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 transition-colors duration-500" 
         transition:fade={{ duration: 200 }} 
         onclick={kapat}
         onkeydown={handleBackdropKeydown}
@@ -194,7 +194,7 @@
         tabindex="-1"
     >
         <div 
-            class="bg-[var(--bg-surface)] text-[var(--text-main)] w-full max-md:max-h-[90vh] max-w-md rounded-[var(--radius)] shadow-2xl overflow-hidden relative border border-[var(--border)] transition-all duration-500 flex flex-col" 
+            class="bg-(--bg-surface) text-(--text-main) w-full max-md:max-h-[90vh] max-w-md rounded-(--radius) shadow-2xl overflow-hidden relative border border-(--border) transition-all duration-500 flex flex-col" 
             transition:scale={{ start: 0.95, duration: 300, easing: cubicOut }} 
             onclick={(e) => e.stopPropagation()} 
             onkeydown={(e) => e.stopPropagation()}
@@ -202,24 +202,24 @@
             aria-modal="true"
             tabindex="-1"
         >
-            <div class="flex justify-between items-center px-6 py-4 bg-[var(--bg-card)] border-b border-[var(--border)] shrink-0">
-                <h2 class="text-sm font-black uppercase tracking-widest text-[var(--text-main)]/70">Sisteme Veri Aktar</h2>
-                <button type="button" onclick={kapat} class="p-2 -mr-2 text-[var(--text-dim)] hover:text-white transition-colors" aria-label="Kapat">
+            <div class="flex justify-between items-center px-6 py-4 bg-(--bg-card) border-b border-(--border) shrink-0">
+                <h2 class="text-sm font-black uppercase tracking-widest text-(--text-main)/70">Sisteme Veri Aktar</h2>
+                <button type="button" onclick={kapat} class="p-2 -mr-2 text-(--text-dim) hover:text-white transition-colors" aria-label="Kapat">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
 
             {#if yukleniyor}
-                <div class="absolute inset-0 bg-[var(--bg-surface)]/95 backdrop-blur-md z-50 flex flex-col items-center justify-center p-10 text-center" in:fade>
-                    <div class="w-full max-w-[260px]">
+                <div class="absolute inset-0 bg-(--bg-surface)/95 backdrop-blur-md z-50 flex flex-col items-center justify-center p-10 text-center" in:fade>
+                    <div class="w-full max-w-65">
                         <div class="flex justify-between text-[10px] mb-3 font-black uppercase tracking-widest">
-                            <span class="text-[var(--accent)]">Veri İşleniyor</span>
+                            <span class="text-(--accent)">Veri İşleniyor</span>
                             <span>{Math.round(downloadInfo.pct)}%</span>
                         </div>
-                        <div class="w-full h-1.5 bg-[var(--border)] rounded-full overflow-hidden">
-                            <div class="h-full bg-[var(--accent)] transition-all duration-300" style="width: {downloadInfo.pct}%"></div>
+                        <div class="w-full h-1.5 bg-(--border) rounded-full overflow-hidden">
+                            <div class="h-full bg-(--accent) transition-all duration-300" style="width: {downloadInfo.pct}%"></div>
                         </div>
-                        <p class="text-[10px] text-[var(--text-dim)] mt-4 font-mono">
+                        <p class="text-[10px] text-(--text-dim) mt-4 font-mono">
                             {#if gorunum === 'youtube'}{downloadInfo.speed} • ETA: {downloadInfo.eta}{:else}Bitstream doğrulanıyor...{/if}
                         </p>
                     </div>
@@ -229,101 +229,101 @@
             <div class="p-6 overflow-y-auto custom-scrollbar flex-1 min-h-0">
                 {#if gorunum === 'secim'}
                     <div class="grid gap-3" in:fly={{ y: 8, duration: 400 }}>
-                        <button type="button" onclick={dosyaSec} class="flex items-center gap-5 p-5 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border)] rounded-2xl transition-all text-left group">
-                            <div class="w-11 h-11 bg-[var(--accent)]/10 text-[var(--accent)] rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                        <button type="button" onclick={dosyaSec} class="flex items-center gap-5 p-5 bg-(--bg-card) hover:bg-(--bg-card-hover) border border-(--border) rounded-2xl transition-all text-left group">
+                            <div class="w-11 h-11 bg-(--accent)/10 text-(--accent) rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                             </div>
                             <div>
                                 <span class="block font-bold">Yerel Diskten Aktar</span>
-                                <span class="text-[11px] text-[var(--text-dim)] uppercase tracking-tight">Cihazdaki ses dosyalarını seç</span>
+                                <span class="text-[11px] text-(--text-dim) uppercase tracking-tight">Cihazdaki ses dosyalarını seç</span>
                             </div>
                         </button>
 
-                        <button type="button" onclick={() => gorunum = 'youtube'} class="flex items-center gap-5 p-5 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border)] rounded-2xl transition-all text-left group">
+                        <button type="button" onclick={() => gorunum = 'youtube'} class="flex items-center gap-5 p-5 bg-(--bg-card) hover:bg-(--bg-card-hover) border border-(--border) rounded-2xl transition-all text-left group">
                             <div class="w-11 h-11 bg-red-500/10 text-red-500 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                                 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
                             </div>
                             <div>
                                 <span class="block font-bold">Ağdan Veri İndir</span>
-                                <span class="text-[11px] text-[var(--text-dim)] uppercase tracking-tight">YouTube araması yap veya link gir</span>
+                                <span class="text-[11px] text-(--text-dim) uppercase tracking-tight">YouTube araması yap veya link gir</span>
                             </div>
                         </button>
 
-                        <button type="button" onclick={() => { kapat(); setTimeout(() => playerState.isCreatePlaylistModalOpen = true, 300); }} class="flex items-center gap-5 p-5 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border)] rounded-2xl transition-all text-left group">
+                        <button type="button" onclick={() => { kapat(); setTimeout(() => playerState.isCreatePlaylistModalOpen = true, 300); }} class="flex items-center gap-5 p-5 bg-(--bg-card) hover:bg-(--bg-card-hover) border border-(--border) rounded-2xl transition-all text-left group">
                             <div class="w-11 h-11 bg-emerald-500/10 text-emerald-500 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
                             </div>
                             <div>
                                 <span class="block font-bold">Koleksiyon / Liste Ekle</span>
-                                <span class="text-[11px] text-[var(--text-dim)] uppercase tracking-tight">Yeni oluştur veya JSON yükle</span>
+                                <span class="text-[11px] text-(--text-dim) uppercase tracking-tight">Yeni oluştur veya JSON yükle</span>
                             </div>
                         </button>
                     </div>
 
                 {:else if gorunum === 'detay' || gorunum === 'youtube'}
                     <div class="space-y-6" in:fly={{ x: 12, duration: 400 }}>
-                        <button type="button" onclick={() => gorunum = 'secim'} class="text-[10px] font-black text-[var(--accent)] uppercase tracking-widest flex items-center gap-1 hover:opacity-80 transition-opacity">
+                        <button type="button" onclick={() => gorunum = 'secim'} class="text-[10px] font-black text-(--accent) uppercase tracking-widest flex items-center gap-1 hover:opacity-80 transition-opacity">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"></path></svg> Geri Dön
                         </button>
                         
                         <div class="space-y-5 pr-2 pb-2">
                             <div class="space-y-3">
                                 <div class="flex justify-between items-center px-1">
-                                    <span class="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest">Kategori Belirle</span>
+                                    <span class="text-[10px] font-black text-(--text-dim) uppercase tracking-widest">Kategori Belirle</span>
                                     {#if tespitEdilenTarz && gorunum !== 'youtube'}
-                                        <span class="text-[9px] bg-[var(--accent)]/10 text-[var(--accent)] px-2 py-0.5 rounded font-bold uppercase tracking-tighter">{tespitEdilenTarz}</span>
+                                        <span class="text-[9px] bg-(--accent)/10 text-(--accent) px-2 py-0.5 rounded font-bold uppercase tracking-tighter">{tespitEdilenTarz}</span>
                                     {/if}
                                 </div>
                                 <div class="grid grid-cols-4 gap-2">
                                     {#each tarzlar as tarz}
-                                        <button type="button" onclick={() => secilenTarz = tarz} class="py-2 text-[9px] font-bold uppercase tracking-widest rounded-lg border transition-all {secilenTarz === tarz ? 'bg-[var(--accent)] border-[var(--accent)] text-white shadow-lg shadow-[var(--accent)]/20' : 'bg-[var(--bg-card)] border-transparent text-[var(--text-dim)] hover:bg-[var(--bg-card-hover)]'}">{tarz}</button>
+                                        <button type="button" onclick={() => secilenTarz = tarz} class="py-2 text-[9px] font-bold uppercase tracking-widest rounded-lg border transition-all {secilenTarz === tarz ? 'bg-(--accent) border-(--accent) text-white shadow-lg shadow-(--accent)/20' : 'bg-(--bg-card) border-transparent text-(--text-dim) hover:bg-(--bg-card-hover)'}">{tarz}</button>
                                     {/each}
                                 </div>
                             </div>
 
                             {#if gorunum === 'youtube'}
-                                <div class="space-y-2 pt-2 border-t border-[var(--border)]">
-                                    <label for="yt-search-input" class="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest">Arama veya URL</label>
+                                <div class="space-y-2 pt-2 border-t border-(--border)">
+                                    <label for="yt-search-input" class="text-[10px] font-black text-(--text-dim) uppercase tracking-widest">Arama veya URL</label>
                                     <div class="flex gap-2">
-                                        <input id="yt-search-input" type="text" bind:value={aramaSorgusu} onkeydown={(e) => e.key === 'Enter' && !aramaYapiliyor && muzikAra()} placeholder="Tarkan..." class="flex-1 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-3.5 text-sm focus:border-red-500/50 outline-none transition-all font-mono" />
-                                        <button type="button" onclick={muzikAra} disabled={aramaYapiliyor || !aramaSorgusu.trim()} class="bg-red-500 hover:bg-red-600 text-white rounded-xl px-5 font-black uppercase tracking-widest text-[10px] transition-all disabled:opacity-50 min-w-[80px]">
+                                        <input id="yt-search-input" type="text" bind:value={aramaSorgusu} onkeydown={(e) => e.key === 'Enter' && !aramaYapiliyor && muzikAra()} placeholder="Tarkan..." class="flex-1 bg-(--bg-card) border border-(--border) rounded-xl p-3.5 text-sm focus:border-red-500/50 outline-none transition-all font-mono" />
+                                        <button type="button" onclick={muzikAra} disabled={aramaYapiliyor || !aramaSorgusu.trim()} class="bg-red-500 hover:bg-red-600 text-white rounded-xl px-5 font-black uppercase tracking-widest text-[10px] transition-all disabled:opacity-50 min-w-20">
                                             {#if aramaYapiliyor}...{:else}Tara{/if}
                                         </button>
                                     </div>
                                 </div>
 
-                                {#if aramaMesaji}<div class="text-[10px] font-mono text-[var(--accent)] uppercase tracking-widest" in:slide>{aramaMesaji}</div>{/if}
+                                {#if aramaMesaji}<div class="text-[10px] font-mono text-(--accent) uppercase tracking-widest" in:slide>{aramaMesaji}</div>{/if}
 
                                 {#if aramaSonuclari.length > 0}
                                     <div class="flex flex-col gap-2 mt-2">
                                         {#each aramaSonuclari as sonuc}
-                                            <button type="button" onclick={() => kaydet(sonuc.webpage_url)} class="flex items-center gap-3 p-2 bg-[var(--bg-card)] hover:bg-red-500/10 border border-[var(--border)] hover:border-red-500/30 rounded-xl transition-all text-left group">
+                                            <button type="button" onclick={() => kaydet(sonuc.webpage_url)} class="flex items-center gap-3 p-2 bg-(--bg-card) hover:bg-red-500/10 border border-(--border) hover:border-red-500/30 rounded-xl transition-all text-left group">
                                                 <div class="w-12 h-9 bg-black rounded-md overflow-hidden shrink-0 relative"><img src={sonuc.thumbnail} alt="" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" /></div>
                                                 <div class="flex-1 min-w-0">
-                                                    <p class="text-xs font-bold text-[var(--text-main)] truncate group-hover:text-red-400 transition-colors">{sonuc.title}</p>
-                                                    <div class="flex items-center gap-2 mt-0.5"><span class="text-[8px] font-black text-[var(--text-dim)] uppercase truncate max-w-[100px]">{sonuc.channel}</span><span class="w-1 h-1 bg-[var(--border)] rounded-full"></span><span class="text-[8px] font-mono text-[var(--text-dim)]">{sonuc.duration_string}</span></div>
+                                                    <p class="text-xs font-bold text-(--text-main) truncate group-hover:text-red-400 transition-colors">{sonuc.title}</p>
+                                                    <div class="flex items-center gap-2 mt-0.5"><span class="text-[8px] font-black text-(--text-dim) uppercase truncate max-w-25">{sonuc.channel}</span><span class="w-1 h-1 bg-(--border) rounded-full"></span><span class="text-[8px] font-mono text-(--text-dim)">{sonuc.duration_string}</span></div>
                                                 </div>
                                             </button>
                                         {/each}
                                     </div>
                                 {/if}
                             {:else}
-                                <div class="space-y-4 pt-2 border-t border-[var(--border)]">
+                                <div class="space-y-4 pt-2 border-t border-(--border)">
                                     <div class="space-y-2">
-                                        <label for="local-isim" class="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest">Şarkı Adı</label>
-                                        <input id="local-isim" type="text" bind:value={formVerisi.isim} class="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-3.5 text-sm outline-none focus:border-[var(--accent)]/50" />
+                                        <label for="local-isim" class="text-[10px] font-black text-(--text-dim) uppercase tracking-widest">Şarkı Adı</label>
+                                        <input id="local-isim" type="text" bind:value={formVerisi.isim} class="w-full bg-(--bg-card) border border-(--border) rounded-xl p-3.5 text-sm outline-none focus:border-(--accent)/50" />
                                     </div>
                                     <div class="grid grid-cols-2 gap-4">
                                         <div class="space-y-2">
-                                            <label for="local-artist" class="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest">Sanatçı</label>
-                                            <input id="local-artist" type="text" bind:value={formVerisi.sarkici} class="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-3.5 text-sm outline-none focus:border-[var(--accent)]/50" />
+                                            <label for="local-artist" class="text-[10px] font-black text-(--text-dim) uppercase tracking-widest">Sanatçı</label>
+                                            <input id="local-artist" type="text" bind:value={formVerisi.sarkici} class="w-full bg-(--bg-card) border border-(--border) rounded-xl p-3.5 text-sm outline-none focus:border-(--accent)/50" />
                                         </div>
                                         <div class="space-y-2">
-                                            <label for="local-album" class="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest">Albüm</label>
-                                            <input id="local-album" type="text" bind:value={formVerisi.album} class="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-3.5 text-sm outline-none focus:border-[var(--accent)]/50" />
+                                            <label for="local-album" class="text-[10px] font-black text-(--text-dim) uppercase tracking-widest">Albüm</label>
+                                            <input id="local-album" type="text" bind:value={formVerisi.album} class="w-full bg-(--bg-card) border border-(--border) rounded-xl p-3.5 text-sm outline-none focus:border-(--accent)/50" />
                                         </div>
                                     </div>
-                                    <button type="button" onclick={() => kaydet()} disabled={!formVerisi.isim} class="w-full bg-[var(--accent)] text-white font-black py-4 rounded-2xl shadow-xl hover:opacity-90 transition-all disabled:opacity-20 uppercase tracking-[0.2em] text-[11px] mt-4">Kütüphaneye Ekle</button>
+                                    <button type="button" onclick={() => kaydet()} disabled={!formVerisi.isim} class="w-full bg-(--accent) text-white font-black py-4 rounded-2xl shadow-xl hover:opacity-90 transition-all disabled:opacity-20 uppercase tracking-[0.2em] text-[11px] mt-4">Kütüphaneye Ekle</button>
                                 </div>
                             {/if}
                         </div>
@@ -335,7 +335,7 @@
                             <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
                         </div>
                         <h2 class="text-xl font-bold uppercase tracking-tighter mb-2 italic">Aktarım Başarılı</h2>
-                        <p class="text-[var(--text-dim)] text-xs mb-8 px-6 leading-relaxed uppercase truncate">"{formVerisi.isim}" kütüphane veritabanına işlendi.</p>
+                        <p class="text-(--text-dim) text-xs mb-8 px-6 leading-relaxed uppercase truncate">"{formVerisi.isim}" kütüphane veritabanına işlendi.</p>
                         
                         <div class="grid gap-3">
                             {#if playerState.playlistler.length > 0}
@@ -348,22 +348,22 @@
                                     <div class="relative w-full">
                                         <select 
                                             onchange={playlisteEkle}
-                                            class="w-full bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-main)] font-bold py-4 px-4 rounded-2xl outline-none focus:border-[var(--accent)] transition-all uppercase text-[10px] tracking-widest appearance-none cursor-pointer hover:bg-[var(--bg-card-hover)]"
+                                            class="w-full bg-(--bg-surface) border border-(--border) text-(--text-main) font-bold py-4 px-4 rounded-2xl outline-none focus:border-(--accent) transition-all uppercase text-[10px] tracking-widest appearance-none cursor-pointer hover:bg-(--bg-card-hover)"
                                         >
                                             <option value="">➕ BİR ÇALMA LİSTESİNE EKLE</option>
                                             {#each playerState.playlistler as pl}
                                                 <option value={pl.id}>{pl.isim}</option>
                                             {/each}
                                         </select>
-                                        <div class="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-dim)]">
+                                        <div class="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-(--text-dim)">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"></path></svg>
                                         </div>
                                     </div>
                                 {/if}
                             {/if}
 
-                            <button type="button" onclick={baskaEkle} class="w-full bg-[var(--accent)] text-white font-black py-4 rounded-2xl hover:shadow-[0_0_15px_var(--accent-glow)] transition-all uppercase text-[11px] tracking-widest active:scale-95">Yeni Giriş Yap</button>
-                            <button type="button" onclick={kapat} class="w-full bg-[var(--bg-card)] text-[var(--text-dim)] border border-[var(--border)] font-bold py-3.5 rounded-2xl hover:bg-[var(--bg-card-hover)] hover:text-white transition-all uppercase text-[10px] tracking-widest active:scale-95">Kapat</button>
+                            <button type="button" onclick={baskaEkle} class="w-full bg-(--accent) text-white font-black py-4 rounded-2xl hover:shadow-[0_0_15px_var(--accent-glow)] transition-all uppercase text-[11px] tracking-widest active:scale-95">Yeni Giriş Yap</button>
+                            <button type="button" onclick={kapat} class="w-full bg-(--bg-card) text-(--text-dim) border border-(--border) font-bold py-3.5 rounded-2xl hover:bg-(--bg-card-hover) hover:text-white transition-all uppercase text-[10px] tracking-widest active:scale-95">Kapat</button>
                         </div>
                     </div>
                 {/if}

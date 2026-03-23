@@ -69,7 +69,7 @@
 <div class="p-8 lg:p-10 w-full min-h-full pb-32 flex flex-col relative min-w-0 overflow-y-auto custom-scrollbar bg-transparent text-[var(--text-main)] transition-colors duration-500">
     
     {#if playerState.sarkiListesi.length === 0}
-        <div class="flex flex-col items-center justify-center flex-1 mt-10 p-10 bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] border-dashed" in:fade>
+        <div class="flex flex-col items-center justify-center flex-1 mt-10 p-10 bg-(--bg-card) border border-(--border) rounded-(--radius) border-dashed" in:fade>
             <div class="mb-6 opacity-40">
                 <svg class="w-20 h-20 text-[var(--text-main)]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                     <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
