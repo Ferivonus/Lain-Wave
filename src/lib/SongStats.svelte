@@ -41,7 +41,7 @@
 
     {#if sarki.tarz && sarki.tarz.trim() !== ""}
         <div 
-            class="hidden xl:flex items-center px-2.5 py-1 rounded-md bg-(--bg-card) border border-(--border) text-(--text-dim) uppercase tracking-widest font-black max-w-[90px] shrink-0 cursor-default hover:border-(--accent)/30 hover:text-(--text-main) transition-all shadow-sm" 
+            class="hidden xl:flex items-center px-2.5 py-1 rounded-md bg-(--bg-card) border border-(--border) text-(--text-dim) uppercase tracking-widest font-black max-w-22.5 shrink-0 cursor-default hover:border-(--accent)/30 hover:text-(--text-main) transition-all shadow-sm" 
             title="Tür: {sarki.tarz}"
         >
             <span class="truncate">{sarki.tarz}</span>
@@ -75,7 +75,7 @@
     {/if}
 
     <div 
-        class="flex items-center gap-2 min-w-[55px] justify-end group cursor-default hover:text-(--accent) transition-all shrink-0" 
+        class="flex items-center gap-2 min-w-13.75 justify-end group cursor-default hover:text-(--accent) transition-all shrink-0" 
         title="{sarki.dinlenme_sayisi || 0} Kez Dinlendi"
     >
         <svg class="w-4 h-4 opacity-50 group-hover:opacity-100 group-hover:scale-110 transition-all" fill="currentColor" viewBox="0 0 24 24">
@@ -85,7 +85,7 @@
     </div>
 
     <div 
-        class="flex items-center gap-2 min-w-[50px] justify-end group cursor-default hover:text-(--text-main) transition-all shrink-0" 
+        class="flex items-center gap-2 min-w-12.5 justify-end group cursor-default hover:text-(--text-main) transition-all shrink-0" 
         title="Süre: {formatSure(sarki.sure)}"
     >
         <svg class="w-4 h-4 opacity-40 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">

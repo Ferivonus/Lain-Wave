@@ -184,7 +184,7 @@
                 </div>
                 <div class="flex gap-6 overflow-x-auto custom-scrollbar pb-4 -mx-2 px-2">
                     {#each favoriSanatcilar as sanatci}
-                        <a href="/artist/{encodeURIComponent(sanatci.isim)}" class="flex flex-col items-center gap-4 group min-w-[130px] cursor-pointer">
+                        <a href="/artist/{encodeURIComponent(sanatci.isim)}" class="flex flex-col items-center gap-4 group min-w-32.5 cursor-pointer">
                             <div class="w-32 h-32 rounded-full bg-(--bg-card) border-2 border-(--border) group-hover:border-(--accent-sec) shadow-lg flex items-center justify-center overflow-hidden transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-[0_15px_30px_var(--accent-glow)] relative">
                                 {#if sanatci.kapak}
                                     <img src={convertFileSrc(sanatci.kapak)} alt={sanatci.isim} class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />

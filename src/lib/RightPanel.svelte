@@ -45,12 +45,12 @@
           <button 
             type="button"
             onclick={() => aktifSekme = sekme as any}
-            class="text-[9px] font-black tracking-[0.2em] uppercase transition-all pb-2 -mb-[10px] relative
+            class="text-[9px] font-black tracking-[0.2em] uppercase transition-all pb-2 -mb-2.5 relative
             {aktifSekme === sekme ? 'text-(--accent)' : 'text-(--text-dim) hover:text-(--text-main)'}"
           >
             {sekme === 'detay' ? 'DETAY' : sekme === 'siradaki' ? 'KUYRUK' : 'SÖZLER'}
             {#if aktifSekme === sekme}
-              <div class="absolute bottom-0 left-0 w-full h-[2px] bg-(--accent) rounded-t-md shadow-[0_0_10px_var(--accent-glow)]" in:fade></div>
+              <div class="absolute bottom-0 left-0 w-full h-0.5 bg-(--accent) rounded-t-md shadow-[0_0_10px_var(--accent-glow)]" in:fade></div>
             {/if}
           </button>
         {/each}

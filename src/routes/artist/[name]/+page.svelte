@@ -74,9 +74,9 @@
   }
 </script>
 
-<div class="p-6 lg:p-10 w-full max-w-[1600px] mx-auto min-h-full pb-32 flex flex-col min-w-0 bg-transparent text-(--text-main) transition-colors duration-500 overflow-y-auto custom-scrollbar">
+<div class="p-6 lg:p-10 w-full max-w-400 mx-auto min-h-full pb-32 flex flex-col min-w-0 bg-transparent text-(--text-main) transition-colors duration-500 overflow-y-auto custom-scrollbar">
   
-  <section class="relative w-full min-h-[350px] lg:h-[400px] rounded-(--radius) overflow-hidden mb-12 shadow-2xl flex items-end p-8 lg:p-12 border border-(--border)" in:fade>
+  <section class="relative w-full min-h-87.5 lg:h-100 rounded-(--radius) overflow-hidden mb-12 shadow-2xl flex items-end p-8 lg:p-12 border border-(--border)" in:fade>
     <div class="absolute inset-0 z-0">
       {#if kapakGorseli}
         <img src={convertFileSrc(kapakGorseli)} alt="" class="w-full h-full object-cover blur-3xl opacity-30 scale-110 transition-transform duration-1000" />
