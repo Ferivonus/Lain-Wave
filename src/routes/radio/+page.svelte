@@ -83,25 +83,25 @@
     }
 </script>
 
-<div class="p-8 lg:p-12 w-full min-h-full pb-32 flex flex-col relative overflow-hidden bg-transparent text-[var(--text-main)] transition-colors duration-500 overflow-y-auto custom-scrollbar">
+<div class="p-8 lg:p-12 w-full min-h-full pb-32 flex flex-col relative overflow-hidden bg-transparent text-(--text-main) transition-colors duration-500 overflow-y-auto custom-scrollbar">
     
-    <div class="absolute top-[-5%] right-[-5%] w-[400px] h-[400px] bg-[var(--accent)] opacity-5 blur-[120px] rounded-full -z-10 animate-pulse-slow"></div>
-    <div class="absolute bottom-[-5%] left-[-5%] w-[300px] h-[300px] bg-[var(--accent-sec)] opacity-5 blur-[100px] rounded-full -z-10"></div>
+    <div class="absolute top-[-5%] right-[-5%] w-[400px] h-[400px] bg-(--accent) opacity-5 blur-[120px] rounded-full -z-10 animate-pulse-slow"></div>
+    <div class="absolute bottom-[-5%] left-[-5%] w-[300px] h-[300px] bg-(--accent-sec) opacity-5 blur-[100px] rounded-full -z-10"></div>
 
     {#if !seciliIstasyon}
         <div in:fade={{ duration: 300 }}>
             <header class="mb-14" in:fly={{ y: -20, duration: 600 }}>
                 <div class="flex items-center gap-3 mb-4">
                     <span class="flex h-2.5 w-2.5 relative">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent)] opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-[var(--accent)]"></span>
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-(--accent) opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-(--accent)"></span>
                     </span>
-                    <span class="text-[10px] font-black tracking-[0.4em] text-[var(--accent)] uppercase">Live Stream Connected</span>
+                    <span class="text-[10px] font-black tracking-[0.4em] text-(--accent) uppercase">Live Stream Connected</span>
                 </div>
                 <h1 class="text-5xl lg:text-7xl font-black tracking-tighter uppercase leading-none italic drop-shadow-md">
                     Lain Radyo
                 </h1>
-                <p class="text-[var(--text-dim)] mt-4 max-w-lg font-medium text-sm leading-relaxed">
+                <p class="text-(--text-dim) mt-4 max-w-lg font-medium text-sm leading-relaxed">
                     Sistem kütüphaneni analiz etti. Frekansa tıklayarak yayın akışını inceleyebilir ve müziğe yön verebilirsin.
                 </p>
             </header>
@@ -111,13 +111,13 @@
                     <button 
                         type="button"
                         aria-label="{ist.isim} frekansını aç"
-                        class="relative aspect-square rounded-[var(--radius)] overflow-hidden transition-all duration-500 border border-[var(--border)] p-0 text-left group shadow-lg
-                        {ist.aktifMi ? 'hover:-translate-y-2 hover:border-[var(--accent)]/50 hover:shadow-2xl cursor-pointer' : 'opacity-20 grayscale cursor-not-allowed'}"
+                        class="relative aspect-square rounded-(--radius) overflow-hidden transition-all duration-500 border border-(--border) p-0 text-left group shadow-lg
+                        {ist.aktifMi ? 'hover:-translate-y-2 hover:border-(--accent)/50 hover:shadow-2xl cursor-pointer' : 'opacity-20 grayscale cursor-not-allowed'}"
                         onclick={() => ist.aktifMi && istasyonAc(ist.isim, ist.ikon, ist.color, ist.keywords)}
                         disabled={!ist.aktifMi}
                         in:scale={{ duration: 400, start: 0.95, delay: i * 30 }}
                     >
-                        <div class="absolute inset-0 bg-[var(--bg-card)] group-hover:bg-[var(--bg-card-hover)] transition-colors"></div>
+                        <div class="absolute inset-0 bg-(--bg-card) group-hover:bg-(--bg-card-hover) transition-colors"></div>
                         <div class="absolute -bottom-10 -right-10 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-20 transition-opacity" style="background: {ist.color}"></div>
 
                         <div class="absolute inset-0 p-6 flex flex-col justify-between z-10">
@@ -126,10 +126,10 @@
                             </div>
                             
                             <div class="max-w-[70%]">
-                                <h3 class="text-lg font-black uppercase tracking-tight mb-1 group-hover:text-[var(--accent)] transition-colors">{ist.isim}</h3>
+                                <h3 class="text-lg font-black uppercase tracking-tight mb-1 group-hover:text-(--accent) transition-colors">{ist.isim}</h3>
                                 <div class="flex items-center gap-2">
-                                    <div class="w-1.5 h-1.5 rounded-full {ist.aktifMi ? 'bg-[var(--accent)] animate-[pulse_1.5s_infinite]' : 'bg-zinc-600'}"></div>
-                                    <p class="text-[var(--text-dim)] text-[9px] font-black uppercase tracking-widest">
+                                    <div class="w-1.5 h-1.5 rounded-full {ist.aktifMi ? 'bg-(--accent) animate-[pulse_1.5s_infinite]' : 'bg-zinc-600'}"></div>
+                                    <p class="text-(--text-dim) text-[9px] font-black uppercase tracking-widest">
                                         {ist.aktifMi ? 'SİNYAL OK' : 'YAYIN YOK'}
                                     </p>
                                 </div>
@@ -140,10 +140,10 @@
             </div>
 
             {#if digerTarzlar.length > 0}
-                <div class="mt-16 pt-8 border-t border-[var(--border)]" in:fade={{ delay: 300 }}>
+                <div class="mt-16 pt-8 border-t border-(--border)" in:fade={{ delay: 300 }}>
                     <div class="flex items-center gap-4 mb-6">
-                        <h2 class="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em]">Alternatif Frekanslar</h2>
-                        <div class="h-px flex-1 bg-[var(--border)] opacity-50"></div>
+                        <h2 class="text-[10px] font-black text-(--text-dim) uppercase tracking-[0.4em]">Alternatif Frekanslar</h2>
+                        <div class="h-px flex-1 bg-(--border) opacity-50"></div>
                     </div>
                     <div class="flex flex-wrap gap-3">
                         {#each digerTarzlar as tarz}
@@ -151,7 +151,7 @@
                                 type="button"
                                 aria-label="{tarz} frekansını aç"
                                 onclick={() => istasyonAc(tarz, '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-12 h-12"><path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM12 14v6M8 8l8 8"/></svg>', "var(--accent)", [tarz], true)}
-                                class="px-5 py-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-dim)] hover:text-white hover:border-[var(--accent)] hover:bg-[var(--accent)] transition-all text-[10px] font-black uppercase tracking-widest shadow-sm hover:shadow-[0_0_15px_var(--accent-glow)] active:scale-95"
+                                class="px-5 py-2.5 rounded-xl bg-(--bg-surface) border border-(--border) text-(--text-dim) hover:text-white hover:border-(--accent) hover:bg-(--accent) transition-all text-[10px] font-black uppercase tracking-widest shadow-sm hover:shadow-[0_0_15px_var(--accent-glow)] active:scale-95"
                             >
                                 {tarz}
                             </button>
@@ -168,28 +168,28 @@
                 type="button"
                 aria-label="Frekanslara Dön"
                 onclick={() => seciliIstasyon = null} 
-                class="flex items-center gap-2 text-[var(--text-dim)] hover:text-[var(--accent)] transition-colors mb-8 group w-fit"
+                class="flex items-center gap-2 text-(--text-dim) hover:text-(--accent) transition-colors mb-8 group w-fit"
             >
                 <svg class="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                 <span class="text-[10px] font-black uppercase tracking-[0.2em]">Frekanslara Dön</span>
             </button>
 
-            <header class="flex items-end gap-6 mb-10 border-b border-[var(--border)] pb-8 relative">
+            <header class="flex items-end gap-6 mb-10 border-b border-(--border) pb-8 relative">
                 <div class="drop-shadow-[0_0_20px_var(--accent-glow)]" style="color: {seciliIstasyon.color};">
                     {@html seciliIstasyon.ikon.replace('w-12 h-12', 'w-24 h-24 lg:w-32 lg:h-32')}
                 </div>
                 <div>
                     <h2 class="text-[10px] font-black tracking-[0.4em] uppercase opacity-70 mb-2" style="color: {seciliIstasyon.color}">Yayın Akışı Aktif</h2>
                     <h1 class="text-4xl lg:text-6xl font-black tracking-tighter uppercase italic">{seciliIstasyon.isim}</h1>
-                    <p class="text-[var(--text-dim)] font-bold text-xs uppercase tracking-widest mt-2">{seciliIstasyon.sarkilar.length} Veri Dosyası</p>
+                    <p class="text-(--text-dim) font-bold text-xs uppercase tracking-widest mt-2">{seciliIstasyon.sarkilar.length} Veri Dosyası</p>
                 </div>
             </header>
 
             <div class="flex flex-col gap-2">
                 {#each seciliIstasyon.sarkilar as sarki, index}
-                    <div class="flex items-center gap-4 p-3 pr-6 rounded-xl border border-transparent hover:border-[var(--border)] bg-transparent hover:bg-[var(--bg-surface)] transition-all group">
+                    <div class="flex items-center gap-4 p-3 pr-6 rounded-xl border border-transparent hover:border-(--border) bg-transparent hover:bg-(--bg-surface) transition-all group">
                         
-                        <div class="w-10 text-center font-mono text-[10px] font-bold text-[var(--text-dim)] group-hover:hidden">
+                        <div class="w-10 text-center font-mono text-[10px] font-bold text-(--text-dim) group-hover:hidden">
                             {(index + 1).toString().padStart(2, '0')}
                         </div>
                         
@@ -197,7 +197,7 @@
                             type="button"
                             aria-label="Şarkıyı Oynat"
                             onclick={() => sarkiCal(sarki)}
-                            class="w-10 h-10 hidden group-hover:flex items-center justify-center text-[var(--accent)] focus:outline-none"
+                            class="w-10 h-10 hidden group-hover:flex items-center justify-center text-(--accent) focus:outline-none"
                         >
                             <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                         </button>
@@ -207,11 +207,11 @@
                             class="flex-1 min-w-0 cursor-pointer text-left focus:outline-none" 
                             onclick={() => sarkiCal(sarki)}
                         >
-                            <h4 class="text-sm font-black truncate {playerState.aktifSarki?.id === sarki.id ? 'text-[var(--accent)]' : 'text-[var(--text-main)]'}">{sarki.isim}</h4>
-                            <p class="text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-widest truncate mt-0.5">{sarki.sarkici}</p>
+                            <h4 class="text-sm font-black truncate {playerState.aktifSarki?.id === sarki.id ? 'text-(--accent)' : 'text-(--text-main)'}">{sarki.isim}</h4>
+                            <p class="text-[10px] font-bold text-(--text-dim) uppercase tracking-widest truncate mt-0.5">{sarki.sarkici}</p>
                         </button>
 
-                        <div class="text-[10px] font-mono text-[var(--text-dim)] font-bold">
+                        <div class="text-[10px] font-mono text-(--text-dim) font-bold">
                             {formatSure(sarki.sure)}
                         </div>
 

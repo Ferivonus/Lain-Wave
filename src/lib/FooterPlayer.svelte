@@ -135,29 +135,29 @@
   }
 </script>
 
-<footer class="h-20 lg:h-24 bg-[var(--bg-surface)] border-t border-[var(--border)] flex items-center justify-between px-4 lg:px-8 z-40 shadow-[0_-10px_30px_rgba(0,0,0,0.3)] relative transition-all duration-500 backdrop-blur-md">
+<footer class="h-20 lg:h-24 bg-(--bg-surface) border-t border-(--border) flex items-center justify-between px-4 lg:px-8 z-40 shadow-[0_-10px_30px_rgba(0,0,0,0.3)] relative transition-all duration-500 backdrop-blur-md">
   
   <div class="flex items-center gap-4 w-1/3 min-w-0">
-    <div class="w-12 h-12 lg:w-14 lg:h-14 bg-[var(--bg-card)] rounded-xl shadow-lg border border-[var(--border)] flex-shrink-0 overflow-hidden group relative">
+    <div class="w-12 h-12 lg:w-14 lg:h-14 bg-(--bg-card) rounded-xl shadow-lg border border-(--border) shrink-0 overflow-hidden group relative">
       {#if playerState.aktifSarki?.kapak_yolu}
         <img src={convertFileSrc(playerState.aktifSarki.kapak_yolu)} alt="Albüm Kapağı" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
       {:else}
-        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-[var(--accent)]/20 to-[var(--accent-sec)]/20">
-          <svg class="w-6 h-6 text-[var(--text-dim)]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+        <div class="w-full h-full flex items-center justify-center bg-linear-to-br from-(--accent)/20 to-(--accent-sec)/20">
+          <svg class="w-6 h-6 text-(--text-dim)" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
         </div>
       {/if}
     </div>
     
     <div class="flex flex-col min-w-0">
-      <span class="text-sm font-bold text-[var(--text-main)] truncate leading-tight">
+      <span class="text-sm font-bold text-(--text-main) truncate leading-tight">
         {playerState.aktifSarki?.isim || "Lain Wave"}
       </span>
       {#if playerState.aktifSarki}
-        <a href="/artist/{encodeURIComponent(playerState.aktifSarki.sarkici)}" class="text-[11px] text-[var(--text-dim)] font-bold uppercase tracking-widest truncate hover:text-[var(--accent)] transition-colors mt-0.5">
+        <a href="/artist/{encodeURIComponent(playerState.aktifSarki.sarkici)}" class="text-[11px] text-(--text-dim) font-bold uppercase tracking-widest truncate hover:text-(--accent) transition-colors mt-0.5">
           {playerState.aktifSarki.sarkici}
         </a>
       {:else}
-        <span class="text-[10px] text-[var(--text-dim)] font-bold uppercase tracking-widest truncate mt-0.5">Sistem Hazır</span>
+        <span class="text-[10px] text-(--text-dim) font-bold uppercase tracking-widest truncate mt-0.5">Sistem Hazır</span>
       {/if}       
     </div>
     
@@ -174,7 +174,7 @@
         type="button" 
         aria-label="Karışık Çal" 
         disabled={!playerState.aktifSarki}
-        class="hidden sm:block text-[var(--text-dim)] hover:text-[var(--accent)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        class="hidden sm:block text-(--text-dim) hover:text-(--accent) transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline></svg>
       </button>
@@ -184,7 +184,7 @@
         aria-label="Önceki Şarkı" 
         onclick={oncekiSarki} 
         disabled={!playerState.aktifSarki}
-        class="text-[var(--text-main)] hover:scale-110 transition-transform active:scale-95 disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed shrink-0"
+        class="text-(--text-main) hover:scale-110 transition-transform active:scale-95 disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed shrink-0"
       >
         <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
       </button>
@@ -194,7 +194,7 @@
         onclick={oynatDuraklatToggle} 
         aria-label={playerState.suAnOynuyorMu ? "Duraklat" : "Oynat"}
         disabled={!playerState.aktifSarki}
-        class="w-10 h-10 lg:w-12 lg:h-12 shrink-0 bg-[var(--text-main)] text-[var(--bg-main)] rounded-full flex items-center justify-center hover:scale-105 transition-all shadow-[0_5px_15px_rgba(0,0,0,0.3)] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed"
+        class="w-10 h-10 lg:w-12 lg:h-12 shrink-0 bg-(--text-main) text-(--bg-main) rounded-full flex items-center justify-center hover:scale-105 transition-all shadow-[0_5px_15px_rgba(0,0,0,0.3)] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed"
       >
         {#if playerState.suAnOynuyorMu} 
           <svg class="w-5 h-5 lg:w-6 lg:h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
@@ -208,7 +208,7 @@
         aria-label="Sonraki Şarkı" 
         onclick={sonrakiSarki} 
         disabled={!playerState.aktifSarki}
-        class="text-[var(--text-main)] hover:scale-110 transition-transform active:scale-95 disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed shrink-0"
+        class="text-(--text-main) hover:scale-110 transition-transform active:scale-95 disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed shrink-0"
       >
         <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
       </button>
@@ -219,7 +219,7 @@
         onclick={toggleTekrarModu}
         disabled={!playerState.aktifSarki}
         class="hidden sm:block transition-all disabled:opacity-30 disabled:cursor-not-allowed 
-               {playerState.tekrarModu !== 'kapali' ? 'text-[var(--accent)] drop-shadow-[0_0_5px_var(--accent-glow)]' : 'text-[var(--text-dim)] hover:text-[var(--text-main)]'}"
+               {playerState.tekrarModu !== 'kapali' ? 'text-(--accent) drop-shadow-[0_0_5px_var(--accent-glow)]' : 'text-(--text-dim) hover:text-(--text-main)'}"
         title={playerState.tekrarModu === 'tek_sarki' ? "Şarkıyı Tekrarla" : playerState.tekrarModu === 'liste' ? "Listeyi Tekrarla" : "Tekrar Kapalı"}
       >
         {#if playerState.tekrarModu === 'tek_sarki'}
@@ -241,7 +241,7 @@
       </button>
     </div>
     
-    <div class="hidden sm:flex items-center gap-3 w-full text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-widest">
+    <div class="hidden sm:flex items-center gap-3 w-full text-[10px] font-bold text-(--text-dim) uppercase tracking-widest">
       <span class="w-10 text-right shrink-0">{formatZaman(playerState.suAnkiZaman)}</span>
       <div 
         bind:this={zamanCubuguRef}
@@ -256,10 +256,10 @@
         onpointercancel={handleZamanPointerUp}
         onkeydown={klavyeSarkiSar}
         aria-label="Şarkı ilerleme çubuğu"
-        class="flex-1 h-1.5 bg-[var(--border)] rounded-full cursor-pointer relative group transition-all hover:h-2 touch-none {!playerState.aktifSarki ? 'opacity-50 pointer-events-none' : ''}"
+        class="flex-1 h-1.5 bg-(--border) rounded-full cursor-pointer relative group transition-all hover:h-2 touch-none {!playerState.aktifSarki ? 'opacity-50 pointer-events-none' : ''}"
       >
         <div 
-          class="absolute top-0 left-0 h-full bg-[var(--accent)] rounded-full transition-all duration-100 ease-linear pointer-events-none" 
+          class="absolute top-0 left-0 h-full bg-(--accent) rounded-full transition-all duration-100 ease-linear pointer-events-none" 
           style="width: {(playerState.suAnkiZaman / (playerState.toplamZaman || 1)) * 100}%"
         >
           <div class="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
@@ -269,14 +269,14 @@
     </div>
   </div>
 
-  <div class="flex items-center justify-end gap-4 w-1/3 text-[var(--text-dim)] min-w-0">
+  <div class="flex items-center justify-end gap-4 w-1/3 text-(--text-dim) min-w-0">
     <div class="hidden md:flex items-center gap-3 group">
       
       <button 
         type="button" 
         aria-label="Sesi Aç/Kapat"
         onclick={sesKapatAc}
-        class="shrink-0 transition-transform hover:scale-110 active:scale-90 group-hover:text-[var(--text-main)]"
+        class="shrink-0 transition-transform hover:scale-110 active:scale-90 group-hover:text-(--text-main)"
       >
         <svg class="w-5 h-5 transition-colors" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           {#if playerState.sesSeviyesi === 0}
@@ -302,14 +302,14 @@
         onpointercancel={handleSesPointerUp}
         onkeydown={klavyeSesAyarla}
         aria-label="Ses seviyesi ayarı"
-        class="w-16 lg:w-24 h-1.5 bg-[var(--border)] rounded-full cursor-pointer relative group hover:h-2 transition-all touch-none shrink-0"
+        class="w-16 lg:w-24 h-1.5 bg-(--border) rounded-full cursor-pointer relative group hover:h-2 transition-all touch-none shrink-0"
       >
-        <div class="absolute top-0 left-0 h-full bg-[var(--text-dim)] group-hover:bg-[var(--accent)] rounded-full transition-all pointer-events-none" style="width: {playerState.sesSeviyesi * 100}%">
+        <div class="absolute top-0 left-0 h-full bg-(--text-dim) group-hover:bg-(--accent) rounded-full transition-all pointer-events-none" style="width: {playerState.sesSeviyesi * 100}%">
           <div class="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
         </div>
       </div>
 
-      <div class="flex items-center text-[10px] font-mono font-bold bg-[var(--bg-surface)] border border-[var(--border)] rounded-md px-1 py-1 focus-within:border-[var(--accent)] focus-within:text-[var(--accent)] transition-colors w-12 justify-center ml-1">
+      <div class="flex items-center text-[10px] font-mono font-bold bg-(--bg-surface) border border-(--border) rounded-md px-1 py-1 focus-within:border-(--accent) focus-within:text-(--accent) transition-colors w-12 justify-center ml-1">
           <input 
               type="number" 
               min="0" 
@@ -325,7 +325,7 @@
     <button 
       type="button"
       onclick={onToggleRightPanel} 
-      class="p-2.5 rounded-xl transition-all {sagMenuAcik ? 'text-[var(--accent)] bg-[var(--accent)]/10' : 'hover:text-[var(--text-main)] hover:bg-[var(--bg-card)]'} shrink-0"
+      class="p-2.5 rounded-xl transition-all {sagMenuAcik ? 'text-(--accent) bg-(--accent)/10' : 'hover:text-(--text-main) hover:bg-(--bg-card)'} shrink-0"
       aria-label="Sağ paneli değiştir"
     >
       <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">

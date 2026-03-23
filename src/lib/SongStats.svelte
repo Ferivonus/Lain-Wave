@@ -25,12 +25,12 @@
     }
 </script>
 
-<div class="flex items-center justify-end gap-3 lg:gap-5 text-[var(--text-dim)] font-medium shrink-0 text-[10px] lg:text-[11px] transition-all duration-500">
+<div class="flex items-center justify-end gap-3 lg:gap-5 text-(--text-dim) font-medium shrink-0 text-[10px] lg:text-[11px] transition-all duration-500">
     
     <button 
         type="button" 
         onclick={duzenleModaliAc}
-        class="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] p-2 rounded-lg hover:bg-[var(--accent)]/10 hover:text-[var(--accent)] transition-all shrink-0"
+        class="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--accent) p-2 rounded-lg hover:bg-(--accent)/10 hover:text-(--accent) transition-all shrink-0"
         aria-label="Verileri Düzenle"
         title="Verileri Düzenle"
     >
@@ -41,7 +41,7 @@
 
     {#if sarki.tarz && sarki.tarz.trim() !== ""}
         <div 
-            class="hidden xl:flex items-center px-2.5 py-1 rounded-md bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-dim)] uppercase tracking-[0.1em] font-black max-w-[90px] shrink-0 cursor-default hover:border-[var(--accent)]/30 hover:text-[var(--text-main)] transition-all shadow-sm" 
+            class="hidden xl:flex items-center px-2.5 py-1 rounded-md bg-(--bg-card) border border-(--border) text-(--text-dim) uppercase tracking-widest font-black max-w-[90px] shrink-0 cursor-default hover:border-(--accent)/30 hover:text-(--text-main) transition-all shadow-sm" 
             title="Tür: {sarki.tarz}"
         >
             <span class="truncate">{sarki.tarz}</span>
@@ -50,7 +50,7 @@
 
     {#if sarki.yil}
         <div 
-            class="hidden 2xl:flex items-center gap-1.5 px-2.5 py-1 rounded-md font-bold tracking-tight text-[var(--accent-sec)] bg-[var(--accent-sec)]/5 border border-[var(--accent-sec)]/10 cursor-default shrink-0 shadow-sm" 
+            class="hidden 2xl:flex items-center gap-1.5 px-2.5 py-1 rounded-md font-bold tracking-tight text-(--accent-sec) bg-(--accent-sec)/5 border border-(--accent-sec)/10 cursor-default shrink-0 shadow-sm" 
             title="Çıkış Yılı: {sarki.yil}"
         >
             <svg class="w-3 h-3 opacity-60" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -67,15 +67,15 @@
         <div 
             class="hidden lg:flex items-center px-2 py-0.5 rounded-md font-black tracking-[0.15em] uppercase border transition-all duration-300 cursor-default shrink-0
             {kaliteBuyuk === 'FLAC' || kaliteBuyuk === 'WAV'
-                ? 'border-[var(--accent)]/40 text-[var(--accent)] bg-[var(--accent)]/10 shadow-[0_0_10px_var(--accent-glow)]/10' 
-                : 'border-[var(--border)] text-[var(--text-dim)] bg-[var(--bg-card)]'}" 
+                ? 'border-(--accent)/40 text-(--accent) bg-(--accent)/10 shadow-[0_0_10px_var(--accent-glow)]/10' 
+                : 'border-(--border) text-(--text-dim) bg-(--bg-card)'}" 
             title="Ses Kalitesi: {sarki.kalite}">
             {kaliteBuyuk}
         </div>
     {/if}
 
     <div 
-        class="flex items-center gap-2 min-w-[55px] justify-end group cursor-default hover:text-[var(--accent)] transition-all shrink-0" 
+        class="flex items-center gap-2 min-w-[55px] justify-end group cursor-default hover:text-(--accent) transition-all shrink-0" 
         title="{sarki.dinlenme_sayisi || 0} Kez Dinlendi"
     >
         <svg class="w-4 h-4 opacity-50 group-hover:opacity-100 group-hover:scale-110 transition-all" fill="currentColor" viewBox="0 0 24 24">
@@ -85,7 +85,7 @@
     </div>
 
     <div 
-        class="flex items-center gap-2 min-w-[50px] justify-end group cursor-default hover:text-[var(--text-main)] transition-all shrink-0" 
+        class="flex items-center gap-2 min-w-[50px] justify-end group cursor-default hover:text-(--text-main) transition-all shrink-0" 
         title="Süre: {formatSure(sarki.sure)}"
     >
         <svg class="w-4 h-4 opacity-40 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">

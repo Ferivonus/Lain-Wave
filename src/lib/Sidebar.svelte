@@ -22,15 +22,15 @@
     }
 </script>
 
-<aside class="w-20 lg:w-64 bg-[var(--bg-surface)] flex flex-col py-6 border-r border-[var(--border)] z-20 flex-shrink-0 transition-all duration-500 relative h-full">
+<aside class="w-20 lg:w-64 bg-(--bg-surface) flex flex-col py-6 border-r border-(--border) z-20 shrink-0 transition-all duration-500 relative h-full">
     
     <div class="flex items-center justify-center lg:justify-start px-0 lg:px-6 mb-8 shrink-0">
-        <div class="w-10 h-10 bg-[var(--accent)] rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-[var(--accent)]/20">
+        <div class="w-10 h-10 bg-(--accent) rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-(--accent)/20">
             <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
             </svg>
         </div>
-        <h1 class="hidden lg:block text-lg font-black tracking-widest uppercase text-[var(--text-main)] ml-3 italic">
+        <h1 class="hidden lg:block text-lg font-black tracking-widest uppercase text-(--text-main) ml-3 italic">
             LAIN WAVE
         </h1>
     </div>
@@ -39,7 +39,7 @@
         <button 
             type="button" 
             onclick={() => playerState.isAddMusicModalOpen = true} 
-            class="w-full bg-[var(--accent)] hover:opacity-90 text-white rounded-2xl py-3.5 flex items-center justify-center gap-2 font-black shadow-xl transition-all active:scale-95 group"
+            class="w-full bg-(--accent) hover:opacity-90 text-white rounded-2xl py-3.5 flex items-center justify-center gap-2 font-black shadow-xl transition-all active:scale-95 group"
             aria-label="Müzik Aktar"
         >
             <svg class="w-5 h-5 shrink-0 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
@@ -51,69 +51,69 @@
 
     <nav class="flex flex-col gap-1 px-3 lg:px-4 flex-1 overflow-y-auto custom-scrollbar pr-1 pb-4">
         
-        <a href="/" class="flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all group {aktifYol === '/' ? 'bg-[var(--accent)]/10 text-[var(--accent)] shadow-sm' : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card)]'}">
+        <a href="/" class="flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all group {aktifYol === '/' ? 'bg-(--accent)/10 text-(--accent) shadow-sm' : 'text-(--text-dim) hover:text-(--text-main) hover:bg-(--bg-card)'}">
             <svg class="w-6 h-6 lg:w-5 lg:h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> 
             <span class="hidden lg:block uppercase tracking-wider text-[10px] lg:text-[11px]">Ana Sayfa</span>
         </a>
 
-        <a href="/discover" class="flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all {aktifYol === '/discover' ? 'bg-[var(--accent)]/10 text-[var(--accent)] shadow-sm' : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card)]'}">
+        <a href="/discover" class="flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all {aktifYol === '/discover' ? 'bg-(--accent)/10 text-(--accent) shadow-sm' : 'text-(--text-dim) hover:text-(--text-main) hover:bg-(--bg-card)'}">
             <svg class="w-6 h-6 lg:w-5 lg:h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path><line x1="2" y1="12" x2="22" y2="12"></line></svg>
             <span class="hidden lg:block uppercase tracking-wider text-[10px] lg:text-[11px]">Ağ Tarayıcısı</span>
         </a>
 
-        <a href="/library" class="flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all {aktifYol === '/library' ? 'bg-[var(--accent)]/10 text-[var(--accent)] shadow-sm' : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card)]'}">
+        <a href="/library" class="flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all {aktifYol === '/library' ? 'bg-(--accent)/10 text-(--accent) shadow-sm' : 'text-(--text-dim) hover:text-(--text-main) hover:bg-(--bg-card)'}">
             <svg class="w-6 h-6 lg:w-5 lg:h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
             <span class="hidden lg:block uppercase tracking-wider text-[10px] lg:text-[11px]">Kütüphane</span>
         </a>
 
-        <a href="/search" class="flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all {aktifYol === '/search' ? 'bg-[var(--accent)]/10 text-[var(--accent)] shadow-sm' : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card)]'}">
+        <a href="/search" class="flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all {aktifYol === '/search' ? 'bg-(--accent)/10 text-(--accent) shadow-sm' : 'text-(--text-dim) hover:text-(--text-main) hover:bg-(--bg-card)'}">
             <svg class="w-6 h-6 lg:w-5 lg:h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> 
             <span class="hidden lg:block uppercase tracking-wider text-[10px] lg:text-[11px]">Ara</span>
         </a>
 
-        <a href="/favorites" class="flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all {aktifYol === '/favorites' ? 'bg-[var(--accent)]/10 text-[var(--accent)] shadow-sm' : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card)]'}">
+        <a href="/favorites" class="flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all {aktifYol === '/favorites' ? 'bg-(--accent)/10 text-(--accent) shadow-sm' : 'text-(--text-dim) hover:text-(--text-main) hover:bg-(--bg-card)'}">
             <svg class="w-6 h-6 lg:w-5 lg:h-5 shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
             <span class="hidden lg:block uppercase tracking-wider text-[10px] lg:text-[11px]">Favoriler</span>
         </a>
 
-        <a href="/artists" class="flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all {aktifYol === '/artists' ? 'bg-[var(--accent)]/10 text-[var(--accent)] shadow-sm' : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card)]'}">
+        <a href="/artists" class="flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all {aktifYol === '/artists' ? 'bg-(--accent)/10 text-(--accent) shadow-sm' : 'text-(--text-dim) hover:text-(--text-main) hover:bg-(--bg-card)'}">
             <svg class="w-6 h-6 lg:w-5 lg:h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
             <span class="hidden lg:block uppercase tracking-wider text-[10px] lg:text-[11px]">Sanatçılar</span>
         </a>
 
-        <a href="/radio" class="flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all {aktifYol === '/radio' ? 'bg-[var(--accent)]/10 text-[var(--accent)] shadow-sm' : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card)]'}">
+        <a href="/radio" class="flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all {aktifYol === '/radio' ? 'bg-(--accent)/10 text-(--accent) shadow-sm' : 'text-(--text-dim) hover:text-(--text-main) hover:bg-(--bg-card)'}">
             <svg class="w-6 h-6 lg:w-5 lg:h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2"></circle><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"></path></svg>
             <span class="hidden lg:block uppercase tracking-wider text-[10px] lg:text-[11px]">Radyo</span>
         </a>
 
-        <a href="/podcasts" class="flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all {aktifYol === '/podcasts' ? 'bg-[var(--accent)]/10 text-[var(--accent)] shadow-sm' : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card)]'}">
+        <a href="/podcasts" class="flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all {aktifYol === '/podcasts' ? 'bg-(--accent)/10 text-(--accent) shadow-sm' : 'text-(--text-dim) hover:text-(--text-main) hover:bg-(--bg-card)'}">
             <svg class="w-6 h-6 lg:w-5 lg:h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path></svg>
             <span class="hidden lg:block uppercase tracking-wider text-[10px] lg:text-[11px]">Podcast</span>
         </a>
 
         <div class="mt-8 mb-3 px-4 hidden lg:flex items-center justify-between shrink-0">
-            <a href="/playlists" class="text-[10px] font-black text-[var(--text-dim)] tracking-[0.3em] uppercase hover:text-[var(--accent)] transition-colors {aktifYol === '/playlists' ? 'text-[var(--accent)]' : ''}">Koleksiyonlar</a>
-            <button type="button" onclick={onYeniPlaylist} class="text-[var(--text-dim)] hover:text-[var(--accent)] p-1 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] rounded-md border border-[var(--border)] transition-all" title="Yeni Liste Oluştur">
+            <a href="/playlists" class="text-[10px] font-black text-(--text-dim) tracking-[0.3em] uppercase hover:text-(--accent) transition-colors {aktifYol === '/playlists' ? 'text-(--accent)' : ''}">Koleksiyonlar</a>
+            <button type="button" onclick={onYeniPlaylist} class="text-(--text-dim) hover:text-(--accent) p-1 bg-(--bg-card) hover:bg-(--bg-card-hover) rounded-md border border-(--border) transition-all" title="Yeni Liste Oluştur">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             </button>
         </div>
 
         {#each playerState.playlistler as liste}
-            <div class="flex items-center group rounded-xl transition-all border border-transparent {aktifYol === `/playlist/${liste.id}` ? 'bg-[var(--accent)]/10 border-[var(--accent)]/20' : 'hover:bg-[var(--bg-card)] hover:border-[var(--border)]'}">
-                <a href="/playlist/{liste.id}" class="flex-1 py-3 px-4 text-[10px] lg:text-[11px] font-bold truncate flex items-center gap-4 {aktifYol === `/playlist/${liste.id}` ? 'text-[var(--accent)]' : 'text-[var(--text-dim)] hover:text-[var(--text-main)]'}">
+            <div class="flex items-center group rounded-xl transition-all border border-transparent {aktifYol === `/playlist/${liste.id}` ? 'bg-(--accent)/10 border-(--accent)/20' : 'hover:bg-(--bg-card) hover:border-(--border)'}">
+                <a href="/playlist/{liste.id}" class="flex-1 py-3 px-4 text-[10px] lg:text-[11px] font-bold truncate flex items-center gap-4 {aktifYol === `/playlist/${liste.id}` ? 'text-(--accent)' : 'text-(--text-dim) hover:text-(--text-main)'}">
                     <svg class="w-6 h-6 lg:w-4 lg:h-4 shrink-0 opacity-50" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
                     <span class="hidden lg:block truncate pr-2">{liste.isim}</span>
                 </a>
                 
-                <button type="button" onclick={(e) => handlePlaylistSil(liste.id, liste.isim, e)} class="hidden lg:block opacity-0 group-hover:opacity-100 text-[var(--text-dim)]/30 hover:text-red-500 p-2 mr-1 transition-all shrink-0" aria-label="Sil" title="Listeyi Sil">
+                <button type="button" onclick={(e) => handlePlaylistSil(liste.id, liste.isim, e)} class="hidden lg:block opacity-0 group-hover:opacity-100 text-(--text-dim)/30 hover:text-red-500 p-2 mr-1 transition-all shrink-0" aria-label="Sil" title="Listeyi Sil">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg>
                 </button>
             </div>
         {/each}
     </nav>
 
-    <div class="px-3 lg:px-4 mt-auto pt-4 border-t border-[var(--border)] shrink-0">
-        <a href="/settings" class="flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all {aktifYol === '/settings' ? 'bg-[var(--accent)]/10 text-[var(--accent)] shadow-sm' : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card)]'}">
+    <div class="px-3 lg:px-4 mt-auto pt-4 border-t border-(--border) shrink-0">
+        <a href="/settings" class="flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all {aktifYol === '/settings' ? 'bg-(--accent)/10 text-(--accent) shadow-sm' : 'text-(--text-dim) hover:text-(--text-main) hover:bg-(--bg-card)'}">
             <svg class="w-6 h-6 lg:w-5 lg:h-5 shrink-0 opacity-70" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> 
             <span class="hidden lg:block uppercase tracking-wider text-[10px] lg:text-[11px]">Ayarlar</span>
         </a>

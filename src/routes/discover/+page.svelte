@@ -76,10 +76,10 @@
   }
 </script>
 
-<div class="p-8 lg:p-12 w-full min-h-full pb-32 flex flex-col relative min-w-0 bg-transparent text-[var(--text-main)] transition-colors duration-500 overflow-y-auto custom-scrollbar">
+<div class="p-8 lg:p-12 w-full min-h-full pb-32 flex flex-col relative min-w-0 bg-transparent text-(--text-main) transition-colors duration-500 overflow-y-auto custom-scrollbar">
   
-  <section class="relative w-full h-72 rounded-[var(--radius)] overflow-hidden mb-12 shadow-2xl border border-[var(--border)] group shrink-0" in:fade>
-    <div class="absolute inset-0 bg-gradient-to-r from-[var(--accent)] via-[var(--accent-sec)] to-[var(--bg-main)] opacity-60 z-10"></div>
+  <section class="relative w-full h-72 rounded-(--radius) overflow-hidden mb-12 shadow-2xl border border-(--border) group shrink-0" in:fade>
+    <div class="absolute inset-0 bg-linear-to-r from-(--accent) via-(--accent-sec) to-(--bg-main) opacity-60 z-10"></div>
     <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=2070')] bg-cover bg-center mix-blend-overlay group-hover:scale-105 transition-transform duration-1000"></div>
     <div class="absolute inset-0 p-10 flex flex-col justify-center z-20">
       <div class="flex items-center gap-3 mb-4">
@@ -91,8 +91,8 @@
     </div>
   </section>
 
-  <section class="mb-16 bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] p-8 shadow-xl relative overflow-hidden group shrink-0">
-      <div class="absolute top-0 right-0 w-64 h-64 bg-[var(--accent)]/5 blur-[80px] rounded-full pointer-events-none"></div>
+  <section class="mb-16 bg-(--bg-card) border border-(--border) rounded-(--radius) p-8 shadow-xl relative overflow-hidden group shrink-0">
+      <div class="absolute top-0 right-0 w-64 h-64 bg-(--accent)/5 blur-[80px] rounded-full pointer-events-none"></div>
       
       <div class="flex items-center gap-4 mb-6 relative z-10">
           <div class="w-12 h-12 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center border border-red-500/20 shrink-0">
@@ -100,7 +100,7 @@
           </div>
           <div>
               <h2 class="text-xl font-black uppercase tracking-tight italic">Ağ Tarayıcısı</h2>
-              <p class="text-[10px] text-[var(--text-dim)] font-bold tracking-widest uppercase mt-1">YouTube üzerinden müzik arayın veya URL yapıştırın</p>
+              <p class="text-[10px] text-(--text-dim) font-bold tracking-widest uppercase mt-1">YouTube üzerinden müzik arayın veya URL yapıştırın</p>
           </div>
       </div>
 
@@ -110,7 +110,7 @@
               bind:value={playerState.aramaSorgusu}
               onkeydown={(e) => e.key === 'Enter' && !playerState.aramaYapiliyor && muzikAra()}
               placeholder="Şarkı adı, link veya playlist adresi yazın..." 
-              class="flex-1 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl px-6 py-4 outline-none text-sm text-[var(--text-main)] focus:border-red-500/50 transition-colors placeholder:text-[var(--text-dim)]/50 font-mono"
+              class="flex-1 bg-(--bg-surface) border border-(--border) rounded-xl px-6 py-4 outline-none text-sm text-(--text-main) focus:border-red-500/50 transition-colors placeholder:text-(--text-dim)/50 font-mono"
               disabled={playerState.aramaYapiliyor}
           />
           <button 
@@ -127,13 +127,13 @@
       </div>
       
       {#if playerState.indirmeMesaji}
-          <div class="mb-2 text-[10px] font-mono font-bold uppercase tracking-widest {playerState.indirmeMesaji.includes('başarı') || playerState.indirmeMesaji.includes('tamamlandı') ? 'text-[var(--accent)]' : 'text-red-400'}" in:slide>> {playerState.indirmeMesaji}</div>
+          <div class="mb-2 text-[10px] font-mono font-bold uppercase tracking-widest {playerState.indirmeMesaji.includes('başarı') || playerState.indirmeMesaji.includes('tamamlandı') ? 'text-(--accent)' : 'text-red-400'}" in:slide>> {playerState.indirmeMesaji}</div>
       {/if}
 
       {#if playerState.aramaSonuclari.length > 0}
           <div class="flex flex-col gap-2 mt-6" in:fade>
-              <div class="flex justify-between items-end border-b border-[var(--border)] pb-2 mb-2">
-                  <h3 class="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.3em]">
+              <div class="flex justify-between items-end border-b border-(--border) pb-2 mb-2">
+                  <h3 class="text-[10px] font-black text-(--text-dim) uppercase tracking-[0.3em]">
                       Bulunan Sinyaller ({playerState.aramaSonuclari.length})
                   </h3>
                   {#if playerState.aramaSonuclari.length > 1}
@@ -141,7 +141,7 @@
                           type="button"
                           onclick={tumunuIndir}
                           disabled={playerState.topluIndirmeAktif}
-                          class="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border transition-all {playerState.topluIndirmeAktif ? 'bg-red-500/10 text-red-500 border-red-500/30 cursor-not-allowed' : 'text-[var(--text-main)] border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--accent)]'}"
+                          class="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border transition-all {playerState.topluIndirmeAktif ? 'bg-red-500/10 text-red-500 border-red-500/30 cursor-not-allowed' : 'text-(--text-main) border-(--border) hover:border-(--accent) hover:text-(--accent)'}"
                       >
                           {#if playerState.topluIndirmeAktif} Veri Çekiliyor... {:else} Tümünü İndir {/if}
                       </button>
@@ -150,16 +150,16 @@
               
               {#each playerState.aramaSonuclari.slice(0, playerState.gosterilenSayi) as sonuc}
                   {@const isDownloading = playerState.aktifIndirmeler.has(sonuc.webpage_url)}
-                  <div class="flex items-center gap-4 p-3 bg-[var(--bg-surface)] border border-[var(--border)] hover:border-red-500/30 rounded-xl group transition-all w-full min-w-0">
+                  <div class="flex items-center gap-4 p-3 bg-(--bg-surface) border border-(--border) hover:border-red-500/30 rounded-xl group transition-all w-full min-w-0">
                       <div class="w-16 h-10 bg-black rounded-lg overflow-hidden shrink-0 relative">
                           <img src={sonuc.thumbnail} alt="" class="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity" />
                       </div>
                       <div class="flex-1 min-w-0">
-                          <p class="text-xs font-bold text-[var(--text-main)] truncate group-hover:text-red-400 transition-colors">{sonuc.title}</p>
+                          <p class="text-xs font-bold text-(--text-main) truncate group-hover:text-red-400 transition-colors">{sonuc.title}</p>
                           <div class="flex items-center gap-2 mt-1">
-                              <span class="text-[9px] font-black text-[var(--text-dim)] uppercase truncate max-w-[120px]">{sonuc.channel}</span>
-                              <span class="w-1 h-1 bg-[var(--border)] rounded-full"></span>
-                              <span class="text-[9px] font-mono text-[var(--text-dim)]">{sonuc.duration_string}</span>
+                              <span class="text-[9px] font-black text-(--text-dim) uppercase truncate max-w-[120px]">{sonuc.channel}</span>
+                              <span class="w-1 h-1 bg-(--border) rounded-full"></span>
+                              <span class="text-[9px] font-mono text-(--text-dim)">{sonuc.duration_string}</span>
                           </div>
                       </div>
                       
@@ -168,7 +168,7 @@
                           onclick={() => youtubeIndir(sonuc.webpage_url)}
                           disabled={isDownloading || playerState.topluIndirmeAktif}
                           aria-label="{sonuc.title} indir"
-                          class="p-3 text-[var(--text-dim)] hover:text-white hover:bg-red-500 rounded-lg transition-all disabled:opacity-50 shrink-0 {isDownloading ? 'text-red-500 bg-red-500/10' : ''}"
+                          class="p-3 text-(--text-dim) hover:text-white hover:bg-red-500 rounded-lg transition-all disabled:opacity-50 shrink-0 {isDownloading ? 'text-red-500 bg-red-500/10' : ''}"
                       >
                           {#if isDownloading}
                               <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -183,7 +183,7 @@
                   <button 
                       type="button" 
                       onclick={() => playerState.gosterilenSayi += 5}
-                      class="mt-4 py-3 w-full rounded-xl border border-dashed border-[var(--border)] text-[10px] font-black uppercase tracking-widest text-[var(--text-dim)] hover:text-[var(--accent)] hover:border-[var(--accent)]/50 hover:bg-[var(--accent)]/5 transition-all"
+                      class="mt-4 py-3 w-full rounded-xl border border-dashed border-(--border) text-[10px] font-black uppercase tracking-widest text-(--text-dim) hover:text-(--accent) hover:border-(--accent)/50 hover:bg-(--accent)/5 transition-all"
                   >
                       Daha Fazla Göster ({playerState.aramaSonuclari.length - playerState.gosterilenSayi} Kaldı)
                   </button>
@@ -193,16 +193,16 @@
   </section>
 
   <section class="mb-16 shrink-0">
-    <h2 class="text-xs font-black text-[var(--text-dim)] mb-6 uppercase tracking-[0.4em] flex items-center gap-4">FREKANS GRUPLARI <div class="h-px flex-1 bg-[var(--border)] opacity-50"></div></h2>
+    <h2 class="text-xs font-black text-(--text-dim) mb-6 uppercase tracking-[0.4em] flex items-center gap-4">FREKANS GRUPLARI <div class="h-px flex-1 bg-(--border) opacity-50"></div></h2>
     <div class="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
       {#each kategoriler as kat, i}
-        <a href="/search?q={kat.isim}" class="flex-shrink-0 w-36 h-44 bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] p-5 flex flex-col justify-between hover:bg-[var(--bg-card-hover)] hover:border-[var(--accent)]/50 transition-all group shadow-lg" in:scale={{ duration: 400, delay: i * 50 }}>
+        <a href="/search?q={kat.isim}" class="shrink-0 w-36 h-44 bg-(--bg-card) border border-(--border) rounded-(--radius) p-5 flex flex-col justify-between hover:bg-(--bg-card-hover) hover:border-(--accent)/50 transition-all group shadow-lg" in:scale={{ duration: 400, delay: i * 50 }}>
           <span class="text-4xl group-hover:scale-110 transition-transform">
              {@html tarzIkonlari[kat.isim] || '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>'}
           </span>
           <div class="min-w-0">
-            <p class="font-black text-sm uppercase tracking-tight group-hover:text-[var(--accent)] transition-colors truncate">{kat.isim}</p>
-            <p class="text-[9px] font-bold text-[var(--text-dim)] uppercase">{kat.adet} Parça</p>
+            <p class="font-black text-sm uppercase tracking-tight group-hover:text-(--accent) transition-colors truncate">{kat.isim}</p>
+            <p class="text-[9px] font-bold text-(--text-dim) uppercase">{kat.adet} Parça</p>
           </div>
         </a>
       {/each}
@@ -212,7 +212,7 @@
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
     
     <div class="lg:col-span-5 flex flex-col min-w-0">
-      <h2 class="text-xl font-black text-[var(--text-main)] mb-8 flex items-center gap-4 uppercase italic tracking-tight"><span class="text-[var(--accent)] text-3xl font-serif">#</span> Zirvedekiler</h2>
+      <h2 class="text-xl font-black text-(--text-main) mb-8 flex items-center gap-4 uppercase italic tracking-tight"><span class="text-(--accent) text-3xl font-serif">#</span> Zirvedekiler</h2>
       <div class="flex flex-col gap-3">
         {#each enCokDinlenenler as sarki, index}
           <div 
@@ -220,50 +220,50 @@
             onclick={() => sarkiCal(sarki)}
             onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && sarkiCal(sarki)}
             aria-label="{sarki.isim} çal"
-            class="flex items-center gap-4 p-4 rounded-2xl transition-all group cursor-pointer border {playerState.aktifSarki?.id === sarki.id ? 'bg-[var(--accent)]/10 border-[var(--accent)]/30' : 'bg-[var(--bg-card)] border-[var(--border)] hover:bg-[var(--bg-card-hover)] hover:border-[var(--accent)]/30'}"
+            class="flex items-center gap-4 p-4 rounded-2xl transition-all group cursor-pointer border {playerState.aktifSarki?.id === sarki.id ? 'bg-(--accent)/10 border-(--accent)/30' : 'bg-(--bg-card) border-(--border) hover:bg-(--bg-card-hover) hover:border-(--accent)/30'}"
             in:fly={{ x: -20, duration: 400, delay: index * 50 }}
           >
             <div class="w-6 text-center shrink-0">
                {#if playerState.aktifSarki?.id === sarki.id && playerState.suAnOynuyorMu}
                   <div class="flex items-end justify-center gap-0.5 h-3.5 mb-1">
-                     <div class="w-1 bg-[var(--accent)] animate-[bounce_1s_infinite]"></div>
-                     <div class="w-1 bg-[var(--accent)] animate-[bounce_1.2s_infinite]"></div>
-                     <div class="w-1 bg-[var(--accent)] animate-[bounce_0.8s_infinite]"></div>
+                     <div class="w-1 bg-(--accent) animate-bounce"></div>
+                     <div class="w-1 bg-(--accent) animate-[bounce_1.2s_infinite]"></div>
+                     <div class="w-1 bg-(--accent) animate-[bounce_0.8s_infinite]"></div>
                   </div>
                {:else}
-                  <span class="text-lg font-black text-[var(--text-dim)]/20 group-hover:hidden italic">{index + 1}</span>
-                  <svg class="w-4 h-4 mx-auto hidden group-hover:block text-[var(--accent)]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                  <span class="text-lg font-black text-(--text-dim)/20 group-hover:hidden italic">{index + 1}</span>
+                  <svg class="w-4 h-4 mx-auto hidden group-hover:block text-(--accent)" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
                {/if}
             </div>
-            <div class="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-[var(--border)] bg-[var(--bg-surface)]">
+            <div class="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-(--border) bg-(--bg-surface)">
               {#if sarki.kapak_yolu}
                 <img src={convertFileSrc(sarki.kapak_yolu)} alt="" class="w-full h-full object-cover group-hover:scale-110 transition-transform" />
               {:else}
-                <div class="w-full h-full flex items-center justify-center text-[var(--text-dim)]/30 italic font-black text-xs">LW</div>
+                <div class="w-full h-full flex items-center justify-center text-(--text-dim)/30 italic font-black text-xs">LW</div>
               {/if}
             </div>
             <div class="flex-1 min-w-0">
-              <span class="font-bold text-[var(--text-main)] truncate block text-sm group-hover:text-[var(--accent)] transition-colors">{sarki.isim}</span>
-              <button onclick={(e) => { e.stopPropagation(); }} class="text-[10px] text-[var(--text-dim)] font-bold uppercase tracking-widest truncate block opacity-80 hover:text-[var(--accent)] text-left w-full">
+              <span class="font-bold text-(--text-main) truncate block text-sm group-hover:text-(--accent) transition-colors">{sarki.isim}</span>
+              <button onclick={(e) => { e.stopPropagation(); }} class="text-[10px] text-(--text-dim) font-bold uppercase tracking-widest truncate block opacity-80 hover:text-(--accent) text-left w-full">
                 {sarki.sarkici}
               </button>
             </div>
             
             <div class="shrink-0 flex items-center gap-1" onclick={(e) => e.stopPropagation()} role="presentation">
-              <select aria-label="Listeye Ekle" onchange={(e) => handlePlaylistEkle(sarki.id, e)} class="bg-[var(--bg-surface)] text-[9px] text-[var(--text-dim)] rounded-lg px-1 py-1 outline-none border border-[var(--border)] w-16 focus:border-[var(--accent)] opacity-70 hover:opacity-100 hidden sm:block transition-all cursor-pointer font-bold">
+              <select aria-label="Listeye Ekle" onchange={(e) => handlePlaylistEkle(sarki.id, e)} class="bg-(--bg-surface) text-[9px] text-(--text-dim) rounded-lg px-1 py-1 outline-none border border-(--border) w-16 focus:border-(--accent) opacity-70 hover:opacity-100 hidden sm:block transition-all cursor-pointer font-bold">
                 <option value="">➕ LİSTE</option>
                 {#each playerState.playlistler as pl}
                   {#if !pl.sarkilar.includes(sarki.id)}<option value={pl.id}>{pl.isim.toUpperCase()}</option>{/if}
                 {/each}
               </select>
               
-              <button type="button" aria-label="Düzenle" title="Bilgileri Düzenle" onclick={(e) => editModaliAc(sarki, e)} class="text-[var(--text-dim)]/50 hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 p-1.5 rounded-lg transition-all hidden sm:block">
+              <button type="button" aria-label="Düzenle" title="Bilgileri Düzenle" onclick={(e) => editModaliAc(sarki, e)} class="text-(--text-dim)/50 hover:text-(--accent) hover:bg-(--accent)/10 p-1.5 rounded-lg transition-all hidden sm:block">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
               </button>
               
               <FavoriteButton sarkiId={sarki.id} />
               
-              <button type="button" aria-label="Sil" title="Sil" onclick={(e) => handleSarkiSil(sarki, e)} class="text-[var(--text-dim)]/50 hover:text-red-500 hover:bg-red-500/10 p-1.5 rounded-lg transition-all">
+              <button type="button" aria-label="Sil" title="Sil" onclick={(e) => handleSarkiSil(sarki, e)} class="text-(--text-dim)/50 hover:text-red-500 hover:bg-red-500/10 p-1.5 rounded-lg transition-all">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
               </button>
             </div>
@@ -273,7 +273,7 @@
     </div>
 
     <div class="lg:col-span-7 flex flex-col min-w-0">
-      <h2 class="text-xl font-black text-[var(--text-main)] mb-8 flex items-center gap-4 uppercase italic tracking-tight"><span class="text-[var(--accent-sec)] text-3xl font-serif">/</span> Son Eklenenler</h2>
+      <h2 class="text-xl font-black text-(--text-main) mb-8 flex items-center gap-4 uppercase italic tracking-tight"><span class="text-(--accent-sec) text-3xl font-serif">/</span> Son Eklenenler</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {#each yeniEklenenler as sarki, i}
           <div 
@@ -281,30 +281,30 @@
             onclick={() => sarkiCal(sarki)}
             onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && sarkiCal(sarki)}
             aria-label="{sarki.isim} çal"
-            class="flex items-center gap-3 p-3 rounded-2xl transition-all cursor-pointer group border {playerState.aktifSarki?.id === sarki.id ? 'bg-[var(--accent)]/10 border-[var(--accent)]/30' : 'bg-[var(--bg-card)] border-[var(--border)] hover:bg-[var(--bg-card-hover)] hover:border-[var(--accent-sec)]/30'}"
+            class="flex items-center gap-3 p-3 rounded-2xl transition-all cursor-pointer group border {playerState.aktifSarki?.id === sarki.id ? 'bg-(--accent)/10 border-(--accent)/30' : 'bg-(--bg-card) border-(--border) hover:bg-(--bg-card-hover) hover:border-(--accent-sec)/30'}"
             in:fly={{ y: 10, duration: 400, delay: i * 30 }}
           >
-            <div class="w-10 h-10 rounded-xl overflow-hidden shrink-0 relative border border-[var(--border)]">
+            <div class="w-10 h-10 rounded-xl overflow-hidden shrink-0 relative border border-(--border)">
                {#if sarki.kapak_yolu}
                   <img src={convertFileSrc(sarki.kapak_yolu)} alt="" class="w-full h-full object-cover group-hover:scale-110 transition-transform" />
                {:else}
-                  <div class="w-full h-full bg-[var(--bg-surface)] flex items-center justify-center text-[var(--text-dim)]/20 text-xs">🎵</div>
+                  <div class="w-full h-full bg-(--bg-surface) flex items-center justify-center text-(--text-dim)/20 text-xs">🎵</div>
                {/if}
-               <div class="absolute inset-0 bg-[var(--accent)]/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></div>
+               <div class="absolute inset-0 bg-(--accent)/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></div>
             </div>
             <div class="flex-1 min-w-0">
-              <span class="text-xs font-bold text-[var(--text-main)] truncate block leading-tight group-hover:text-[var(--accent)] transition-colors">{sarki.isim}</span>
-              <span class="text-[9px] text-[var(--text-dim)] font-bold truncate uppercase tracking-widest opacity-80 block">{sarki.sarkici}</span>
+              <span class="text-xs font-bold text-(--text-main) truncate block leading-tight group-hover:text-(--accent) transition-colors">{sarki.isim}</span>
+              <span class="text-[9px] text-(--text-dim) font-bold truncate uppercase tracking-widest opacity-80 block">{sarki.sarkici}</span>
             </div>
             
             <div onclick={(e) => e.stopPropagation()} role="presentation" class="shrink-0 flex items-center gap-1">
-               <button type="button" aria-label="Düzenle" title="Düzenle" onclick={(e) => editModaliAc(sarki, e)} class="text-[var(--text-dim)]/50 hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 p-1.5 rounded-lg transition-all">
+               <button type="button" aria-label="Düzenle" title="Düzenle" onclick={(e) => editModaliAc(sarki, e)} class="text-(--text-dim)/50 hover:text-(--accent) hover:bg-(--accent)/10 p-1.5 rounded-lg transition-all">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                </button>
                
                <FavoriteButton sarkiId={sarki.id} />
                
-               <button type="button" aria-label="Sil" title="Sil" onclick={(e) => handleSarkiSil(sarki, e)} class="text-[var(--text-dim)]/50 hover:text-red-500 hover:bg-red-500/10 p-1.5 rounded-lg transition-all">
+               <button type="button" aria-label="Sil" title="Sil" onclick={(e) => handleSarkiSil(sarki, e)} class="text-(--text-dim)/50 hover:text-red-500 hover:bg-red-500/10 p-1.5 rounded-lg transition-all">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                </button>
             </div>
@@ -312,15 +312,15 @@
         {/each}
       </div>
 
-      <div class="mt-8 p-6 rounded-[var(--radius)] bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-surface)] border border-[var(--border)] flex items-center justify-between shadow-xl shrink-0" in:fade={{ delay: 500 }}>
+      <div class="mt-8 p-6 rounded-(--radius) bg-linear-to-br from-(--bg-card) to-(--bg-surface) border border-(--border) flex items-center justify-between shadow-xl shrink-0" in:fade={{ delay: 500 }}>
         <div class="flex flex-col">
-          <span class="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.3em] mb-2">Toplam Veri Akışı</span>
+          <span class="text-[10px] font-black text-(--text-dim) uppercase tracking-[0.3em] mb-2">Toplam Veri Akışı</span>
           <div class="flex items-end gap-2 leading-none">
-             <span class="text-4xl font-black text-[var(--text-main)] italic tracking-tighter">{playerState.sarkiListesi.length}</span>
-             <span class="text-[10px] font-bold text-[var(--accent)] uppercase tracking-widest mb-1">Dizin</span>
+             <span class="text-4xl font-black text-(--text-main) italic tracking-tighter">{playerState.sarkiListesi.length}</span>
+             <span class="text-[10px] font-bold text-(--accent) uppercase tracking-widest mb-1">Dizin</span>
           </div>
         </div>
-        <div class="w-12 h-12 rounded-full border border-[var(--border)] flex items-center justify-center text-[var(--accent)] bg-[var(--bg-surface)] shadow-inner">
+        <div class="w-12 h-12 rounded-full border border-(--border) flex items-center justify-center text-(--accent) bg-(--bg-surface) shadow-inner">
           <svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path></svg>
         </div>
       </div>

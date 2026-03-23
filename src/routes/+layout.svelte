@@ -87,14 +87,14 @@
 <svelte:window onkeydown={klavyeKisaYollari} />
 
 {#if isChecking}
-  <div class="fixed inset-0 bg-[#050505] z-[9999] flex items-center justify-center">
+  <div class="fixed inset-0 bg-[#050505] z-9999 flex items-center justify-center">
       <span class="animate-pulse text-white/50 font-black tracking-[0.5em] uppercase text-xs">Sistem Başlatılıyor...</span>
   </div>
 {/if}
 
 {#if isWelcomeScreenOpen && !isChecking}
   <div 
-      class="fixed inset-0 z-[9999] flex items-center justify-center bg-[#050505]/95 backdrop-blur-2xl p-4"
+      class="fixed inset-0 z-9999 flex items-center justify-center bg-[#050505]/95 backdrop-blur-2xl p-4"
       in:fade={{ duration: 400 }}
   >
       <div 
@@ -138,7 +138,7 @@
   </div>
 {/if}
 
-<div class="{playerState.currentTheme} h-screen w-full flex flex-col font-sans overflow-hidden bg-[var(--bg-main)] text-[var(--text-main)] relative transition-colors duration-500">
+<div class="{playerState.currentTheme} h-screen w-full flex flex-col font-sans overflow-hidden bg-(--bg-main) text-(--text-main) relative transition-colors duration-500">
 
   <div class="flex-1 flex overflow-hidden relative">
     <Sidebar {aktifYol} onYeniPlaylist={yeniPlaylistOlustur} />

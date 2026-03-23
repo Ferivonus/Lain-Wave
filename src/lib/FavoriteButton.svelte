@@ -19,7 +19,7 @@
     title={isFavorite ? "Favorilerden Çıkar" : "Favorilere Ekle"} 
     onclick={handleToggle} 
     class="relative flex items-center justify-center transition-all duration-300 active:scale-75 hover:scale-110 shrink-0 focus:outline-none rounded-full p-2
-    {isFavorite ? 'text-[var(--accent)]' : 'text-[var(--text-dim)] hover:text-[var(--text-main)]'}">
+    {isFavorite ? 'text-(--accent)' : 'text-(--text-dim) hover:text-(--text-main)'}">
     
     {#if isFavorite}
         <div 

@@ -72,7 +72,7 @@
         type="button"
         onclick={disaAktar}
         disabled={islemDurumu === 'isleniyor'}
-        class="flex items-center gap-2 bg-[var(--bg-surface)] text-[var(--text-dim)] hover:text-[var(--accent)] hover:border-[var(--accent)]/50 border border-[var(--border)] px-4 py-2.5 rounded-lg font-black transition-all active:scale-95 text-[10px] uppercase tracking-widest shrink-0 disabled:opacity-50"
+        class="flex items-center gap-2 bg-(--bg-surface) text-(--text-dim) hover:text-(--accent) hover:border-(--accent)/50 border border-(--border) px-4 py-2.5 rounded-lg font-black transition-all active:scale-95 text-[10px] uppercase tracking-widest shrink-0 disabled:opacity-50"
         aria-label="Playlisti Paylaş"
     >
         {#if islemDurumu === 'isleniyor'}
@@ -91,19 +91,19 @@
     </button>
 
     {#if islemDurumu === 'basarili'}
-        <div class="absolute top-full mt-3 right-0 bg-[var(--bg-card)] border border-[var(--accent)]/30 p-4 rounded-xl shadow-2xl w-72 z-50 flex flex-col gap-3" in:fly={{ y: -5, duration: 300 }} out:fade>
-            <div class="flex items-start gap-3 text-[var(--accent)]">
+        <div class="absolute top-full mt-3 right-0 bg-(--bg-card) border border-(--accent)/30 p-4 rounded-xl shadow-2xl w-72 z-50 flex flex-col gap-3" in:fly={{ y: -5, duration: 300 }} out:fade>
+            <div class="flex items-start gap-3 text-(--accent)">
                 <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                 <div class="flex flex-col">
                     <span class="text-xs font-black uppercase tracking-widest">{mesaj}</span>
-                    <span class="text-[9px] text-[var(--text-dim)] font-mono mt-1 break-all opacity-70 leading-tight">{kayitliDosyaYolu}</span>
+                    <span class="text-[9px] text-(--text-dim) font-mono mt-1 break-all opacity-70 leading-tight">{kayitliDosyaYolu}</span>
                 </div>
             </div>
             
             <button 
                 type="button" 
                 onclick={klasoruAc}
-                class="w-full bg-[var(--accent)] text-white hover:shadow-[0_0_15px_var(--accent-glow)] py-2.5 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95 flex items-center justify-center gap-2 mt-1"
+                class="w-full bg-(--accent) text-white hover:shadow-[0_0_15px_var(--accent-glow)] py-2.5 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95 flex items-center justify-center gap-2 mt-1"
             >
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
                 Klasörü Aç

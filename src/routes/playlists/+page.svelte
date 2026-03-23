@@ -43,19 +43,19 @@
   ];
 </script>
 
-<div class="p-8 lg:p-12 w-full min-h-full pb-32 flex flex-col relative min-w-0 bg-transparent text-[var(--text-main)] transition-colors duration-500 overflow-y-auto custom-scrollbar">
+<div class="p-8 lg:p-12 w-full min-h-full pb-32 flex flex-col relative min-w-0 bg-transparent text-(--text-main) transition-colors duration-500 overflow-y-auto custom-scrollbar">
   
   <header class="mb-12" in:fly={{ y: -20, duration: 600 }}>
     <div class="flex items-center gap-3 mb-4">
-      <span class="w-10 h-[2px] bg-[var(--accent)]/50 shrink-0"></span>
-      <span class="text-[10px] font-black tracking-[0.4em] text-[var(--text-dim)] uppercase truncate">Koleksiyonlar</span>
+      <span class="w-10 h-[2px] bg-(--accent)/50 shrink-0"></span>
+      <span class="text-[10px] font-black tracking-[0.4em] text-(--text-dim) uppercase truncate">Koleksiyonlar</span>
     </div>
     <h1 class="text-5xl lg:text-7xl font-black italic tracking-tighter uppercase leading-none drop-shadow-lg truncate">
       Çalma Listeleri
     </h1>
     
     <div class="flex flex-col md:flex-row md:items-center gap-6 mt-6">
-      <p class="text-[var(--text-dim)] text-[10px] lg:text-xs font-bold uppercase tracking-[0.3em] truncate flex-1">
+      <p class="text-(--text-dim) text-[10px] lg:text-xs font-bold uppercase tracking-[0.3em] truncate flex-1">
           Kütüphanende {playerState.playlistler.length} adet özel frekans bloğu tanımlı
       </p>
       
@@ -63,7 +63,7 @@
         <button 
           type="button" 
           onclick={() => playerState.isAddMusicModalOpen = true} 
-          class="flex items-center gap-2 bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-dim)] hover:text-[var(--accent)] hover:border-[var(--accent)]/50 hover:bg-[var(--accent)]/5 px-6 py-3 rounded-full font-black shadow-lg transition-all active:scale-95 uppercase text-[10px] tracking-widest shrink-0"
+          class="flex items-center gap-2 bg-(--bg-card) border border-(--border) text-(--text-dim) hover:text-(--accent) hover:border-(--accent)/50 hover:bg-(--accent)/5 px-6 py-3 rounded-full font-black shadow-lg transition-all active:scale-95 uppercase text-[10px] tracking-widest shrink-0"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
           Yeni Parça Ekle
@@ -72,7 +72,7 @@
         <button 
           type="button" 
           onclick={yeniPlaylistOlustur} 
-          class="flex items-center gap-2 bg-[var(--text-main)] text-[var(--bg-main)] hover:bg-[var(--accent)] hover:text-white px-8 py-3 rounded-full font-black shadow-xl transition-all active:scale-95 uppercase text-[10px] tracking-widest shrink-0"
+          class="flex items-center gap-2 bg-(--text-main) text-(--bg-main) hover:bg-(--accent) hover:text-white px-8 py-3 rounded-full font-black shadow-xl transition-all active:scale-95 uppercase text-[10px] tracking-widest shrink-0"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           Yeni Liste
@@ -87,22 +87,22 @@
       type="button" 
       onclick={yeniPlaylistOlustur} 
       aria-label="Yeni çalma listesi oluştur veya içe aktar"
-      class="group flex flex-col items-center justify-center bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border-2 border-dashed border-[var(--border)] hover:border-[var(--accent)]/50 rounded-[var(--radius)] p-4 lg:p-5 transition-all duration-300 shadow-lg active:scale-95 h-full w-full min-h-[220px]"
+      class="group flex flex-col items-center justify-center bg-(--bg-card) hover:bg-(--bg-card-hover) border-2 border-dashed border-(--border) hover:border-(--accent)/50 rounded-(--radius) p-4 lg:p-5 transition-all duration-300 shadow-lg active:scale-95 h-full w-full min-h-[220px]"
       in:fade
     >
-      <div class="w-16 h-16 rounded-full bg-[var(--bg-surface)] group-hover:bg-[var(--accent)]/10 flex items-center justify-center transition-all mb-4 border border-[var(--border)] group-hover:scale-110 shadow-inner group-hover:border-[var(--accent)]/50 shrink-0">
-        <svg class="w-8 h-8 text-[var(--text-dim)] group-hover:text-[var(--accent)] transition-colors" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
+      <div class="w-16 h-16 rounded-full bg-(--bg-surface) group-hover:bg-(--accent)/10 flex items-center justify-center transition-all mb-4 border border-(--border) group-hover:scale-110 shadow-inner group-hover:border-(--accent)/50 shrink-0">
+        <svg class="w-8 h-8 text-(--text-dim) group-hover:text-(--accent) transition-colors" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
             <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
         </svg>
       </div>
-      <span class="text-[11px] font-black text-[var(--text-dim)] group-hover:text-[var(--text-main)] transition-colors tracking-[0.2em] uppercase mt-2 text-center w-full truncate">Yeni / İçe Aktar</span>
+      <span class="text-[11px] font-black text-(--text-dim) group-hover:text-(--text-main) transition-colors tracking-[0.2em] uppercase mt-2 text-center w-full truncate">Yeni / İçe Aktar</span>
     </button>
 
     {#each playerState.playlistler as liste, i}
       <a 
         href="/playlist/{liste.id}" 
         in:scale={{ duration: 400, start: 0.95, delay: i * 30 }}
-        class="group flex flex-col bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] rounded-[var(--radius)] p-4 lg:p-5 transition-all duration-500 shadow-lg border border-[var(--border)] hover:border-[var(--accent)]/30 text-left relative overflow-hidden h-full w-full min-w-0"
+        class="group flex flex-col bg-(--bg-card) hover:bg-(--bg-card-hover) rounded-(--radius) p-4 lg:p-5 transition-all duration-500 shadow-lg border border-(--border) hover:border-(--accent)/30 text-left relative overflow-hidden h-full w-full min-w-0"
       >
         <div 
           class="w-full aspect-square shrink-0 rounded-[calc(var(--radius)-0.5rem)] mb-5 flex items-center justify-center relative overflow-hidden transition-all duration-500 group-hover:shadow-xl border border-white/10"
@@ -127,10 +127,10 @@
         <div class="flex items-start justify-between w-full min-w-0 mt-auto">
           
           <div class="flex flex-col min-w-0 flex-1 pr-2">
-            <h3 class="text-[var(--text-main)] font-black truncate text-base lg:text-lg group-hover:text-[var(--accent)] transition-colors uppercase tracking-tight leading-tight w-full">
+            <h3 class="text-(--text-main) font-black truncate text-base lg:text-lg group-hover:text-(--accent) transition-colors uppercase tracking-tight leading-tight w-full">
                 {liste.isim}
             </h3>
-            <div class="flex items-center gap-2 mt-2 text-[var(--text-dim)]/70">
+            <div class="flex items-center gap-2 mt-2 text-(--text-dim)/70">
               <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
               <p class="text-[9px] font-black uppercase tracking-[0.2em] truncate w-full">{liste.sarkilar.length} Parça</p>
             </div>
@@ -139,7 +139,7 @@
           <button 
             type="button" 
             onclick={(e) => handlePlaylistSil(liste.id, liste.isim, e)} 
-            class="text-[var(--text-dim)]/30 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all p-1.5 shrink-0 opacity-0 group-hover:opacity-100 -mr-1" 
+            class="text-(--text-dim)/30 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all p-1.5 shrink-0 opacity-0 group-hover:opacity-100 -mr-1" 
             aria-label="{liste.isim} listesini sil"
             title="Listeyi Sil"
           >
