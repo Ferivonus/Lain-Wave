@@ -6,7 +6,7 @@
     import { playerState, initializePlayer, type Ayarlar } from '../../store.svelte';
 
     let veriYolu = $state("Yükleniyor...");
-    let surum = "2.1"; 
+    let surum = "3.2"; 
 
     let kullaniciAdi = $state("");
     let discordAktif = $state(true);
