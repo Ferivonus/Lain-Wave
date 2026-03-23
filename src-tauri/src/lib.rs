@@ -2,19 +2,19 @@
 
 use discord_presence::Client as DiscordClient;
 use id3::{Tag, TagLike};
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::{Arc, Mutex};
-use tauri::tray::TrayIconEvent;
 use tauri::Emitter;
+use tauri::tray::TrayIconEvent;
+use tauri::{AppHandle, Manager};
 use tauri::{
     menu::{Menu, MenuItem},
     tray::TrayIconBuilder,
 };
-use tauri::{AppHandle, Manager};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Shortcut, ShortcutState};
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -149,7 +149,7 @@ fn init_db(app: &AppHandle) -> Result<Connection, String> {
     .map_err(|e| format!("Tablolar oluşturulamadı: {}", e))?;
 
     conn.execute(
-        "INSERT OR IGNORE INTO ayarlar (id, kullanici_adi, discord_aktif, medya_tuslari_aktif, tema) 
+        "INSERT OR IGNORE INTO ayarlar (id, kullanici_adi, discord_aktif, medya_tuslari_aktif, tema)
          VALUES (1, '', 1, 1, 'theme-modern')",
         [],
     )
@@ -216,7 +216,7 @@ async fn sarki_kaydet(
     notlar: Option<String>,
 ) -> Result<Sarki, String> {
     let db_arc = app.state::<DbState>().0.clone();
-    
+
     tauri::async_runtime::spawn_blocking(move || {
         let songs_klasoru = songs_klasoru_bul(&app)?;
         let orijinal_path = Path::new(&yol);
@@ -286,15 +286,15 @@ async fn sarki_kaydet(
         };
 
         let conn = db_arc.lock().map_err(|_| "Veritabanı kilitlendi!")?;
-        
+
         let sira_sorgu: i32 = conn.query_row("SELECT COALESCE(MAX(sira), 0) + 1 FROM sarkilar", [], |r| r.get(0)).unwrap_or(0);
 
         conn.execute(
-            "INSERT INTO sarkilar (id, isim, sarkici, album, yol, kapak_yolu, tarz, kalite, sure, dinlenme_sayisi, son_dinlenme_tarihi, yil, notlar, sira) 
+            "INSERT INTO sarkilar (id, isim, sarkici, album, yol, kapak_yolu, tarz, kalite, sure, dinlenme_sayisi, son_dinlenme_tarihi, yil, notlar, sira)
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
             params![
-                yeni_sarki.id, yeni_sarki.isim, yeni_sarki.sarkici, yeni_sarki.album, yeni_sarki.yol, 
-                yeni_sarki.kapak_yolu, yeni_sarki.tarz, yeni_sarki.kalite, yeni_sarki.sure, 
+                yeni_sarki.id, yeni_sarki.isim, yeni_sarki.sarkici, yeni_sarki.album, yeni_sarki.yol,
+                yeni_sarki.kapak_yolu, yeni_sarki.tarz, yeni_sarki.kalite, yeni_sarki.sure,
                 yeni_sarki.dinlenme_sayisi, yeni_sarki.son_dinlenme_tarihi.map(|v| v as i64), yeni_sarki.yil, yeni_sarki.notlar, sira_sorgu
             ],
         ).map_err(|e| format!("Veritabanına eklenemedi: {}", e))?;
@@ -308,13 +308,17 @@ async fn sarki_kaydet(
 #[tauri::command]
 async fn sarkilari_getir(app: AppHandle) -> Result<Vec<Sarki>, String> {
     let db_arc = app.state::<DbState>().0.clone();
-    
+
     tauri::async_runtime::spawn_blocking(move || {
         let conn = db_arc.lock().map_err(|_| "Veritabanı kilitlendi!")?;
-        let mut stmt = conn.prepare("SELECT * FROM sarkilar ORDER BY sira ASC").map_err(|e| e.to_string())?;
-        
-        let sarki_iter = stmt.query_map([], row_to_sarki).map_err(|e| e.to_string())?;
-        
+        let mut stmt = conn
+            .prepare("SELECT * FROM sarkilar ORDER BY sira ASC")
+            .map_err(|e| e.to_string())?;
+
+        let sarki_iter = stmt
+            .query_map([], row_to_sarki)
+            .map_err(|e| e.to_string())?;
+
         let mut sarkilar = Vec::new();
         for sarki in sarki_iter {
             if let Ok(s) = sarki {
@@ -330,12 +334,14 @@ async fn sarkilari_getir(app: AppHandle) -> Result<Vec<Sarki>, String> {
 #[tauri::command]
 async fn playlist_olustur(app: AppHandle, isim: String) -> Result<Playlist, String> {
     let db_arc = app.state::<DbState>().0.clone();
-    
+
     tauri::async_runtime::spawn_blocking(move || {
         let conn = db_arc.lock().map_err(|_| "Veritabanı kilitlendi!")?;
-        
-        let count: i32 = conn.query_row("SELECT COUNT(*) FROM playlistler", [], |row| row.get(0)).unwrap_or(0);
-        
+
+        let count: i32 = conn
+            .query_row("SELECT COUNT(*) FROM playlistler", [], |row| row.get(0))
+            .unwrap_or(0);
+
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map_err(|_| "Zaman hesaplama hatası!")?
@@ -343,10 +349,17 @@ async fn playlist_olustur(app: AppHandle, isim: String) -> Result<Playlist, Stri
 
         let id = format!("pl_{}_{}", count + 1, timestamp);
 
-        conn.execute("INSERT INTO playlistler (id, isim) VALUES (?1, ?2)", params![id, isim])
-            .map_err(|e| format!("Playlist oluşturulamadı: {}", e))?;
+        conn.execute(
+            "INSERT INTO playlistler (id, isim) VALUES (?1, ?2)",
+            params![id, isim],
+        )
+        .map_err(|e| format!("Playlist oluşturulamadı: {}", e))?;
 
-        Ok(Playlist { id, isim, sarkilar: Vec::new() })
+        Ok(Playlist {
+            id,
+            isim,
+            sarkilar: Vec::new(),
+        })
     })
     .await
     .map_err(|e| format!("İşlem hatası: {}", e))?
@@ -355,11 +368,11 @@ async fn playlist_olustur(app: AppHandle, isim: String) -> Result<Playlist, Stri
 #[tauri::command]
 async fn playlistleri_getir(app: AppHandle) -> Result<Vec<Playlist>, String> {
     let db_arc = app.state::<DbState>().0.clone();
-    
+
     tauri::async_runtime::spawn_blocking(move || {
         let conn = db_arc.lock().map_err(|_| "Veritabanı kilitlendi!")?;
         let mut stmt = conn.prepare("SELECT id, isim FROM playlistler").map_err(|e| e.to_string())?;
-        
+
         let pl_iter = stmt.query_map([], |row| {
             Ok(Playlist {
                 id: row.get(0)?,
@@ -388,17 +401,23 @@ async fn playlistleri_getir(app: AppHandle) -> Result<Vec<Playlist>, String> {
 }
 
 #[tauri::command]
-async fn playliste_sarki_ekle(app: AppHandle, playlist_id: String, sarki_id: String) -> Result<Playlist, String> {
+async fn playliste_sarki_ekle(
+    app: AppHandle,
+    playlist_id: String,
+    sarki_id: String,
+) -> Result<Playlist, String> {
     let db_arc = app.state::<DbState>().0.clone();
-    
+
     tauri::async_runtime::spawn_blocking(move || {
         let conn = db_arc.lock().map_err(|_| "Veritabanı kilitlendi!")?;
-        
-        let var_mi: i32 = conn.query_row(
-            "SELECT COUNT(*) FROM playlist_sarkilar WHERE playlist_id = ? AND sarki_id = ?",
-            params![playlist_id, sarki_id],
-            |row| row.get(0)
-        ).unwrap_or(0);
+
+        let var_mi: i32 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM playlist_sarkilar WHERE playlist_id = ? AND sarki_id = ?",
+                params![playlist_id, sarki_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
 
         if var_mi == 0 {
             let max_sira: i32 = conn.query_row(
@@ -409,18 +428,35 @@ async fn playliste_sarki_ekle(app: AppHandle, playlist_id: String, sarki_id: Str
 
             conn.execute(
                 "INSERT INTO playlist_sarkilar (playlist_id, sarki_id, sira) VALUES (?1, ?2, ?3)",
-                params![playlist_id, sarki_id, max_sira]
-            ).map_err(|e| e.to_string())?;
+                params![playlist_id, sarki_id, max_sira],
+            )
+            .map_err(|e| e.to_string())?;
         }
 
-        let isim: String = conn.query_row("SELECT isim FROM playlistler WHERE id = ?", params![playlist_id], |row| row.get(0)).map_err(|_| "Playlist bulunamadı")?;
-        
-        let mut stmt = conn.prepare("SELECT sarki_id FROM playlist_sarkilar WHERE playlist_id = ? ORDER BY sira ASC").unwrap();
+        let isim: String = conn
+            .query_row(
+                "SELECT isim FROM playlistler WHERE id = ?",
+                params![playlist_id],
+                |row| row.get(0),
+            )
+            .map_err(|_| "Playlist bulunamadı")?;
+
+        let mut stmt = conn
+            .prepare(
+                "SELECT sarki_id FROM playlist_sarkilar WHERE playlist_id = ? ORDER BY sira ASC",
+            )
+            .unwrap();
         let sarkilar_iter = stmt.query_map([&playlist_id], |row| row.get(0)).unwrap();
         let mut sarkilar = Vec::new();
-        for s in sarkilar_iter.flatten() { sarkilar.push(s); }
+        for s in sarkilar_iter.flatten() {
+            sarkilar.push(s);
+        }
 
-        Ok(Playlist { id: playlist_id, isim, sarkilar })
+        Ok(Playlist {
+            id: playlist_id,
+            isim,
+            sarkilar,
+        })
     })
     .await
     .map_err(|e| format!("İşlem hatası: {}", e))?
@@ -429,15 +465,21 @@ async fn playliste_sarki_ekle(app: AppHandle, playlist_id: String, sarki_id: Str
 #[tauri::command]
 async fn favorileri_getir(app: AppHandle) -> Result<Vec<String>, String> {
     let db_arc = app.state::<DbState>().0.clone();
-    
+
     tauri::async_runtime::spawn_blocking(move || {
         let conn = db_arc.lock().map_err(|_| "Veritabanı kilitlendi!")?;
-        let mut stmt = conn.prepare("SELECT sarki_id FROM favoriler").map_err(|e| e.to_string())?;
-        
+        let mut stmt = conn
+            .prepare("SELECT sarki_id FROM favoriler")
+            .map_err(|e| e.to_string())?;
+
         let mut favoriler = Vec::new();
-        let rows = stmt.query_map([], |row| row.get::<_, String>(0)).map_err(|e| e.to_string())?;
-        for r in rows.flatten() { favoriler.push(r); }
-        
+        let rows = stmt
+            .query_map([], |row| row.get::<_, String>(0))
+            .map_err(|e| e.to_string())?;
+        for r in rows.flatten() {
+            favoriler.push(r);
+        }
+
         Ok(favoriler)
     })
     .await
@@ -447,23 +489,39 @@ async fn favorileri_getir(app: AppHandle) -> Result<Vec<String>, String> {
 #[tauri::command]
 async fn favori_degistir(app: AppHandle, sarki_id: String) -> Result<Vec<String>, String> {
     let db_arc = app.state::<DbState>().0.clone();
-    
+
     tauri::async_runtime::spawn_blocking(move || {
         let conn = db_arc.lock().map_err(|_| "Veritabanı kilitlendi!")?;
-        
-        let var_mi: i32 = conn.query_row("SELECT COUNT(*) FROM favoriler WHERE sarki_id = ?", params![sarki_id], |row| row.get(0)).unwrap_or(0);
-        
+
+        let var_mi: i32 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM favoriler WHERE sarki_id = ?",
+                params![sarki_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
+
         if var_mi > 0 {
-            conn.execute("DELETE FROM favoriler WHERE sarki_id = ?", params![sarki_id]).ok();
+            conn.execute(
+                "DELETE FROM favoriler WHERE sarki_id = ?",
+                params![sarki_id],
+            )
+            .ok();
         } else {
-            conn.execute("INSERT INTO favoriler (sarki_id) VALUES (?)", params![sarki_id]).ok();
+            conn.execute(
+                "INSERT INTO favoriler (sarki_id) VALUES (?)",
+                params![sarki_id],
+            )
+            .ok();
         }
 
         let mut stmt = conn.prepare("SELECT sarki_id FROM favoriler").unwrap();
         let rows = stmt.query_map([], |row| row.get::<_, String>(0)).unwrap();
         let mut favoriler = Vec::new();
-        for r in rows.flatten() { favoriler.push(r); }
-        
+        for r in rows.flatten() {
+            favoriler.push(r);
+        }
+
         Ok(favoriler)
     })
     .await
@@ -471,22 +529,45 @@ async fn favori_degistir(app: AppHandle, sarki_id: String) -> Result<Vec<String>
 }
 
 #[tauri::command]
-async fn playlistten_sarki_cikar(app: AppHandle, playlist_id: String, sarki_id: String) -> Result<Playlist, String> {
+async fn playlistten_sarki_cikar(
+    app: AppHandle,
+    playlist_id: String,
+    sarki_id: String,
+) -> Result<Playlist, String> {
     let db_arc = app.state::<DbState>().0.clone();
-    
+
     tauri::async_runtime::spawn_blocking(move || {
         let conn = db_arc.lock().map_err(|_| "Veritabanı kilitlendi!")?;
-        
-        conn.execute("DELETE FROM playlist_sarkilar WHERE playlist_id = ? AND sarki_id = ?", params![playlist_id, sarki_id])
-            .map_err(|e| e.to_string())?;
 
-        let isim: String = conn.query_row("SELECT isim FROM playlistler WHERE id = ?", params![playlist_id], |row| row.get(0)).map_err(|_| "Playlist bulunamadı")?;
-        let mut stmt = conn.prepare("SELECT sarki_id FROM playlist_sarkilar WHERE playlist_id = ? ORDER BY sira ASC").unwrap();
+        conn.execute(
+            "DELETE FROM playlist_sarkilar WHERE playlist_id = ? AND sarki_id = ?",
+            params![playlist_id, sarki_id],
+        )
+        .map_err(|e| e.to_string())?;
+
+        let isim: String = conn
+            .query_row(
+                "SELECT isim FROM playlistler WHERE id = ?",
+                params![playlist_id],
+                |row| row.get(0),
+            )
+            .map_err(|_| "Playlist bulunamadı")?;
+        let mut stmt = conn
+            .prepare(
+                "SELECT sarki_id FROM playlist_sarkilar WHERE playlist_id = ? ORDER BY sira ASC",
+            )
+            .unwrap();
         let sarkilar_iter = stmt.query_map([&playlist_id], |row| row.get(0)).unwrap();
         let mut sarkilar = Vec::new();
-        for s in sarkilar_iter.flatten() { sarkilar.push(s); }
+        for s in sarkilar_iter.flatten() {
+            sarkilar.push(s);
+        }
 
-        Ok(Playlist { id: playlist_id, isim, sarkilar })
+        Ok(Playlist {
+            id: playlist_id,
+            isim,
+            sarkilar,
+        })
     })
     .await
     .map_err(|e| format!("İşlem hatası: {}", e))?
@@ -495,15 +576,17 @@ async fn playlistten_sarki_cikar(app: AppHandle, playlist_id: String, sarki_id: 
 #[tauri::command]
 async fn sarki_sil(app: AppHandle, sarki_id: String) -> Result<(), String> {
     let db_arc = app.state::<DbState>().0.clone();
-    
+
     tauri::async_runtime::spawn_blocking(move || {
         let mut conn = db_arc.lock().map_err(|_| "Veritabanı kilitlendi!")?;
-        
-        let (yol, kapak_yolu): (String, Option<String>) = conn.query_row(
-            "SELECT yol, kapak_yolu FROM sarkilar WHERE id = ?", 
-            params![sarki_id], 
-            |row| Ok((row.get(0)?, row.get(1)?))
-        ).map_err(|_| "Şarkı veritabanında bulunamadı")?;
+
+        let (yol, kapak_yolu): (String, Option<String>) = conn
+            .query_row(
+                "SELECT yol, kapak_yolu FROM sarkilar WHERE id = ?",
+                params![sarki_id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .map_err(|_| "Şarkı veritabanında bulunamadı")?;
 
         let _ = fs::remove_file(&yol);
         if let Some(kapak) = kapak_yolu {
@@ -511,9 +594,18 @@ async fn sarki_sil(app: AppHandle, sarki_id: String) -> Result<(), String> {
         }
 
         let tx = conn.transaction().map_err(|e| e.to_string())?;
-        tx.execute("DELETE FROM sarkilar WHERE id = ?", params![sarki_id]).map_err(|e| e.to_string())?;
-        tx.execute("DELETE FROM playlist_sarkilar WHERE sarki_id = ?", params![sarki_id]).map_err(|e| e.to_string())?;
-        tx.execute("DELETE FROM favoriler WHERE sarki_id = ?", params![sarki_id]).map_err(|e| e.to_string())?;
+        tx.execute("DELETE FROM sarkilar WHERE id = ?", params![sarki_id])
+            .map_err(|e| e.to_string())?;
+        tx.execute(
+            "DELETE FROM playlist_sarkilar WHERE sarki_id = ?",
+            params![sarki_id],
+        )
+        .map_err(|e| e.to_string())?;
+        tx.execute(
+            "DELETE FROM favoriler WHERE sarki_id = ?",
+            params![sarki_id],
+        )
+        .map_err(|e| e.to_string())?;
         tx.commit().map_err(|e| e.to_string())?;
 
         Ok(())
@@ -525,15 +617,19 @@ async fn sarki_sil(app: AppHandle, sarki_id: String) -> Result<(), String> {
 #[tauri::command]
 async fn sarki_sirasi_guncelle(app: AppHandle, yeni_liste: Vec<Sarki>) -> Result<(), String> {
     let db_arc = app.state::<DbState>().0.clone();
-    
+
     tauri::async_runtime::spawn_blocking(move || {
         let mut conn = db_arc.lock().map_err(|_| "Veritabanı kilitlendi!")?;
         let tx = conn.transaction().map_err(|e| e.to_string())?;
-        
+
         for (index, sarki) in yeni_liste.iter().enumerate() {
-            tx.execute("UPDATE sarkilar SET sira = ? WHERE id = ?", params![index as i32, sarki.id]).ok();
+            tx.execute(
+                "UPDATE sarkilar SET sira = ? WHERE id = ?",
+                params![index as i32, sarki.id],
+            )
+            .ok();
         }
-        
+
         tx.commit().map_err(|e| e.to_string())?;
         Ok(())
     })
@@ -551,17 +647,39 @@ fn get_app_data_dir(app: AppHandle) -> Result<String, String> {
 fn open_data_folder(app: AppHandle) -> Result<(), String> {
     let path = app_data_dir(&app)?;
     #[cfg(target_os = "windows")]
-    { Command::new("explorer").arg(path).spawn().map_err(|e| e.to_string())?; }
+    {
+        Command::new("explorer")
+            .arg(path)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
     #[cfg(target_os = "macos")]
-    { Command::new("open").arg(path).spawn().map_err(|e| e.to_string())?; }
+    {
+        Command::new("open")
+            .arg(path)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
     Ok(())
 }
 
 #[tauri::command]
-fn update_discord_status(state: tauri::State<'_, DiscordState>, detay: String, durum: String, start_timestamp: Option<i64>, end_timestamp: Option<i64>) -> Result<(), String> {
-    let mut drpc = state.0.lock().map_err(|_| "Discord işlem kilitlendi!".to_string())?;
+fn update_discord_status(
+    state: tauri::State<'_, DiscordState>,
+    detay: String,
+    durum: String,
+    start_timestamp: Option<i64>,
+    end_timestamp: Option<i64>,
+) -> Result<(), String> {
+    let mut drpc = state
+        .0
+        .lock()
+        .map_err(|_| "Discord işlem kilitlendi!".to_string())?;
     drpc.set_activity(|mut a| {
-        a = a.details(detay).state(durum).assets(|ass| ass.large_image("icon"));
+        a = a
+            .details(detay)
+            .state(durum)
+            .assets(|ass| ass.large_image("icon"));
         a = match (start_timestamp, end_timestamp) {
             (Some(start), Some(end)) => a.timestamps(|t| t.start(start as u64).end(end as u64)),
             (Some(start), None) => a.timestamps(|t| t.start(start as u64)),
@@ -569,24 +687,32 @@ fn update_discord_status(state: tauri::State<'_, DiscordState>, detay: String, d
             (None, None) => a,
         };
         a
-    }).map_err(|e| e.to_string())?;
+    })
+    .map_err(|e| e.to_string())?;
     Ok(())
 }
 
 #[tauri::command]
 fn clear_discord_status(state: tauri::State<'_, DiscordState>) -> Result<(), String> {
-    let mut drpc = state.0.lock().map_err(|_| "Discord işlem kilitlendi!".to_string())?;
+    let mut drpc = state
+        .0
+        .lock()
+        .map_err(|_| "Discord işlem kilitlendi!".to_string())?;
     drpc.clear_activity().map_err(|e| e.to_string())?;
     Ok(())
 }
 
 #[tauri::command]
-async fn dinlenme_sayisi_artir(app: AppHandle, sarki_id: String, tarih: u64) -> Result<(u32, u64), String> {
+async fn dinlenme_sayisi_artir(
+    app: AppHandle,
+    sarki_id: String,
+    tarih: u64,
+) -> Result<(u32, u64), String> {
     let db_arc = app.state::<DbState>().0.clone();
-    
+
     tauri::async_runtime::spawn_blocking(move || {
         let conn = db_arc.lock().map_err(|_| "Veritabanı kilitlendi!")?;
-        
+
         conn.execute(
             "UPDATE sarkilar SET dinlenme_sayisi = dinlenme_sayisi + 1, son_dinlenme_tarihi = ? WHERE id = ?",
             params![tarih as i64, sarki_id]
@@ -602,14 +728,19 @@ async fn dinlenme_sayisi_artir(app: AppHandle, sarki_id: String, tarih: u64) -> 
 #[tauri::command]
 async fn playlist_sil(app: AppHandle, playlist_id: String) -> Result<(), String> {
     let db_arc = app.state::<DbState>().0.clone();
-    
+
     tauri::async_runtime::spawn_blocking(move || {
         let mut conn = db_arc.lock().map_err(|_| "Veritabanı kilitlendi!")?;
         let tx = conn.transaction().map_err(|e| e.to_string())?;
-        
-        tx.execute("DELETE FROM playlistler WHERE id = ?", params![playlist_id]).map_err(|e| e.to_string())?;
-        tx.execute("DELETE FROM playlist_sarkilar WHERE playlist_id = ?", params![playlist_id]).map_err(|e| e.to_string())?;
-        
+
+        tx.execute("DELETE FROM playlistler WHERE id = ?", params![playlist_id])
+            .map_err(|e| e.to_string())?;
+        tx.execute(
+            "DELETE FROM playlist_sarkilar WHERE playlist_id = ?",
+            params![playlist_id],
+        )
+        .map_err(|e| e.to_string())?;
+
         tx.commit().map_err(|e| e.to_string())?;
         Ok(())
     })
@@ -658,7 +789,7 @@ async fn youtube_indir(app: tauri::AppHandle, url: String, tarz: String) -> Resu
 
         let timestamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(|_| "Zaman hatası!")?.as_nanos();
         let id = format!("yt_{}", timestamp);
-        
+
         let yt_dlp_hedef = songs_klasoru.join(format!("{}.%(ext)s", id));
         let hedef_ses_yolu = songs_klasoru.join(format!("{}.wav", id));
         let hedef_kapak_yolu = songs_klasoru.join(format!("{}.jpg", id));
@@ -746,7 +877,7 @@ async fn youtube_indir(app: tauri::AppHandle, url: String, tarz: String) -> Resu
         let sira_sorgu: i32 = conn.query_row("SELECT COALESCE(MAX(sira), 0) + 1 FROM sarkilar", [], |r| r.get(0)).unwrap_or(0);
 
         conn.execute(
-            "INSERT INTO sarkilar (id, isim, sarkici, album, yol, kapak_yolu, tarz, kalite, sure, dinlenme_sayisi, son_dinlenme_tarihi, yil, notlar, sira) 
+            "INSERT INTO sarkilar (id, isim, sarkici, album, yol, kapak_yolu, tarz, kalite, sure, dinlenme_sayisi, son_dinlenme_tarihi, yil, notlar, sira)
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
             params![yeni_sarki.id, yeni_sarki.isim, yeni_sarki.sarkici, yeni_sarki.album, yeni_sarki.yol, yeni_sarki.kapak_yolu, yeni_sarki.tarz, yeni_sarki.kalite, yeni_sarki.sure, yeni_sarki.dinlenme_sayisi, yeni_sarki.son_dinlenme_tarihi.map(|v| v as i64), yeni_sarki.yil, yeni_sarki.notlar, sira_sorgu],
         ).map_err(|e| format!("Veritabanına eklenemedi: {}", e))?;
@@ -760,23 +891,52 @@ async fn youtube_arama(app: tauri::AppHandle, sorgu: String) -> Result<Vec<YouTu
     let app_clone = app.clone();
     tauri::async_runtime::spawn_blocking(move || {
         let cache_dir = app_data_dir(&app_clone)?.join("yt_cache");
-        if !cache_dir.exists() { std::fs::create_dir_all(&cache_dir).map_err(|e| e.to_string())?; }
+        if !cache_dir.exists() {
+            std::fs::create_dir_all(&cache_dir).map_err(|e| e.to_string())?;
+        }
 
         let arama_kodu = format!("ytsearch20:{}", sorgu);
         let (yt_dlp_path, binaries_dir) = {
-            let exe_path = std::env::current_exe().map(|p| p.parent().map(|p| p.to_path_buf()).unwrap_or_default()).unwrap_or_default();
+            let exe_path = std::env::current_exe()
+                .map(|p| p.parent().map(|p| p.to_path_buf()).unwrap_or_default())
+                .unwrap_or_default();
             let resource_dir = app_clone.path().resource_dir().unwrap_or_default();
             let current_dir = std::env::current_dir().unwrap_or_default();
-            let olasi_yollar = vec![exe_path.join("binaries").join("yt-dlp.exe"), resource_dir.join("binaries").join("yt-dlp.exe"), current_dir.join("src-tauri").join("binaries").join("yt-dlp.exe"), current_dir.join("binaries").join("yt-dlp.exe")];
-            let yt_path = olasi_yollar.into_iter().find(|p| p.exists()).ok_or_else(|| "Araç bulunamadı".to_string())?;
+            let olasi_yollar = vec![
+                exe_path.join("binaries").join("yt-dlp.exe"),
+                resource_dir.join("binaries").join("yt-dlp.exe"),
+                current_dir
+                    .join("src-tauri")
+                    .join("binaries")
+                    .join("yt-dlp.exe"),
+                current_dir.join("binaries").join("yt-dlp.exe"),
+            ];
+            let yt_path = olasi_yollar
+                .into_iter()
+                .find(|p| p.exists())
+                .ok_or_else(|| "Araç bulunamadı".to_string())?;
             let bin_dir = yt_path.parent().unwrap_or(Path::new("")).to_path_buf();
             (yt_path, bin_dir)
         };
 
         let mut cmd = std::process::Command::new(&yt_dlp_path);
-        cmd.env("PYTHONIOENCODING", "utf-8").env("PATH", "C:\\Windows\\System32;C:\\Windows").current_dir(&cache_dir);
-        cmd.args(["--no-warnings", "--cache-dir", cache_dir.to_str().unwrap_or(""), "--ffmpeg-location", binaries_dir.to_str().unwrap_or(""), "--dump-json", "--default-search", "ytsearch", "--no-playlist", &arama_kodu])
-            .stdin(std::process::Stdio::null()).stderr(std::process::Stdio::piped());
+        cmd.env("PYTHONIOENCODING", "utf-8")
+            .env("PATH", "C:\\Windows\\System32;C:\\Windows")
+            .current_dir(&cache_dir);
+        cmd.args([
+            "--no-warnings",
+            "--cache-dir",
+            cache_dir.to_str().unwrap_or(""),
+            "--ffmpeg-location",
+            binaries_dir.to_str().unwrap_or(""),
+            "--dump-json",
+            "--default-search",
+            "ytsearch",
+            "--no-playlist",
+            &arama_kodu,
+        ])
+        .stdin(std::process::Stdio::null())
+        .stderr(std::process::Stdio::piped());
 
         #[cfg(target_os = "windows")]
         use std::os::windows::process::CommandExt;
@@ -784,45 +944,88 @@ async fn youtube_arama(app: tauri::AppHandle, sorgu: String) -> Result<Vec<YouTu
         cmd.creation_flags(0x08000000);
 
         let output = cmd.output().map_err(|e| e.to_string())?;
-        if !output.status.success() { return Err(format!("Arama başarısız: {}", String::from_utf8_lossy(&output.stderr))); }
+        if !output.status.success() {
+            return Err(format!(
+                "Arama başarısız: {}",
+                String::from_utf8_lossy(&output.stderr)
+            ));
+        }
 
         let mut sonuclar = Vec::new();
         for line in String::from_utf8_lossy(&output.stdout).lines() {
             if let Ok(json) = serde_json::from_str::<serde_json::Value>(line) {
                 sonuclar.push(YouTubeSonuc {
                     title: json["title"].as_str().unwrap_or("Bilinmeyen").to_string(),
-                    channel: json["uploader"].as_str().unwrap_or("Bilinmeyen").to_string(),
-                    duration_string: json["duration_string"].as_str().unwrap_or("0:00").to_string(),
+                    channel: json["uploader"]
+                        .as_str()
+                        .unwrap_or("Bilinmeyen")
+                        .to_string(),
+                    duration_string: json["duration_string"]
+                        .as_str()
+                        .unwrap_or("0:00")
+                        .to_string(),
                     thumbnail: json["thumbnail"].as_str().unwrap_or("").to_string(),
                     webpage_url: json["webpage_url"].as_str().unwrap_or("").to_string(),
                 });
             }
         }
         Ok(sonuclar)
-    }).await.map_err(|e| e.to_string())?
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
-async fn youtube_playlist_getir(app: tauri::AppHandle, url: String) -> Result<Vec<YouTubeSonuc>, String> {
+async fn youtube_playlist_getir(
+    app: tauri::AppHandle,
+    url: String,
+) -> Result<Vec<YouTubeSonuc>, String> {
     let app_clone = app.clone();
     tauri::async_runtime::spawn_blocking(move || {
         let cache_dir = app_data_dir(&app_clone)?.join("yt_cache");
-        if !cache_dir.exists() { std::fs::create_dir_all(&cache_dir).map_err(|e| e.to_string())?; }
+        if !cache_dir.exists() {
+            std::fs::create_dir_all(&cache_dir).map_err(|e| e.to_string())?;
+        }
 
         let (yt_dlp_path, binaries_dir) = {
-            let exe_path = std::env::current_exe().map(|p| p.parent().map(|p| p.to_path_buf()).unwrap_or_default()).unwrap_or_default();
+            let exe_path = std::env::current_exe()
+                .map(|p| p.parent().map(|p| p.to_path_buf()).unwrap_or_default())
+                .unwrap_or_default();
             let resource_dir = app_clone.path().resource_dir().unwrap_or_default();
             let current_dir = std::env::current_dir().unwrap_or_default();
-            let olasi_yollar = vec![exe_path.join("binaries").join("yt-dlp.exe"), resource_dir.join("binaries").join("yt-dlp.exe"), current_dir.join("src-tauri").join("binaries").join("yt-dlp.exe"), current_dir.join("binaries").join("yt-dlp.exe")];
-            let yt_path = olasi_yollar.into_iter().find(|p| p.exists()).ok_or_else(|| "Araç bulunamadı".to_string())?;
+            let olasi_yollar = vec![
+                exe_path.join("binaries").join("yt-dlp.exe"),
+                resource_dir.join("binaries").join("yt-dlp.exe"),
+                current_dir
+                    .join("src-tauri")
+                    .join("binaries")
+                    .join("yt-dlp.exe"),
+                current_dir.join("binaries").join("yt-dlp.exe"),
+            ];
+            let yt_path = olasi_yollar
+                .into_iter()
+                .find(|p| p.exists())
+                .ok_or_else(|| "Araç bulunamadı".to_string())?;
             let bin_dir = yt_path.parent().unwrap_or(Path::new("")).to_path_buf();
             (yt_path, bin_dir)
         };
 
         let mut cmd = std::process::Command::new(&yt_dlp_path);
-        cmd.env("PYTHONIOENCODING", "utf-8").env("PATH", "C:\\Windows\\System32;C:\\Windows").current_dir(&cache_dir);
-        cmd.args(["--no-warnings", "--cache-dir", cache_dir.to_str().unwrap_or(""), "--ffmpeg-location", binaries_dir.to_str().unwrap_or(""), "--dump-json", "--flat-playlist", &url])
-            .stdin(std::process::Stdio::null()).stderr(std::process::Stdio::piped());
+        cmd.env("PYTHONIOENCODING", "utf-8")
+            .env("PATH", "C:\\Windows\\System32;C:\\Windows")
+            .current_dir(&cache_dir);
+        cmd.args([
+            "--no-warnings",
+            "--cache-dir",
+            cache_dir.to_str().unwrap_or(""),
+            "--ffmpeg-location",
+            binaries_dir.to_str().unwrap_or(""),
+            "--dump-json",
+            "--flat-playlist",
+            &url,
+        ])
+        .stdin(std::process::Stdio::null())
+        .stderr(std::process::Stdio::piped());
 
         #[cfg(target_os = "windows")]
         use std::os::windows::process::CommandExt;
@@ -830,34 +1033,74 @@ async fn youtube_playlist_getir(app: tauri::AppHandle, url: String) -> Result<Ve
         cmd.creation_flags(0x08000000);
 
         let output = cmd.output().map_err(|e| e.to_string())?;
-        if !output.status.success() { return Err(format!("Arama başarısız: {}", String::from_utf8_lossy(&output.stderr))); }
+        if !output.status.success() {
+            return Err(format!(
+                "Arama başarısız: {}",
+                String::from_utf8_lossy(&output.stderr)
+            ));
+        }
 
         let mut sonuclar = Vec::new();
         for line in String::from_utf8_lossy(&output.stdout).lines() {
             if let Ok(json) = serde_json::from_str::<serde_json::Value>(line) {
                 if json["url"].is_string() || json["id"].is_string() {
-                    let video_url = json["url"].as_str().map(|s| s.to_string()).unwrap_or_else(|| format!("https://www.youtube.com/watch?v={}", json["id"].as_str().unwrap_or("")));
+                    let video_url =
+                        json["url"]
+                            .as_str()
+                            .map(|s| s.to_string())
+                            .unwrap_or_else(|| {
+                                format!(
+                                    "https://www.youtube.com/watch?v={}",
+                                    json["id"].as_str().unwrap_or("")
+                                )
+                            });
                     sonuclar.push(YouTubeSonuc {
                         title: json["title"].as_str().unwrap_or("Bilinmeyen").to_string(),
-                        channel: json["uploader"].as_str().unwrap_or("Bilinmeyen").to_string(),
-                        duration_string: json["duration_string"].as_str().map(|s| s.to_string()).unwrap_or_else(|| json["duration"].as_f64().map(|d| format!("{}:{:02.0}", (d / 60.0).floor(), d % 60.0)).unwrap_or_else(|| "0:00".to_string())),
-                        thumbnail: json["thumbnails"].as_array().and_then(|t| t.last()).and_then(|t| t["url"].as_str()).unwrap_or("").to_string(),
+                        channel: json["uploader"]
+                            .as_str()
+                            .unwrap_or("Bilinmeyen")
+                            .to_string(),
+                        duration_string: json["duration_string"]
+                            .as_str()
+                            .map(|s| s.to_string())
+                            .unwrap_or_else(|| {
+                                json["duration"]
+                                    .as_f64()
+                                    .map(|d| format!("{}:{:02.0}", (d / 60.0).floor(), d % 60.0))
+                                    .unwrap_or_else(|| "0:00".to_string())
+                            }),
+                        thumbnail: json["thumbnails"]
+                            .as_array()
+                            .and_then(|t| t.last())
+                            .and_then(|t| t["url"].as_str())
+                            .unwrap_or("")
+                            .to_string(),
                         webpage_url: video_url,
                     });
                 }
             }
         }
         Ok(sonuclar)
-    }).await.map_err(|e| e.to_string())?
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
-async fn sarki_guncelle(app: AppHandle, id: String, isim: String, sarkici: String, album: String, tarz: Option<String>, yil: Option<u32>) -> Result<Sarki, String> {
+async fn sarki_guncelle(
+    app: AppHandle,
+    id: String,
+    isim: String,
+    sarkici: String,
+    album: String,
+    tarz: Option<String>,
+    yil: Option<u32>,
+) -> Result<Sarki, String> {
     let db_arc = app.state::<DbState>().0.clone();
-    
+
     tauri::async_runtime::spawn_blocking(move || {
         let conn = db_arc.lock().map_err(|_| "Veritabanı kilitlendi!")?;
-        
+
         conn.execute(
             "UPDATE sarkilar SET isim = ?1, sarkici = ?2, album = ?3, tarz = ?4, yil = ?5 WHERE id = ?6",
             params![isim, sarkici, album, tarz, yil, id]
@@ -865,40 +1108,59 @@ async fn sarki_guncelle(app: AppHandle, id: String, isim: String, sarkici: Strin
 
         let mut stmt = conn.prepare("SELECT * FROM sarkilar WHERE id = ?").unwrap();
         let sarki = stmt.query_row(params![id], row_to_sarki).map_err(|_| "Güncellenen şarkı bulunamadı")?;
-        
+
         Ok(sarki)
     }).await.map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
-async fn playlist_disa_aktar(app: tauri::AppHandle, playlist_adi: String, icerik: String) -> Result<String, String> {
+async fn playlist_disa_aktar(
+    app: tauri::AppHandle,
+    playlist_adi: String,
+    icerik: String,
+) -> Result<String, String> {
     let db_arc = app.state::<DbState>().0.clone();
 
     tauri::async_runtime::spawn_blocking(move || {
         let app_dir = app_data_dir(&app)?;
         let conn = db_arc.lock().map_err(|_| "Veritabanı kilitlendi!")?;
-        
-        let kullanici_adi: String = conn.query_row("SELECT kullanici_adi FROM ayarlar WHERE id = 1", [], |row| row.get(0)).unwrap_or_else(|_| "Anonim".to_string());
-        let guvenli_kullanici = if kullanici_adi.trim().is_empty() { "Anonim".to_string() } else { kullanici_adi.replace(&['/', '\\', ':', '*', '?', '"', '<', '>', '|'][..], "_") };
-        let guvenli_isim = playlist_adi.replace(&['/', '\\', ':', '*', '?', '"', '<', '>', '|'][..], "_");
+
+        let kullanici_adi: String = conn
+            .query_row(
+                "SELECT kullanici_adi FROM ayarlar WHERE id = 1",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap_or_else(|_| "Anonim".to_string());
+        let guvenli_kullanici = if kullanici_adi.trim().is_empty() {
+            "Anonim".to_string()
+        } else {
+            kullanici_adi.replace(&['/', '\\', ':', '*', '?', '"', '<', '>', '|'][..], "_")
+        };
+        let guvenli_isim =
+            playlist_adi.replace(&['/', '\\', ':', '*', '?', '"', '<', '>', '|'][..], "_");
 
         let export_dir = app_dir.join("paylasima_uygun_playlistler");
-        if !export_dir.exists() { std::fs::create_dir_all(&export_dir).map_err(|e| e.to_string())?; }
+        if !export_dir.exists() {
+            std::fs::create_dir_all(&export_dir).map_err(|e| e.to_string())?;
+        }
 
         let dosya_yolu = export_dir.join(format!("{} - {}.json", guvenli_kullanici, guvenli_isim));
         std::fs::write(&dosya_yolu, icerik).map_err(|e| e.to_string())?;
 
         Ok(dosya_yolu.to_string_lossy().to_string())
-    }).await.map_err(|e| e.to_string())?
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
 async fn ayarlari_getir(app: AppHandle) -> Result<Ayarlar, String> {
     let db_arc = app.state::<DbState>().0.clone();
-    
+
     tauri::async_runtime::spawn_blocking(move || {
         let conn = db_arc.lock().map_err(|_| "Veritabanı kilitlendi!")?;
-        
+
         let ayarlar = conn.query_row("SELECT kullanici_adi, discord_aktif, medya_tuslari_aktif, tema FROM ayarlar WHERE id = 1", [], |row| {
             let discord: i32 = row.get(1)?;
             let medya: i32 = row.get(2)?;
@@ -909,7 +1171,7 @@ async fn ayarlari_getir(app: AppHandle) -> Result<Ayarlar, String> {
                 tema: row.get(3)?
             })
         }).unwrap_or_default();
-        
+
         Ok(ayarlar)
     }).await.map_err(|e| e.to_string())?
 }
@@ -917,42 +1179,56 @@ async fn ayarlari_getir(app: AppHandle) -> Result<Ayarlar, String> {
 #[tauri::command]
 async fn ayarlari_kaydet(app: AppHandle, ayarlar: Ayarlar) -> Result<(), String> {
     let db_arc = app.state::<DbState>().0.clone();
-    
+
     tauri::async_runtime::spawn_blocking(move || {
         let conn = db_arc.lock().map_err(|_| "Veritabanı kilitlendi!")?;
-        
+
         conn.execute(
             "UPDATE ayarlar SET kullanici_adi = ?1, discord_aktif = ?2, medya_tuslari_aktif = ?3, tema = ?4 WHERE id = 1",
             params![ayarlar.kullanici_adi, if ayarlar.discord_aktif {1} else {0}, if ayarlar.medya_tuslari_aktif {1} else {0}, ayarlar.tema]
         ).map_err(|e| e.to_string())?;
-        
+
         Ok(())
     }).await.map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
-async fn playlist_sirasi_guncelle(app: AppHandle, playlist_id: String, yeni_sarki_siralari: Vec<String>) -> Result<(), String> {
+async fn playlist_sirasi_guncelle(
+    app: AppHandle,
+    playlist_id: String,
+    yeni_sarki_siralari: Vec<String>,
+) -> Result<(), String> {
     let db_arc = app.state::<DbState>().0.clone();
-    
+
     tauri::async_runtime::spawn_blocking(move || {
         let mut conn = db_arc.lock().map_err(|_| "Veritabanı kilitlendi!")?;
         let tx = conn.transaction().map_err(|e| e.to_string())?;
-        
-        tx.execute("DELETE FROM playlist_sarkilar WHERE playlist_id = ?", params![playlist_id]).map_err(|e| e.to_string())?;
-        
+
+        tx.execute(
+            "DELETE FROM playlist_sarkilar WHERE playlist_id = ?",
+            params![playlist_id],
+        )
+        .map_err(|e| e.to_string())?;
+
         for (index, sarki_id) in yeni_sarki_siralari.iter().enumerate() {
-            tx.execute("INSERT INTO playlist_sarkilar (playlist_id, sarki_id, sira) VALUES (?1, ?2, ?3)", params![playlist_id, sarki_id, index as i32]).ok();
+            tx.execute(
+                "INSERT INTO playlist_sarkilar (playlist_id, sarki_id, sira) VALUES (?1, ?2, ?3)",
+                params![playlist_id, sarki_id, index as i32],
+            )
+            .ok();
         }
-        
+
         tx.commit().map_err(|e| e.to_string())?;
         Ok(())
-    }).await.map_err(|e| e.to_string())?
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
 async fn yedek_al(app: tauri::AppHandle, hedef_yol: String) -> Result<(), String> {
     let db_arc = app.state::<DbState>().0.clone();
-    
+
     tauri::async_runtime::spawn_blocking(move || {
         let conn = db_arc.lock().map_err(|_| "Veritabanı kilitlendi!")?;
         let mut yedek_verisi = serde_json::Map::new();
@@ -965,7 +1241,7 @@ async fn yedek_al(app: tauri::AppHandle, hedef_yol: String) -> Result<(), String
         let mut stmt_pl = conn.prepare("SELECT id, isim FROM playlistler").unwrap();
         let pl_iter = stmt_pl.query_map([], |row| Ok(Playlist { id: row.get(0)?, isim: row.get(1)?, sarkilar: Vec::new() })).unwrap();
         let mut listeler: Vec<Playlist> = pl_iter.filter_map(Result::ok).collect();
-        
+
         for pl in listeler.iter_mut() {
             let mut s_stmt = conn.prepare("SELECT sarki_id FROM playlist_sarkilar WHERE playlist_id = ? ORDER BY sira ASC").unwrap();
             let ids = s_stmt.query_map([&pl.id], |row| row.get::<_, String>(0)).unwrap();
@@ -992,11 +1268,11 @@ async fn yedek_al(app: tauri::AppHandle, hedef_yol: String) -> Result<(), String
 #[tauri::command]
 async fn yedekten_don(app: tauri::AppHandle, kaynak_yol: String) -> Result<(), String> {
     let db_arc = app.state::<DbState>().0.clone();
-    
+
     tauri::async_runtime::spawn_blocking(move || {
         let icerik = fs::read_to_string(kaynak_yol).map_err(|e| e.to_string())?;
         let yedek_verisi: serde_json::Value = serde_json::from_str(&icerik).map_err(|e| format!("Geçersiz yedek dosyası: {}", e))?;
-        
+
         let mut conn = db_arc.lock().map_err(|_| "Veritabanı kilitlendi!")?;
         let tx = conn.transaction().map_err(|e| e.to_string())?;
 
@@ -1098,7 +1374,11 @@ pub fn run() {
                         _ => {}
                     })
                     .on_tray_icon_event(|tray, event| {
-                        if let TrayIconEvent::Click { button: tauri::tray::MouseButton::Left, .. } = event {
+                        if let TrayIconEvent::Click {
+                            button: tauri::tray::MouseButton::Left,
+                            ..
+                        } = event
+                        {
                             let app_handle = tray.app_handle();
                             if let Some(window) = app_handle.get_webview_window("main") {
                                 let _ = window.show();
@@ -1116,9 +1396,13 @@ pub fn run() {
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(|app: &AppHandle, shortcut: &Shortcut, event| {
                     if event.state() == ShortcutState::Pressed {
-                        if shortcut.key == Code::MediaPlayPause { let _ = app.emit("media-toggle", ()); } 
-                        else if shortcut.key == Code::MediaTrackNext { let _ = app.emit("media-next", ()); } 
-                        else if shortcut.key == Code::MediaTrackPrevious { let _ = app.emit("media-prev", ()); }
+                        if shortcut.key == Code::MediaPlayPause {
+                            let _ = app.emit("media-toggle", ());
+                        } else if shortcut.key == Code::MediaTrackNext {
+                            let _ = app.emit("media-next", ());
+                        } else if shortcut.key == Code::MediaTrackPrevious {
+                            let _ = app.emit("media-prev", ());
+                        }
                     }
                 })
                 .build(),
@@ -1130,14 +1414,33 @@ pub fn run() {
             }
         })
         .invoke_handler(tauri::generate_handler![
-            sarki_kaydet, sarkilari_getir, playlist_olustur, playlistleri_getir,
-            playliste_sarki_ekle, favorileri_getir, playlistten_sarki_cikar,
-            sarki_sirasi_guncelle, sarki_sil, favori_degistir, get_app_data_dir,
-            sarki_metadata_oku, update_discord_status, clear_discord_status,
-            dinlenme_sayisi_artir, open_data_folder, playlist_sil, youtube_arama,
-            sarki_guncelle, youtube_indir, playlist_disa_aktar, ayarlari_getir,
-            ayarlari_kaydet, youtube_playlist_getir, playlist_sirasi_guncelle,
-            yedek_al, yedekten_don
+            sarki_kaydet,
+            sarkilari_getir,
+            playlist_olustur,
+            playlistleri_getir,
+            playliste_sarki_ekle,
+            favorileri_getir,
+            playlistten_sarki_cikar,
+            sarki_sirasi_guncelle,
+            sarki_sil,
+            favori_degistir,
+            get_app_data_dir,
+            sarki_metadata_oku,
+            update_discord_status,
+            clear_discord_status,
+            dinlenme_sayisi_artir,
+            open_data_folder,
+            playlist_sil,
+            youtube_arama,
+            sarki_guncelle,
+            youtube_indir,
+            playlist_disa_aktar,
+            ayarlari_getir,
+            ayarlari_kaydet,
+            youtube_playlist_getir,
+            playlist_sirasi_guncelle,
+            yedek_al,
+            yedekten_don
         ])
         .run(tauri::generate_context!())
         .expect("Lain Wave başlatılamadı");
