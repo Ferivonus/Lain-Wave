@@ -3,7 +3,7 @@
     import { invoke } from '@tauri-apps/api/core';
     import { save, open } from '@tauri-apps/plugin-dialog';
     import { fade, fly } from 'svelte/transition';
-    import { playerState, initializePlayer, type Ayarlar } from '../../store.svelte';
+    import { playerState, type Ayarlar } from '../../store.svelte';
 
     let veriYolu = $state("Yükleniyor...");
     let surum = "3.2"; 
