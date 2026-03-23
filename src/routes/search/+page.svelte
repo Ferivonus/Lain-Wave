@@ -194,7 +194,7 @@
                 </div>
               </div>
 
-              <div class="w-auto max-w-[200px] xl:max-w-[280px] shrink-0 hidden lg:flex items-center justify-end pr-4 pl-2 min-w-0">
+              <div class="w-auto max-w-50 xl:max-w-70 shrink-0 hidden lg:flex items-center justify-end pr-4 pl-2 min-w-0">
                 <SongStats {sarki} />
               </div>
 
@@ -238,7 +238,7 @@
           <div class="flex items-center text-[10px] font-black text-(--text-dim) border-b border-(--border) pb-3 mb-4 px-4 sm:px-6 tracking-[0.2em] uppercase shrink-0">
             <span class="w-8 sm:w-10 shrink-0">#</span>
             <span class="flex-1 min-w-0 ml-2 sm:ml-4">KİMLİK & BİLGİ</span>
-            <span class="w-auto max-w-[200px] xl:max-w-[280px] shrink-0 hidden lg:flex justify-end pr-4">METRİKLER</span> 
+            <span class="w-auto max-w-50 xl:max-w-70 shrink-0 hidden lg:flex justify-end pr-4">METRİKLER</span> 
             <span class="w-32 sm:w-48 xl:w-56 shrink-0 text-right pr-2">İŞLEMLER</span> 
           </div>
 
@@ -292,7 +292,7 @@
                   </div>
                 </div>
 
-                <div class="w-auto max-w-[200px] xl:max-w-[280px] shrink-0 hidden lg:flex items-center justify-end pr-4 pl-2 min-w-0">
+                <div class="w-auto max-w-50 xl:max-w-70 shrink-0 hidden lg:flex items-center justify-end pr-4 pl-2 min-w-0">
                   <SongStats {sarki} />
                 </div>
 
@@ -327,7 +327,7 @@
         <div class="flex items-center text-[10px] font-black text-(--text-dim) border-b border-(--border) pb-3 mb-4 px-4 sm:px-6 tracking-[0.2em] uppercase shrink-0">
           <span class="w-8 sm:w-10 shrink-0">#</span>
           <span class="flex-1 min-w-0 ml-2 sm:ml-4">KİMLİK & BİLGİ</span>
-          <span class="w-auto max-w-[200px] xl:max-w-[280px] shrink-0 hidden lg:flex justify-end pr-4">METRİKLER</span> 
+          <span class="w-auto max-w-50 xl:max-w-70 shrink-0 hidden lg:flex justify-end pr-4">METRİKLER</span> 
           <span class="w-32 sm:w-48 xl:w-56 shrink-0 text-right pr-2">İŞLEMLER</span> 
         </div>
 
@@ -381,7 +381,7 @@
                 </div>
               </div>
 
-              <div class="w-auto max-w-[200px] xl:max-w-[280px] shrink-0 hidden lg:flex items-center justify-end pr-4 pl-2 min-w-0">
+              <div class="w-auto max-w-50 xl:max-w-70 shrink-0 hidden lg:flex items-center justify-end pr-4 pl-2 min-w-0">
                 <SongStats {sarki} />
               </div>
 
