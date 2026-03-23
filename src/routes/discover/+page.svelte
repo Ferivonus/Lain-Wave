@@ -2,7 +2,6 @@
   import { onMount } from 'svelte';
   import { convertFileSrc } from '@tauri-apps/api/core';
   import FavoriteButton from '$lib/FavoriteButton.svelte';
-  import SongStats from '$lib/SongStats.svelte';
   import { 
       playerState, 
       sarkiCal, 

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { convertFileSrc } from '@tauri-apps/api/core';
   import { playerState, sarkiCal } from '../store.svelte';
-  import { fade, fly, scale } from 'svelte/transition';
+  import { fade, fly } from 'svelte/transition';
 
   let { sagMenuAcik, onClose } = $props<{ 
     sagMenuAcik: boolean, 

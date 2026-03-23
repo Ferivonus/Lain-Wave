@@ -4,7 +4,7 @@
   import FavoriteButton from '$lib/FavoriteButton.svelte';
   import SongStats from '$lib/SongStats.svelte';
   import { playerState, initializePlayer, sarkiPlaylisteEkle, sarkiCal, sarkiSil, type Sarki } from '../../store.svelte';
-  import { fade, fly, scale } from 'svelte/transition';
+  import { fade, scale } from 'svelte/transition';
 
   let aramaMetni = $state("");
 

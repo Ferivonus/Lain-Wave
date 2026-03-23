@@ -34,7 +34,7 @@
   });
 
   function sanatciyiCal(isim: string, event: Event) {
-    event.preventDefault(); r
+    event.preventDefault();
     event.stopPropagation(); 
     
     const sanatcininSarkilari = playerState.sarkiListesi.filter(s => (s.sarkici || "Bilinmeyen Sanatçı") === isim);
