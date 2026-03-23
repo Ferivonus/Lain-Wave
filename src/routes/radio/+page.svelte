@@ -85,8 +85,8 @@
 
 <div class="p-8 lg:p-12 w-full min-h-full pb-32 flex flex-col relative overflow-hidden bg-transparent text-(--text-main) transition-colors duration-500 overflow-y-auto custom-scrollbar">
     
-    <div class="absolute top-[-5%] right-[-5%] w-[400px] h-[400px] bg-(--accent) opacity-5 blur-[120px] rounded-full -z-10 animate-pulse-slow"></div>
-    <div class="absolute bottom-[-5%] left-[-5%] w-[300px] h-[300px] bg-(--accent-sec) opacity-5 blur-[100px] rounded-full -z-10"></div>
+    <div class="absolute top-[-5%] right-[-5%] w-100 h-100 bg-(--accent) opacity-5 blur-[120px] rounded-full -z-10 animate-pulse-slow"></div>
+    <div class="absolute bottom-[-5%] left-[-5%] w-75 h-75 bg-(--accent-sec) opacity-5 blur-[100px] rounded-full -z-10"></div>
 
     {#if !seciliIstasyon}
         <div in:fade={{ duration: 300 }}>
