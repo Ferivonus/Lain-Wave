@@ -1,9 +1,9 @@
 [package]
 name = "lain_wave"
-version = "0.2.4"
+version = "0.3.2"
 description = "Lain Wave is a highly optimized music management system built for speed and reliability. It is engineered to work entirely offline, ensuring that your library remains fully accessible without any internet dependency. The application includes an integrated tool to download tracks directly from YouTube, allowing you to build and maintain a permanent local archive effortlessly."
 authors = ["Fahrettin Baştürk"]
-edition = "2021"
+edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -27,3 +27,4 @@ tauri-plugin-fs = "2.4.5"
 id3 = "1.16.4"
 discord-presence = "3.2.0"
 tauri-plugin-global-shortcut = "2.3.1"
+rusqlite = { version = "0.39.0", features = ["bundled"] }
