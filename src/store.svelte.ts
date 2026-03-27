@@ -81,33 +81,39 @@ export async function discordGuncelle(durum: 'caliyor' | 'duraklatildi' | 'bosta
             return;
         }
 
+        const formatSure = (saniye: number) => {
+            const dk = Math.floor(saniye / 60);
+            const sn = Math.floor(saniye % 60);
+            return `${dk}:${sn.toString().padStart(2, '0')}`;
+        };
+
+        const totalSure = playerState.aktifSarki.sure || 0;
+        const sureMetni = totalSure > 0 ? formatSure(totalSure) : "0:00";
+
         if (durum === 'duraklatildi') {
             await invoke('update_discord_status', {
                 detay: playerState.aktifSarki.isim,
-                durum: `⏸️ Duraklatıldı - ${playerState.aktifSarki.sarkici}`,
+                durum: `⏸ ${sureMetni} - ${playerState.aktifSarki.sarkici}`,
                 startTimestamp: null,
                 endTimestamp: null
             });
         } else {
             const currentTime = playerState.audioRef ? playerState.audioRef.currentTime : 0;
-            const totalSure = playerState.aktifSarki.sure || 0;
             const simdi = Math.floor(Date.now() / 1000);
             
             const sarkiBaslamaZamani = simdi - Math.floor(currentTime);
-            const sarkiBitisZamani = totalSure > 0 ? sarkiBaslamaZamani + totalSure : null;
 
             await invoke('update_discord_status', {
                 detay: playerState.aktifSarki.isim,
-                durum: `▶️ Çalıyor - ${playerState.aktifSarki.sarkici}`,
+                durum: `⏵ ${sureMetni} - ${playerState.aktifSarki.sarkici}`,
                 startTimestamp: sarkiBaslamaZamani,
-                endTimestamp: sarkiBitisZamani
+                endTimestamp: null 
             });
         }
     } catch (e) {
         console.error("Discord güncellenemedi", e);
     }
 }
-
 export async function sarkiCal(sarki: Sarki) {
     if (!playerState.audioRef) return;
 
@@ -377,7 +383,6 @@ export async function youtubePlaylistGetirAPI(url: string): Promise<YouTubeSonuc
     return await invoke<YouTubeSonuc[]>('youtube_playlist_getir', { url });
 }
 
-// YENİ: Genişletilmiş Parametrelerle İndirme API'si (Rust tarafındaki argümanlarla eşleşir)
 export async function youtubeIndirAPI(
     url: string, 
     tarz: string = "Pop", 
@@ -441,7 +446,6 @@ export async function playlistTarama(url: string) {
     }
 }
 
-// YENİ: Tüm ayarları kabul eden ana indirme fonksiyonu
 export async function youtubeIndir(
     hedefUrl: string, 
     tarz: string = "Pop", 
