@@ -531,3 +531,34 @@ export async function playlistSirasiGuncelleAPI(playlistId: string, yeniSarkiSir
         console.error("Liste sırası kaydedilemedi:", e);
     }
 }
+
+ export async function handleSarkiSil(sarki: Sarki, event: MouseEvent | KeyboardEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const mesaj = `DİKKAT: "${sarki.isim}" adlı yayını kütüphaneden ve diskten KALICI olarak silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz.`;
+    
+    if (confirm(mesaj)) {
+        try {
+            await sarkiSil(sarki);
+        } catch (hata) {
+            alert("Silme işlemi sırasında bir hata oluştu.");
+        }
+    }
+}
+  
+  export function editModaliAc(sarki: Sarki, event: Event) {
+      event.stopPropagation();
+      playerState.duzenlenecekSarki = sarki;
+      playerState.isEditModalOpen = true;
+  }
+
+  export async function handlePlaylistEkle(sarkiId: string, event: Event) {
+    const selectElement = event.target as HTMLSelectElement;
+    const playlistId = selectElement.value;
+    if (!playlistId) return;
+    const basarili = await sarkiPlaylisteEkle(sarkiId, playlistId);
+    if (basarili) {
+        selectElement.value = ""; 
+    }
+}

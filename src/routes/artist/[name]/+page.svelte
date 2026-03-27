@@ -8,11 +8,11 @@
       playerState, 
       sarkiCal, 
       initializePlayer, 
-      sarkiSil, 
-      sarkiPlaylisteEkle,
-      type Sarki 
+      handleSarkiSil,
+      editModaliAc,
+      handlePlaylistEkle
   } from '../../../store.svelte';
-  import { fade, fly } from 'svelte/transition';
+  import { fade } from 'svelte/transition';
 
   onMount(async () => {
     if (playerState.sarkiListesi.length === 0) {
@@ -44,34 +44,6 @@
     }
   }
 
-  async function handleSarkiSil(sarki: Sarki, event: MouseEvent | KeyboardEvent) {
-    event.preventDefault();
-    event.stopPropagation();
-    
-    const mesaj = `"${sarki.isim}" adlı parçayı kütüphaneden ve diskten KALICI olarak silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz.`;
-    
-    if (confirm(mesaj)) {
-        try {
-            await sarkiSil(sarki);
-        } catch (hata) {
-            alert("Silme işlemi sırasında bir hata oluştu.");
-        }
-    }
-  }
-
-  async function handlePlaylistEkle(sarkiId: string, event: Event) {
-    const select = event.target as HTMLSelectElement;
-    if (select.value) {
-        await sarkiPlaylisteEkle(sarkiId, select.value);
-        select.value = ""; 
-    }
-  }
-
-  function editModaliAc(sarki: Sarki, event: Event) {
-      event.stopPropagation();
-      playerState.duzenlenecekSarki = sarki;
-      playerState.isEditModalOpen = true;
-  }
 </script>
 
 <div class="p-6 lg:p-10 w-full max-w-400 mx-auto min-h-full pb-32 flex flex-col min-w-0 bg-transparent text-(--text-main) transition-colors duration-500 overflow-y-auto custom-scrollbar">

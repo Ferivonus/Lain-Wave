@@ -7,14 +7,14 @@
       playerState, 
       sarkiCal, 
       initializePlayer, 
-      sarkiSil, 
-      sarkiPlaylisteEkle, 
       muzikAra,
       youtubeIndir,
-      tumunuIndir,
-      type Sarki
+      handleSarkiSil,
+      editModaliAc,
+      handlePlaylistEkle
   } from '../../store.svelte';
   import { fade, fly, scale, slide } from 'svelte/transition';
+  import { diller } from '../../constants/constants.svelte';
 
   onMount(async () => {
     if (playerState.sarkiListesi.length === 0) {
@@ -66,23 +66,8 @@
   // İNDİRME DURUMU BİLGİSİ
   let downloadInfo = $state({ pct: 0, speed: "0KiB/s", eta: "00:00" });
 
-  const diller = [
-            { kod: "tr", ad: "Türkçe" },
-            { kod: "en", ad: "İngilizce" },
-            { kod: "es", ad: "İspanyolca" },
-            { kod: "ko", ad: "Korece" },
-            { kod: "ja", ad: "Japonca" },
-            { kod: "fr", ad: "Fransızca" },
-            { kod: "de", ad: "Almanca" },
-            { kod: "it", ad: "İtalyanca" },
-            { kod: "pt", ad: "Portekizce" },
-            { kod: "ru", ad: "Rusça" },
-            { kod: "ar", ad: "Arapça" }
-        ];
-
   interface DownloadProgressPayload { percentage: number; speed: string; eta: string; }
 
-  // YENİ: İlerleme Çubuğunu Dinleme Efekti
   $effect(() => {
       let unlistenProgress: UnlistenFn;
       let unlistenWarning: UnlistenFn;
@@ -103,29 +88,7 @@
       };
   });
 
-  async function handleSarkiSil(sarki: Sarki, event: Event) {
-    event.stopPropagation();
-    if (confirm(`"${sarki.isim}" kütüphaneden silinecek. Onaylıyor musun?`)) {
-        await sarkiSil(sarki);
-    }
-  }
-
-  async function handlePlaylistEkle(sarkiId: string, event: Event) {
-    const select = event.target as HTMLSelectElement;
-    if (select.value) {
-        await sarkiPlaylisteEkle(sarkiId, select.value);
-        select.value = ""; 
-    }
-  }
-
-  function editModaliAc(sarki: Sarki, event: Event) {
-      event.stopPropagation();
-      playerState.duzenlenecekSarki = sarki;
-      playerState.isEditModalOpen = true;
-  }
-
   async function ozellestirilmisIndir(url: string) {
-      // Yeni indirme başladığında progress'i sıfırla
       downloadInfo = { pct: 0, speed: "0KiB/s", eta: "00:00" };
       await youtubeIndir(url, secilenTarz, secilenDil, ytCeviriKullan, aiKullan);
   }

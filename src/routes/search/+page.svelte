@@ -3,7 +3,7 @@
   import { convertFileSrc } from '@tauri-apps/api/core';
   import FavoriteButton from '$lib/FavoriteButton.svelte';
   import SongStats from '$lib/SongStats.svelte';
-  import { playerState, initializePlayer, sarkiPlaylisteEkle, sarkiCal, sarkiSil, type Sarki } from '../../store.svelte';
+  import { playerState, initializePlayer, sarkiCal, handleSarkiSil, editModaliAc, handlePlaylistEkle } from '../../store.svelte';
   import { fade, scale } from 'svelte/transition';
 
   let aramaMetni = $state("");
@@ -36,38 +36,6 @@
   let tumSarkilarSirali = $derived(
     [...playerState.sarkiListesi].sort((a, b) => (b.dinlenme_sayisi || 0) - (a.dinlenme_sayisi || 0))
   );
-
-  async function handlePlaylistEkle(sarkiId: string, event: Event) {
-    const selectElement = event.target as HTMLSelectElement;
-    const playlistId = selectElement.value;
-    if (!playlistId) return;
-
-    const basarili = await sarkiPlaylisteEkle(sarkiId, playlistId);
-    if (basarili) {
-      selectElement.value = "";
-    }
-  }
-
-  async function handleSarkiSil(sarki: Sarki, event: MouseEvent | KeyboardEvent) {
-    event.preventDefault();
-    event.stopPropagation();
-    
-    const mesaj = `DİKKAT: "${sarki.isim}" adlı parçayı kütüphaneden ve diskten KALICI olarak silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz.`;
-    
-    if (confirm(mesaj)) {
-        try {
-            await sarkiSil(sarki);
-        } catch (hata) {
-            alert("Silme işlemi sırasında bir hata oluştu.");
-        }
-    }
-  }
-
-  function editModaliAc(sarki: Sarki, event: Event) {
-    event.stopPropagation();
-    playerState.duzenlenecekSarki = sarki;
-    playerState.isEditModalOpen = true;
-  }
 
   const kategoriler = [
     { isim: "Pop", renk: "var(--color-pop)", ikon: '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>' },

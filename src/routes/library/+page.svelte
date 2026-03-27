@@ -6,11 +6,10 @@
   import { 
     playerState, 
     sarkiCal, 
-    type Sarki, 
     initializePlayer, 
-    sarkiPlaylisteEkle, 
-    sarkiSil, 
-    siraGuncelle 
+    siraGuncelle, 
+    handleSarkiSil,
+    handlePlaylistEkle
   } from '../../store.svelte';
   import { fade } from 'svelte/transition';
 
@@ -20,29 +19,6 @@
     }
   });
 
-  async function handlePlaylistEkle(sarkiId: string, event: Event) {
-    const selectElement = event.target as HTMLSelectElement;
-    const playlistId = selectElement.value;
-    if (!playlistId) return;
-
-    const basarili = await sarkiPlaylisteEkle(sarkiId, playlistId);
-    if(basarili) {
-        selectElement.value = ""; 
-    }
-  }
-
-  async function handleSarkiSil(sarki: Sarki, event: Event) {
-    event.preventDefault();
-    event.stopPropagation();
-    
-    if (confirm(`"${sarki.isim}" kütüphaneden silinecek. Onaylıyor musun?`)) {
-        try {
-            await sarkiSil(sarki);
-        } catch (hata) {
-            alert("Silme işlemi sırasında hata oluştu.");
-        }
-    }
-  }
 
   let suruklenenIndex = $state<number | null>(null);
   let uzerindeGezinilenIndex = $state<number | null>(null);

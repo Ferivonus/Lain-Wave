@@ -8,11 +8,10 @@
   import { 
     playerState, 
     sarkiCal, 
-    type Sarki, 
     initializePlayer, 
     playlisttenSarkiCikar, 
-    sarkiSil,
-    playlistSirasiGuncelleAPI
+    playlistSirasiGuncelleAPI,
+    handleSarkiSil
   } from '../../../store.svelte';
   import { fade } from 'svelte/transition';
 
@@ -51,19 +50,7 @@
     }
   }
 
-  async function handleKalicSarkiSil(sarki: Sarki, event: MouseEvent | KeyboardEvent) {
-    event.preventDefault();
-    event.stopPropagation();
-    
-    const mesaj = `DİKKAT: "${sarki.isim}" adlı parçayı kütüphaneden ve diskten KALICI olarak silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz.`;
-    if (confirm(mesaj)) {
-        try {
-            await sarkiSil(sarki);
-        } catch (hata) {
-            alert("Silme işlemi sırasında bir hata oluştu.");
-        }
-    }
-  }
+
 
   let suruklenenIndex = $state<number | null>(null);
   let uzerindeGezinilenIndex = $state<number | null>(null);
@@ -259,7 +246,7 @@
                 type="button" 
                 aria-label="Kalıcı Sil" 
                 title="Kütüphaneden ve Diskten Sil" 
-                onclick={(e) => handleKalicSarkiSil(sarki, e)} 
+                onclick={(e) => handleSarkiSil(sarki, e)} 
                 class="p-2 text-(--text-dim)/60 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>

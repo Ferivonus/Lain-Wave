@@ -900,13 +900,11 @@ async fn yedek_al(app: tauri::AppHandle, hedef_yol: String) -> Result<(), String
         let conn = db_arc.lock().map_err(|_| "Veritabanı kilitlendi!")?;
         let mut yedek_verisi = serde_json::Map::new();
 
-        // Şarkılar
         let mut stmt = conn.prepare("SELECT * FROM sarkilar ORDER BY sira ASC").map_err(|e| e.to_string())?;
         let sarki_iter = stmt.query_map([], row_to_sarki).map_err(|e| e.to_string())?;
         let sarkilar: Vec<Sarki> = sarki_iter.filter_map(Result::ok).collect();
         yedek_verisi.insert("kutuphane".to_string(), serde_json::to_value(&sarkilar).unwrap_or_default());
 
-        // Playlistler
         let mut stmt_pl = conn.prepare("SELECT id, isim FROM playlistler").map_err(|e| e.to_string())?;
         let pl_iter = stmt_pl.query_map([], |row| Ok(Playlist { id: row.get(0)?, isim: row.get(1)?, sarkilar: Vec::new() })).map_err(|e| e.to_string())?;
         let mut listeler: Vec<Playlist> = pl_iter.filter_map(Result::ok).collect();
@@ -918,12 +916,10 @@ async fn yedek_al(app: tauri::AppHandle, hedef_yol: String) -> Result<(), String
         }
         yedek_verisi.insert("playlistler".to_string(), serde_json::to_value(&listeler).unwrap_or_default());
 
-        // Favoriler
         let mut stmt_fav = conn.prepare("SELECT sarki_id FROM favoriler").map_err(|e| e.to_string())?;
         let favs: Vec<String> = stmt_fav.query_map([], |row| row.get(0)).map_err(|e| e.to_string())?.filter_map(Result::ok).collect();
         yedek_verisi.insert("favoriler".to_string(), serde_json::to_value(&favs).unwrap_or_default());
 
-        // Ayarlar
         let ayarlar = conn.query_row("SELECT kullanici_adi, discord_aktif, medya_tuslari_aktif, tema FROM ayarlar WHERE id = 1", [], |row| {
             Ok(Ayarlar { kullanici_adi: row.get(0)?, discord_aktif: row.get::<_, i32>(1)? == 1, medya_tuslari_aktif: row.get::<_, i32>(2)? == 1, tema: row.get(3)? })
         }).unwrap_or_default();
@@ -1014,7 +1010,7 @@ async fn mevcut_soz_dillerini_bul(yol: String) -> Result<Vec<AvailableLanguage>,
     let parent = path.parent().ok_or("Klasör bulunamadı")?;
     let file_stem = path.file_stem()
         .and_then(|s| s.to_str())
-        .and_then(|s| s.split('.').next()) // "yt_123.tr" -> "yt_123" kısmını alır
+        .and_then(|s| s.split('.').next()) 
         .ok_or("Dosya adı geçersiz")?;
 
     let mut diller = Vec::new();
@@ -1022,7 +1018,6 @@ async fn mevcut_soz_dillerini_bul(yol: String) -> Result<Vec<AvailableLanguage>,
         for entry in entries.flatten() {
             let name = entry.file_name().to_string_lossy().to_string();
             if name.starts_with(file_stem) && name.ends_with(".srt") {
-                // Dil kodunu ayıkla (Örn: yt_123.tr.srt -> TR)
                 let dil_kodu = name.replace(file_stem, "")
                     .replace(".srt", "")
                     .replace(".", "")
@@ -1038,7 +1033,6 @@ async fn mevcut_soz_dillerini_bul(yol: String) -> Result<Vec<AvailableLanguage>,
         }
     }
     
-    // Alfabetik sırala (TR, EN vb.)
     diller.sort_by(|a, b| a.dil.cmp(&b.dil));
     Ok(diller)
 }
@@ -1095,26 +1089,26 @@ async fn youtube_indir(
         let id = format!("yt_{}", timestamp);
 
         let yt_dlp_hedef = songs_klasoru.join(format!("{}.%(ext)s", id));
-        let hedef_ses_yolu = songs_klasoru.join(format!("{}.flac", id));
-        let hedef_kapak_yolu = songs_klasoru.join(format!("{}.jpg", id));
+        let hedef_ses_yolu = songs_klasoru.join(format!("{}.flac", id)); 
+        let hedef_kapak_yolu = songs_klasoru.join(format!("{}.webp", id)); 
 
         let mut cmd = std::process::Command::new(&yt_dlp_path);
         cmd.env("PYTHONIOENCODING", "utf-8");
         cmd.env("PATH", "C:\\Windows\\System32;C:\\Windows");
         cmd.current_dir(&songs_klasoru);
 
-        // Dinamik Argüman Oluşturma
         cmd.arg("--no-warnings").arg("--no-playlist").arg("--newline").arg("--progress").arg("--no-simulate").arg("--ignore-errors")
             .arg("--cache-dir").arg(&cache_dir).arg("-f").arg("bestaudio/best").arg("-x").arg("--audio-format").arg("flac")
             .arg("--audio-quality").arg("0");
 
-        // SADECE kullanıcı YouTube çevirisi istiyorsa altyazı indirme argümanlarını ekle
         if youtube_cevirisi_kullan {
             cmd.arg("--write-sub").arg("--write-auto-sub").arg("--sub-langs").arg(&dil).arg("--convert-subs").arg("srt");
         }
 
-        // Parametrelerin karıştırılmaması için en sona "--" ekliyoruz.
-cmd.arg("--print").arg("%(title)s|*|%(uploader)s|*|%(duration)s").arg("-o").arg(&yt_dlp_hedef).arg("--").arg(&temiz_url)
+        cmd.arg("--write-thumbnail").arg("--ppa").arg("ThumbnailsConvertor:-q:v 2")
+            .arg("--convert-thumbnails").arg("webp").arg("--ffmpeg-location").arg(&ffmpeg_path);
+
+        cmd.arg("--print").arg("%(title)s|*|%(uploader)s|*|%(duration)s").arg("-o").arg(&yt_dlp_hedef).arg("--").arg(&temiz_url)
             .stdin(std::process::Stdio::null()).stdout(std::process::Stdio::piped()).stderr(std::process::Stdio::piped());
 
         #[cfg(target_os = "windows")]
@@ -1151,12 +1145,9 @@ cmd.arg("--print").arg("%(title)s|*|%(uploader)s|*|%(duration)s").arg("-o").arg(
             return Err(format!("İndirme tamamlanamadı. Çıkış Kodu: {:?}", status.code())); 
         }
 
-        // --- AKILLI ALTYAZI KONTROLÜ VE WHISPER ---
         let mut final_sozler_yolu = None;
         
-        // EĞER İKİSİ DE FALSE İSE HİÇBİR ALTYAZI İŞLEMİ YAPMA (Hızlı Mod)
         if youtube_cevirisi_kullan || yapay_zeka_kullan {
-            // 1. Eğer Youtube çevirisi istendiyse, inen SRT'leri kontrol et
             if youtube_cevirisi_kullan {
                 let mut bulunan_srtler = Vec::new();
                 if let Ok(entries) = std::fs::read_dir(&songs_klasoru) {
@@ -1168,7 +1159,7 @@ cmd.arg("--print").arg("%(title)s|*|%(uploader)s|*|%(duration)s").arg("-o").arg(
                     }
                 }
 
-                let aranan_uzanti = format!(".{}.srt", dil); // Örn: .tr.srt
+                let aranan_uzanti = format!(".{}.srt", dil); 
                 if let Some(srt_yolu) = bulunan_srtler.iter().find(|p| p.to_string_lossy().contains(&aranan_uzanti)) {
                     final_sozler_yolu = Some(srt_yolu.to_string_lossy().to_string());
                 } else if !bulunan_srtler.is_empty() {
@@ -1176,18 +1167,15 @@ cmd.arg("--print").arg("%(title)s|*|%(uploader)s|*|%(duration)s").arg("-o").arg(
                 }
             }
 
-            // 2. Youtube çevirisi başarısız olduysa VEYA istenmediyse VE yapay zeka istendiyse -> Whisper Çalıştır
             if final_sozler_yolu.is_none() && yapay_zeka_kullan && hedef_ses_yolu.exists() {
                 let _ = app_clone.emit("download-progress", serde_json::json!({ "percentage": 99.0, "speed": "AI PROCESSING", "eta": "Whisper" }));
                 let yapay_zeka_srt_yolu = songs_klasoru.join(format!("{}.srt", id));
                 
-                // Kullanıcının seçtiği dili Whisper'a paslıyoruz
                 if let Ok(_) = whisper_altyazi_uret(&hedef_ses_yolu, &yapay_zeka_srt_yolu, &model_yolu, &ffmpeg_path, &dil) {
                     final_sozler_yolu = Some(yapay_zeka_srt_yolu.to_string_lossy().to_string());
                 }
             }
         } else {
-            // İkisi de false ise sadece log basıp hızlıca geç
             println!("Altyazı veya AI istenmedi. Şarkı hızlı modda kaydediliyor.");
         }
 
@@ -1429,21 +1417,19 @@ async fn youtube_playlist_getir(
     .map_err(|e| e.to_string())?
 }
 
-// 1. Yardımcı Fonksiyon: Saniyeyi SRT zaman damgasına çevirir
 fn srt_zaman_damgasi(saniye: i64, milisaniye: i64) -> String {
     let saat = saniye / 3600;
     let dakika = (saniye % 3600) / 60;
     let sn = saniye % 60;
     format!("{:02}:{:02}:{:02},{:03}", saat, dakika, sn, milisaniye)
 }
-// 2. Ana Fonksiyon: Yapay zekayı çalıştırıp altyazı üretir
-// 2. Ana Fonksiyon: Yapay zekayı çalıştırıp altyazı üretir
+
 fn whisper_altyazi_uret(
     orijinal_ses_yolu: &PathBuf,
     hedef_srt_yolu: &PathBuf,
     model_yolu: &PathBuf,
     ffmpeg_yolu: &PathBuf,
-    dil: &str, // KULLANICIDAN GELEN DİL ("tr", "en", "ja", "es")
+    dil: &str, 
 ) -> Result<(), String> {
     
     let temp_dir = std::env::temp_dir();
@@ -1485,7 +1471,6 @@ fn whisper_altyazi_uret(
 
     let mut params = FullParams::new(SamplingStrategy::Greedy { best_of: 1 });
 
-    // ARTIK AUTO YOK, DİREKT KULLANICININ SEÇTİĞİ DİL KULLANILIYOR
     params.set_language(Some(dil)); 
     
     params.set_print_progress(false);

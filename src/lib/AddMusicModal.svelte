@@ -13,6 +13,7 @@
     } from '../store.svelte';
     import { fade, scale, fly, slide } from 'svelte/transition';
     import { cubicOut } from 'svelte/easing';
+  import { diller } from '../constants/constants.svelte';
 
     let gorunum = $state<'secim' | 'detay' | 'youtube' | 'basarili'>('secim');
     let yukleniyor = $state(false);
@@ -55,19 +56,6 @@
     let listeyeEklendiMi = $state(false);
 
     const tarzlar = ["Pop", "Rock", "Lofi", "Electronic", "Jazz", "Hip-Hop", "Classical", "Podcast"];
-    const diller = [
-            { kod: "tr", ad: "Türkçe" },
-            { kod: "en", ad: "İngilizce" },
-            { kod: "es", ad: "İspanyolca" },
-            { kod: "ko", ad: "Korece" },
-            { kod: "ja", ad: "Japonca" },
-            { kod: "fr", ad: "Fransızca" },
-            { kod: "de", ad: "Almanca" },
-            { kod: "it", ad: "İtalyanca" },
-            { kod: "pt", ad: "Portekizce" },
-            { kod: "ru", ad: "Rusça" },
-            { kod: "ar", ad: "Arapça" }
-        ];
 
     $effect(() => {
         let unlistenProgress: UnlistenFn;

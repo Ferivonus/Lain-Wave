@@ -5,7 +5,7 @@
   import { fly, fade, scale } from 'svelte/transition';
   import SongStats from '$lib/SongStats.svelte';
   import FavoriteButton from '$lib/FavoriteButton.svelte';
-  import { playerState, sarkiCal, initializePlayer, sarkiSil, sarkiPlaylisteEkle, youtubeIndirAPI, sarkiKaydetAPI, type Sarki } from '../../store.svelte';
+  import { handleSarkiSil, playerState, sarkiCal, initializePlayer, youtubeIndirAPI, sarkiKaydetAPI, handlePlaylistEkle } from '../../store.svelte';
 
   onMount(async () => {
     if (playerState.sarkiListesi.length === 0) {
@@ -32,32 +32,6 @@
 
   function formatTarih() {
     return new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
-  }
-
-  async function handleSarkiSil(sarki: Sarki, event: MouseEvent | KeyboardEvent) {
-    event.preventDefault();
-    event.stopPropagation();
-    
-    const mesaj = `DİKKAT: "${sarki.isim}" adlı yayını kütüphaneden ve diskten KALICI olarak silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz.`;
-    
-    if (confirm(mesaj)) {
-        try {
-            await sarkiSil(sarki);
-        } catch (hata) {
-            alert("Silme işlemi sırasında bir hata oluştu.");
-        }
-    }
-  }
-
-  async function handlePlaylistEkle(sarkiId: string, event: Event) {
-    const selectElement = event.target as HTMLSelectElement;
-    const playlistId = selectElement.value;
-    if (!playlistId) return;
-
-    const basarili = await sarkiPlaylisteEkle(sarkiId, playlistId);
-    if(basarili) {
-        selectElement.value = ""; 
-    }
   }
 
   async function dosyaSec() {
