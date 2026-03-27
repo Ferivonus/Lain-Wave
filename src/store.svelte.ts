@@ -387,8 +387,8 @@ export async function youtubeIndirAPI(
     url: string, 
     tarz: string = "Pop", 
     dil: string = "auto", 
-    youtubeCevirisiKullan: boolean = true, 
-    yapayZekaKullan: boolean = true
+    youtubeCevirisiKullan: boolean = false, 
+    yapayZekaKullan: boolean = false
 ): Promise<Sarki> {
     const sarki = await invoke<Sarki>('youtube_indir', { 
         url, 
