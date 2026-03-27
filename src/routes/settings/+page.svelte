@@ -53,7 +53,7 @@
         try {
             await invoke('ayarlari_kaydet', {
                 ayarlar: {
-                    kullanici_adi: kullaniciAdi.trim(),
+                    kullanici_adi: kullaniciAdi.trim() || "",
                     discord_aktif: discordAktif,
                     medya_tuslari_aktif: medyaTuslariAktif,
                     tema: playerState.currentTheme
@@ -91,10 +91,10 @@
     }
 
     async function verileriSifirla() {
-        const onay = confirm("DİKKAT: Tüm kütüphane ve ayarlar silinecek! Emin misiniz?");
-        if (onay && confirm("Veritabanı kalıcı olarak boşaltılacak. Onaylıyor musunuz?")) {
+        const onay = window.confirm("DİKKAT: Tüm kütüphane ve ayarlar silinecek! Emin misiniz?");
+        if (onay && window.confirm("Veritabanı kalıcı olarak boşaltılacak. Onaylıyor musunuz?")) {
             await klasoruAc();
-            alert("Lütfen açılan klasördeki .json dosyalarını manuel olarak silip uygulamayı yeniden başlatın.");
+            alert("Lütfen açılan klasördeki .json ve .db dosyalarını manuel olarak silip uygulamayı yeniden başlatın.");
         }
     }
 
@@ -122,7 +122,7 @@
             });
 
             if (selectedPath && typeof selectedPath === 'string') {
-                const onay = confirm("Mevcut kütüphane verileriniz silinip yedeğiniz yüklenecek. Onaylıyor musunuz?");
+                const onay = window.confirm("Mevcut kütüphane verileriniz silinip yedeğiniz yüklenecek. Onaylıyor musunuz?");
                 if (onay) {
                     await invoke('yedekten_don', { kaynakYol: selectedPath });
                     mesajGoster("Yedek yüklendi. Sistemin yeniden başlatılması gerekiyor...");
@@ -140,16 +140,17 @@
     <button 
         type="button"
         onclick={() => history.back()} 
+        aria-label="Ana Sisteme Dön"
         class="flex items-center gap-2 text-(--text-dim) hover:text-(--accent) transition-colors mb-8 group w-fit shrink-0"
         in:fly={{ x: -20, duration: 500 }}
     >
-        <svg class="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        <svg class="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
         <span class="text-[10px] font-black uppercase tracking-[0.2em]">Ana Sisteme Dön</span>
     </button>
 
     <header class="mb-12 shrink-0" in:fly={{ y: -20, duration: 600, delay: 100 }}>
         <div class="flex items-center gap-3 mb-4">
-            <span class="flex h-2.5 w-2.5 relative">
+            <span class="flex h-2.5 w-2.5 relative" aria-hidden="true">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-(--accent) opacity-75"></span>
                 <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-(--accent)"></span>
             </span>
@@ -163,7 +164,7 @@
         
         <section class="bg-(--bg-card) border border-(--border) rounded-(--radius) p-8 lg:p-10 shadow-2xl relative overflow-hidden shrink-0" in:fade={{ delay: 150 }}>
             <div class="flex items-center gap-5 mb-8">
-                <div class="p-4 bg-(--accent)/10 rounded-2xl text-(--accent) shadow-inner">
+                <div class="p-4 bg-(--accent)/10 rounded-2xl text-(--accent) shadow-inner" aria-hidden="true">
                     <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 </div>
                 <div>
@@ -187,7 +188,8 @@
                 </div>
                 <button 
                     type="button" 
-                    onclick={ayarlariKaydet} 
+                    onclick={ayarlariKaydet}
+                    aria-label="Kullanıcı Profilini Güncelle"
                     class="w-full md:w-auto bg-(--accent) text-white font-black py-4 px-10 rounded-xl hover:shadow-[0_0_15px_var(--accent-glow)] transition-all active:scale-95 uppercase tracking-[0.2em] text-[10px] shrink-0"
                 >
                     Profili Güncelle
@@ -208,6 +210,7 @@
                     <button 
                         type="button"
                         onclick={() => temaSec(tema.id)}
+                        aria-label="{tema.ad} temasını seç"
                         class="flex flex-col gap-4 group text-left relative transition-all duration-300 hover:-translate-y-1 active:scale-95 w-full min-w-0 {tema.id}"
                     >
                         <div 
@@ -217,26 +220,26 @@
                                 : 'border-(--border) opacity-60 hover:opacity-100 bg-(--bg-card) hover:shadow-xl'}"
                         >
                             {#if tema.reklam}
-                                <div class="absolute top-2 left-3 z-10 opacity-80 mix-blend-overlay">
+                                <div class="absolute top-2 left-3 z-10 opacity-80 mix-blend-overlay" aria-hidden="true">
                                     <span class="text-[9px] font-black uppercase tracking-[0.2em] text-(--accent)">
                                         {tema.reklam}
                                     </span>
                                 </div>
                             {/if}
 
-                            <div class="relative z-20 space-y-2 mt-4">
+                            <div class="relative z-20 space-y-2 mt-4" aria-hidden="true">
                                 <div class="flex gap-1.5">
                                     <div class="w-2.5 h-2.5 rounded-full shadow-lg shrink-0 bg-(--accent)"></div>
                                     <div class="w-8 h-2.5 rounded-full opacity-30 shrink-0 bg-(--accent)"></div>
                                 </div>
                             </div>
 
-                            <div class="absolute -bottom-4 -right-4 text-6xl font-black opacity-5 italic select-none group-hover:opacity-10 transition-opacity tracking-tighter text-(--accent)">
+                            <div class="absolute -bottom-4 -right-4 text-6xl font-black opacity-5 italic select-none group-hover:opacity-10 transition-opacity tracking-tighter text-(--accent)" aria-hidden="true">
                                 {tema.ad.split(' ')[0]}
                             </div>
                             
                             {#if playerState.currentTheme === tema.id}
-                                <div class="absolute inset-0 flex items-center justify-center backdrop-blur-[2px] z-30 bg-(--accent)/15" in:fade>
+                                <div class="absolute inset-0 flex items-center justify-center backdrop-blur-[2px] z-30 bg-(--accent)/15" in:fade aria-hidden="true">
                                     <div class="w-10 h-10 bg-(--text-main) text-(--bg-main) rounded-full flex items-center justify-center shadow-2xl scale-100 shrink-0">
                                         <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                                     </div>
@@ -255,7 +258,7 @@
 
         <section class="bg-(--bg-card) border border-(--border) rounded-(--radius) p-8 lg:p-10 shadow-2xl relative overflow-hidden shrink-0" in:fade={{ delay: 300 }}>
             <div class="flex items-center gap-5 mb-10">
-                <div class="p-4 bg-(--accent)/10 rounded-2xl text-(--accent) shadow-inner">
+                <div class="p-4 bg-(--accent)/10 rounded-2xl text-(--accent) shadow-inner" aria-hidden="true">
                     <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                 </div>
                 <div class="min-w-0 pr-4">
@@ -265,22 +268,22 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-                <button type="button" onclick={toggleDiscord} class="flex items-center justify-between p-6 bg-(--bg-surface) rounded-2xl border border-(--border) hover:border-(--accent)/50 transition-all group w-full min-w-0">
+                <button type="button" onclick={toggleDiscord} aria-pressed={discordAktif} class="flex items-center justify-between p-6 bg-(--bg-surface) rounded-2xl border border-(--border) hover:border-(--accent)/50 transition-all group w-full min-w-0">
                     <div class="text-left min-w-0 pr-4">
                         <p class="text-xs font-black uppercase tracking-widest truncate">Discord Rich Presence</p>
                         <p class="text-[10px] text-(--text-dim) mt-1 font-bold uppercase truncate">Durumunuzu ağda paylaşın</p>
                     </div>
-                    <div class="w-12 h-6 rounded-full relative transition-colors shrink-0 {discordAktif ? 'bg-(--accent)' : 'bg-gray-700'}">
+                    <div class="w-12 h-6 rounded-full relative transition-colors shrink-0 {discordAktif ? 'bg-(--accent)' : 'bg-gray-700'}" aria-hidden="true">
                         <div class="absolute top-1 w-4 h-4 bg-white rounded-full transition-all {discordAktif ? 'left-7' : 'left-1'}"></div>
                     </div>
                 </button>
 
-                <button type="button" onclick={toggleMedyaTuslari} class="flex items-center justify-between p-6 bg-(--bg-surface) rounded-2xl border border-(--border) hover:border-(--accent)/50 transition-all group w-full min-w-0">
+                <button type="button" onclick={toggleMedyaTuslari} aria-pressed={medyaTuslariAktif} class="flex items-center justify-between p-6 bg-(--bg-surface) rounded-2xl border border-(--border) hover:border-(--accent)/50 transition-all group w-full min-w-0">
                     <div class="text-left min-w-0 pr-4">
                         <p class="text-xs font-black uppercase tracking-widest truncate">Global Medya Tuşları</p>
                         <p class="text-[10px] text-(--text-dim) mt-1 font-bold uppercase truncate">Arka planda kontrol izni</p>
                     </div>
-                    <div class="w-12 h-6 rounded-full relative transition-colors shrink-0 {medyaTuslariAktif ? 'bg-(--accent)' : 'bg-gray-700'}">
+                    <div class="w-12 h-6 rounded-full relative transition-colors shrink-0 {medyaTuslariAktif ? 'bg-(--accent)' : 'bg-gray-700'}" aria-hidden="true">
                         <div class="absolute top-1 w-4 h-4 bg-white rounded-full transition-all {medyaTuslariAktif ? 'left-7' : 'left-1'}"></div>
                     </div>
                 </button>
@@ -288,10 +291,10 @@
         </section>
         
         <section class="bg-(--bg-card) border border-(--border) rounded-(--radius) p-8 lg:p-10 shadow-2xl relative overflow-hidden shrink-0" in:fade={{ delay: 400 }}>
-            <div class="absolute top-0 right-0 w-96 h-96 bg-(--accent)/5 blur-[100px] -z-10 rounded-full pointer-events-none"></div>
+            <div class="absolute top-0 right-0 w-96 h-96 bg-(--accent)/5 blur-[100px] -z-10 rounded-full pointer-events-none" aria-hidden="true"></div>
 
             <div class="flex items-center gap-5 mb-10">
-                <div class="p-4 bg-(--accent-sec)/10 rounded-2xl text-(--accent-sec) shadow-inner">
+                <div class="p-4 bg-(--accent-sec)/10 rounded-2xl text-(--accent-sec) shadow-inner" aria-hidden="true">
                     <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"></path><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
                 </div>
                 <div class="min-w-0 pr-4">
@@ -303,8 +306,8 @@
             <div class="grid gap-10">
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <button type="button" onclick={yedekAl} class="flex items-center gap-4 bg-(--bg-surface) hover:bg-(--accent)/10 border border-(--border) hover:border-(--accent)/50 p-5 rounded-2xl transition-all group text-left min-w-0 active:scale-95">
-                        <div class="p-3 bg-(--bg-card) rounded-xl group-hover:bg-(--accent) group-hover:text-white transition-colors shrink-0 text-(--text-main)">
+                    <button type="button" onclick={yedekAl} aria-label="Sistemi Yedekle" class="flex items-center gap-4 bg-(--bg-surface) hover:bg-(--accent)/10 border border-(--border) hover:border-(--accent)/50 p-5 rounded-2xl transition-all group text-left min-w-0 active:scale-95">
+                        <div class="p-3 bg-(--bg-card) rounded-xl group-hover:bg-(--accent) group-hover:text-white transition-colors shrink-0 text-(--text-main)" aria-hidden="true">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                         </div>
                         <div class="min-w-0">
@@ -313,8 +316,8 @@
                         </div>
                     </button>
 
-                    <button type="button" onclick={yedektenDon} class="flex items-center gap-4 bg-(--bg-surface) hover:bg-emerald-500/10 border border-(--border) hover:border-emerald-500/50 p-5 rounded-2xl transition-all group text-left min-w-0 active:scale-95">
-                        <div class="p-3 bg-(--bg-card) rounded-xl group-hover:bg-emerald-500 group-hover:text-white transition-colors shrink-0 text-(--text-main)">
+                    <button type="button" onclick={yedektenDon} aria-label="Yedeği Geri Yükle" class="flex items-center gap-4 bg-(--bg-surface) hover:bg-emerald-500/10 border border-(--border) hover:border-emerald-500/50 p-5 rounded-2xl transition-all group text-left min-w-0 active:scale-95">
+                        <div class="p-3 bg-(--bg-card) rounded-xl group-hover:bg-emerald-500 group-hover:text-white transition-colors shrink-0 text-(--text-main)" aria-hidden="true">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                         </div>
                         <div class="min-w-0">
@@ -331,6 +334,7 @@
                         <button 
                             type="button"
                             onclick={klasoruAc}
+                            aria-label="Veri Klasörünü Aç"
                             class="w-full md:w-auto bg-(--text-main) text-(--bg-main) hover:bg-(--accent) hover:text-(--text-main) text-[10px] font-black py-4 px-10 rounded-xl transition-all active:scale-95 uppercase tracking-[0.2em] shadow-lg shrink-0"
                         >
                             Klasörü Göster
@@ -346,6 +350,7 @@
                     <button 
                         type="button"
                         onclick={verileriSifirla}
+                        aria-label="Sistemi Sıfırla"
                         class="w-full md:w-auto bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white text-[10px] font-black py-3.5 px-8 rounded-xl transition-all uppercase tracking-widest border border-red-500/20 active:scale-95 shrink-0"
                     >
                         Sistemi Sıfırla
@@ -355,7 +360,7 @@
         </section>
 
         <footer class="flex flex-col items-center justify-center py-20 group shrink-0" in:fade={{ delay: 500 }}>
-            <div class="w-16 h-16 bg-(--accent) rounded-(--radius) flex items-center justify-center mb-6 rotate-3 group-hover:rotate-0 transition-transform duration-700 shadow-[0_10px_30px_var(--accent-glow)]">
+            <div class="w-16 h-16 bg-(--accent) rounded-(--radius) flex items-center justify-center mb-6 rotate-3 group-hover:rotate-0 transition-transform duration-700 shadow-[0_10px_30px_var(--accent-glow)]" aria-hidden="true">
                 <svg class="w-8 h-8 text-(--bg-main)" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
             </div>
             <h3 class="text-3xl font-black tracking-[0.4em] uppercase italic drop-shadow-md text-center w-full truncate">Lain Wave</h3>
@@ -364,7 +369,7 @@
                 <p class="text-[11px] font-black text-(--accent) uppercase tracking-[0.5em] animate-[pulse_3s_infinite] text-center w-full truncate px-4">
                     Fahrettin Baştürk tarafından yapıldı
                 </p>
-                <div class="flex items-center justify-center gap-3 mt-1 w-full">
+                <div class="flex items-center justify-center gap-3 mt-1 w-full" aria-hidden="true">
                     <span class="h-px w-8 bg-(--text-dim) opacity-20 shrink-0"></span>
                     <p class="text-[9px] font-mono text-(--text-dim) font-bold uppercase tracking-widest opacity-60 shrink-0">Version {surum} Build</p>
                     <span class="h-px w-8 bg-(--text-dim) opacity-20 shrink-0"></span>
@@ -380,8 +385,9 @@
         class="fixed bottom-10 left-1/2 -translate-x-1/2 z-200 bg-(--text-main) text-(--bg-main) px-6 py-4 rounded-full font-black text-xs uppercase tracking-widest shadow-[0_10px_40px_var(--accent-glow)] flex items-center gap-3 border border-(--border)" 
         in:fly={{ y: 20, duration: 400 }} 
         out:fade
+        role="alert"
     >
-        <svg class="w-5 h-5 text-(--accent)" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <svg class="w-5 h-5 text-(--accent)" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
         {islemMesaji}
     </div>
 {/if}

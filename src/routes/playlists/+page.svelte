@@ -47,7 +47,7 @@
   
   <header class="mb-12" in:fly={{ y: -20, duration: 600 }}>
     <div class="flex items-center gap-3 mb-4">
-      <span class="w-10 h-[2px] bg-(--accent)/50 shrink-0"></span>
+      <span class="w-10 h-0.5 bg-(--accent)/50 shrink-0"></span>
       <span class="text-[10px] font-black tracking-[0.4em] text-(--text-dim) uppercase truncate">Koleksiyonlar</span>
     </div>
     <h1 class="text-5xl lg:text-7xl font-black italic tracking-tighter uppercase leading-none drop-shadow-lg truncate">
@@ -87,7 +87,7 @@
       type="button" 
       onclick={yeniPlaylistOlustur} 
       aria-label="Yeni çalma listesi oluştur veya içe aktar"
-      class="group flex flex-col items-center justify-center bg-(--bg-card) hover:bg-(--bg-card-hover) border-2 border-dashed border-(--border) hover:border-(--accent)/50 rounded-(--radius) p-4 lg:p-5 transition-all duration-300 shadow-lg active:scale-95 h-full w-full min-h-[220px]"
+      class="group flex flex-col items-center justify-center bg-(--bg-card) hover:bg-(--bg-card-hover) border-2 border-dashed border-(--border) hover:border-(--accent)/50 rounded-(--radius) p-4 lg:p-5 transition-all duration-300 shadow-lg active:scale-95 h-full w-full min-h-55"
       in:fade
     >
       <div class="w-16 h-16 rounded-full bg-(--bg-surface) group-hover:bg-(--accent)/10 flex items-center justify-center transition-all mb-4 border border-(--border) group-hover:scale-110 shadow-inner group-hover:border-(--accent)/50 shrink-0">

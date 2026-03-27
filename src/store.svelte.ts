@@ -8,6 +8,7 @@ export type Sarki = {
     album: string; 
     yol: string; 
     kapak_yolu?: string;
+    sozler_yolu?: string;
     tarz?: string;        
     kalite?: string;      
     sure?: number; 
@@ -266,6 +267,7 @@ export function sarkiyiSardir(saniye: number) {
         }
     }
 }
+
 export function yeniPlaylistOlustur() {
     playerState.isCreatePlaylistModalOpen = true;
 }
@@ -375,8 +377,21 @@ export async function youtubePlaylistGetirAPI(url: string): Promise<YouTubeSonuc
     return await invoke<YouTubeSonuc[]>('youtube_playlist_getir', { url });
 }
 
-export async function youtubeIndirAPI(url: string, tarz: string = "Pop"): Promise<Sarki> {
-    const sarki = await invoke<Sarki>('youtube_indir', { url, tarz });
+// YENİ: Genişletilmiş Parametrelerle İndirme API'si (Rust tarafındaki argümanlarla eşleşir)
+export async function youtubeIndirAPI(
+    url: string, 
+    tarz: string = "Pop", 
+    dil: string = "auto", 
+    youtubeCevirisiKullan: boolean = true, 
+    yapayZekaKullan: boolean = true
+): Promise<Sarki> {
+    const sarki = await invoke<Sarki>('youtube_indir', { 
+        url, 
+        tarz, 
+        dil, 
+        youtubeCevirisiKullan, 
+        yapayZekaKullan 
+    });
     playerState.sarkiListesi = [...playerState.sarkiListesi, sarki];
     return sarki;
 }
@@ -426,14 +441,21 @@ export async function playlistTarama(url: string) {
     }
 }
 
-export async function youtubeIndir(hedefUrl: string) {
+// YENİ: Tüm ayarları kabul eden ana indirme fonksiyonu
+export async function youtubeIndir(
+    hedefUrl: string, 
+    tarz: string = "Pop", 
+    dil: string = "auto", 
+    youtubeCevirisiKullan: boolean = true, 
+    yapayZekaKullan: boolean = true
+) {
     if (!hedefUrl.trim() || playerState.aktifIndirmeler.has(hedefUrl)) return;
 
     playerState.aktifIndirmeler = new Set(playerState.aktifIndirmeler).add(hedefUrl);
     playerState.indirmeMesaji = "Veri akışı sağlanıyor...";
 
     try {
-        await youtubeIndirAPI(hedefUrl, "Pop");
+        await youtubeIndirAPI(hedefUrl, tarz, dil, youtubeCevirisiKullan, yapayZekaKullan);
         playerState.indirmeMesaji = "Veri başarıyla arşive eklendi.";
     } catch (e) {
         playerState.indirmeMesaji = "Bağlantı koptu: " + e;
@@ -443,7 +465,9 @@ export async function youtubeIndir(hedefUrl: string) {
         playerState.aktifIndirmeler = yeniSet;
 
         setTimeout(() => { 
-            if (playerState.aktifIndirmeler.size === 0 && !playerState.aramaYapiliyor && !playerState.topluIndirmeAktif) playerState.indirmeMesaji = ""; 
+            if (playerState.aktifIndirmeler.size === 0 && !playerState.aramaYapiliyor && !playerState.topluIndirmeAktif) {
+                playerState.indirmeMesaji = ""; 
+            }
         }, 5000);
     }
 }

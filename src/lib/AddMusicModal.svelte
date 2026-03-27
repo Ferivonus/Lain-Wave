@@ -46,24 +46,51 @@
     let aramaSonuclari = $state<YouTubeSonuc[]>([]);
     let aramaMesaji = $state("");
 
+    let secilenDil = $state("auto");
+    let ytCeviriKullan = $state(true);
+    let aiKullan = $state(true);
+    let gelismisAyarlarAcik = $state(false);
+
     let sonEklenenSarkiId = $state<string | null>(null);
     let listeyeEklendiMi = $state(false);
 
     const tarzlar = ["Pop", "Rock", "Lofi", "Electronic", "Jazz", "Hip-Hop", "Classical", "Podcast"];
+    const diller = [
+            { kod: "tr", ad: "Türkçe" },
+            { kod: "en", ad: "İngilizce" },
+            { kod: "es", ad: "İspanyolca" },
+            { kod: "ko", ad: "Korece" },
+            { kod: "ja", ad: "Japonca" },
+            { kod: "fr", ad: "Fransızca" },
+            { kod: "de", ad: "Almanca" },
+            { kod: "it", ad: "İtalyanca" },
+            { kod: "pt", ad: "Portekizce" },
+            { kod: "ru", ad: "Rusça" },
+            { kod: "ar", ad: "Arapça" }
+        ];
 
     $effect(() => {
-        let unlistenFn: UnlistenFn;
+        let unlistenProgress: UnlistenFn;
+        let unlistenWarning: UnlistenFn;
         
         listen<DownloadProgressPayload>("download-progress", (event: TauriEvent<DownloadProgressPayload>) => {
             downloadInfo.pct = event.payload.percentage;
             downloadInfo.speed = event.payload.speed;
             downloadInfo.eta = event.payload.eta;
         }).then((fn) => {
-            unlistenFn = fn;
+            unlistenProgress = fn;
+        });
+
+        listen<string>("download-warning", (event: TauriEvent<string>) => {
+            console.warn("Tauri Backend Uyarısı:", event.payload);
+            aramaMesaji = event.payload; 
+        }).then((fn) => {
+            unlistenWarning = fn;
         });
 
         return () => {
-            if (unlistenFn) unlistenFn();
+            if (unlistenProgress) unlistenProgress();
+            if (unlistenWarning) unlistenWarning();
         };
     });
 
@@ -89,6 +116,10 @@
         aramaMesaji = "";
         sonEklenenSarkiId = null;
         listeyeEklendiMi = false;
+        secilenDil = "auto";
+        ytCeviriKullan = true;
+        aiKullan = true;
+        gelismisAyarlarAcik = false;
     }
 
     async function dosyaSec() {
@@ -145,7 +176,7 @@
         try {
             let sarki: Sarki;
             if (gorunum === 'youtube' && hedefUrl) {
-                sarki = await youtubeIndirAPI(hedefUrl, secilenTarz);
+                sarki = await youtubeIndirAPI(hedefUrl, secilenTarz, secilenDil, ytCeviriKullan, aiKullan);
             } else {
                 sarki = await sarkiKaydetAPI({
                     isim: formVerisi.isim,
@@ -160,8 +191,15 @@
             formVerisi.isim = sarki.isim;
             sonEklenenSarkiId = sarki.id;
             gorunum = 'basarili';
-        } catch (hata) {
-            alert(`İşlem sırasında hata: ${hata}`);
+        } catch (hata: any) {
+            console.error("Müzik işleme sırasında hata yakalandı:", hata);
+            
+            let hataMesaji = String(hata);
+            if (hataMesaji.includes("429") || hataMesaji.includes("Too Many Requests")) {
+                alert(`YouTube Hız Sınırı (429 Hatası): Çok fazla istek yapıldı. Lütfen biraz bekleyip tekrar deneyin.\n\nDetay: ${hataMesaji}`);
+            } else {
+                alert(`İşlem sırasında bir hata oluştu:\n\n${hataMesaji}\n\nLütfen bağlantıyı kontrol edip tekrar deneyin.`);
+            }
         } finally {
             yukleniyor = false;
         }
@@ -194,7 +232,7 @@
         tabindex="-1"
     >
         <div 
-            class="bg-(--bg-surface) text-(--text-main) w-full max-md:max-h-[90vh] max-w-md rounded-(--radius) shadow-2xl overflow-hidden relative border border-(--border) transition-all duration-500 flex flex-col" 
+            class="bg-(--bg-surface) text-(--text-main) w-full max-md:max-h-[90vh] max-h-[90vh] max-w-md rounded-(--radius) shadow-2xl overflow-hidden relative border border-(--border) transition-all duration-500 flex flex-col" 
             transition:scale={{ start: 0.95, duration: 300, easing: cubicOut }} 
             onclick={(e) => e.stopPropagation()} 
             onkeydown={(e) => e.stopPropagation()}
@@ -204,7 +242,7 @@
         >
             <div class="flex justify-between items-center px-6 py-4 bg-(--bg-card) border-b border-(--border) shrink-0">
                 <h2 class="text-sm font-black uppercase tracking-widest text-(--text-main)/70">Sisteme Veri Aktar</h2>
-                <button type="button" onclick={kapat} class="p-2 -mr-2 text-(--text-dim) hover:text-white transition-colors" aria-label="Kapat">
+                <button type="button" onclick={kapat} class="p-2 -mr-2 text-(--text-dim) hover:text-white transition-colors" aria-label="Kapat" title="Kapat">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
@@ -282,6 +320,51 @@
                             </div>
 
                             {#if gorunum === 'youtube'}
+                                <div class="pt-2 border-t border-(--border)">
+                                    <button type="button" onclick={() => gelismisAyarlarAcik = !gelismisAyarlarAcik} class="flex items-center justify-between w-full text-[10px] font-black text-(--text-dim) uppercase tracking-widest p-2 hover:bg-(--bg-card) rounded-lg transition-colors">
+                                        <span>Gelişmiş Senkronizasyon Ayarları</span>
+                                        <svg class="w-4 h-4 transition-transform {gelismisAyarlarAcik ? 'rotate-180' : ''}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
+                                    </button>
+                                    
+                                    {#if gelismisAyarlarAcik}
+                                        <div class="mt-3 p-4 bg-black/20 rounded-xl border border-(--border) space-y-5" in:slide>
+                                            
+                                            <div class="space-y-2">
+                                                <label for="dil-secici" class="text-[10px] text-(--text-main) uppercase font-bold tracking-widest pl-1">Hedef Dil / Algoritma</label>
+                                                <div class="relative">
+                                                    <select id="dil-secici" bind:value={secilenDil} class="w-full bg-(--bg-surface) border border-(--border) text-(--text-main) p-3 rounded-xl text-xs outline-none focus:border-(--accent) appearance-none cursor-pointer font-bold">
+                                                        {#each diller as dil}
+                                                            <option value={dil.kod} class="bg-[#1e1e1e] text-white py-2">{dil.ad}</option>
+                                                        {/each}
+                                                    </select>
+                                                    <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-(--text-dim)">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"></path></svg>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="space-y-3 pt-2">
+                                                <label class="flex items-center justify-between cursor-pointer group">
+                                                    <span class="text-[10px] font-bold text-(--text-dim) group-hover:text-white uppercase tracking-widest transition-colors">YouTube Çevirilerini Ara</span>
+                                                    <input type="checkbox" bind:checked={ytCeviriKullan} class="accent-(--accent) w-4 h-4 cursor-pointer"/>
+                                                </label>
+
+                                                <label class="flex items-center justify-between cursor-pointer group">
+                                                    <span class="text-[10px] font-bold text-(--text-dim) group-hover:text-white uppercase tracking-widest transition-colors">Whisper AI Kullan (Yedek)</span>
+                                                    <input type="checkbox" bind:checked={aiKullan} class="accent-(--accent) w-4 h-4 cursor-pointer"/>
+                                                </label>
+                                            </div>
+                                            
+                                            <div class="pt-2 border-t border-white/5">
+                                                <p class="text-[10px] text-(--text-dim)/80 italic leading-relaxed font-medium">
+                                                    <span class="text-(--accent) font-bold not-italic">NOT:</span> YouTube araması kapalıysa veya video içerisinde uygun bir altyazı bulamazsa, Yapay Zeka otomatik olarak devreye girip şarkıyı dinleyerek sözleri çıkarır.
+                                                </p>
+                                            </div>
+                                            
+                                        </div>
+                                    {/if}
+                                </div>
+
                                 <div class="space-y-2 pt-2 border-t border-(--border)">
                                     <label for="yt-search-input" class="text-[10px] font-black text-(--text-dim) uppercase tracking-widest">Arama veya URL</label>
                                     <div class="flex gap-2">
@@ -348,11 +431,12 @@
                                     <div class="relative w-full">
                                         <select 
                                             onchange={playlisteEkle}
+                                            aria-label="Çalma listesi seçimi"
                                             class="w-full bg-(--bg-surface) border border-(--border) text-(--text-main) font-bold py-4 px-4 rounded-2xl outline-none focus:border-(--accent) transition-all uppercase text-[10px] tracking-widest appearance-none cursor-pointer hover:bg-(--bg-card-hover)"
                                         >
-                                            <option value="">➕ BİR ÇALMA LİSTESİNE EKLE</option>
+                                            <option value="" class="bg-[#1e1e1e] text-white">➕ BİR ÇALMA LİSTESİNE EKLE</option>
                                             {#each playerState.playlistler as pl}
-                                                <option value={pl.id}>{pl.isim}</option>
+                                                <option value={pl.id} class="bg-[#1e1e1e] text-white">{pl.isim}</option>
                                             {/each}
                                         </select>
                                         <div class="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-(--text-dim)">
@@ -377,4 +461,8 @@
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+    
+    select {
+        background-image: none; /* Varsayılan oku kaldır */
+    }
 </style>

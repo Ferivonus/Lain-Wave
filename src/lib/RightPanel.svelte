@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { convertFileSrc } from '@tauri-apps/api/core';
+  import { convertFileSrc, invoke } from '@tauri-apps/api/core';
   import { playerState, sarkiCal } from '../store.svelte';
-  import { fade, fly } from 'svelte/transition';
+  import { fade, fly, slide } from 'svelte/transition';
+  import { tick } from 'svelte';
 
   let { sagMenuAcik, onClose } = $props<{ 
     sagMenuAcik: boolean, 
@@ -11,6 +12,7 @@
   let aktifSekme = $state<'detay' | 'siradaki' | 'sozler'>('detay');
   let sarki = $derived(playerState.aktifSarki);
   
+  // --- KUYRUK MANTIĞI ---
   let siradakiSarkilar = $derived.by(() => {
     if (!sarki) return [];
     const index = playerState.sarkiListesi.findIndex(s => s.id === sarki.id);
@@ -23,31 +25,131 @@
     playerState.duzenlenecekSarki = sarki;
     playerState.isEditModalOpen = true;
   }
+
+  // --- SÖZ (KARAOKE) MANTIĞI ---
+  interface LyricLine { start: number; end: number; text: string; }
+  interface AvailableLanguage { dil: string; yol: string; }
+
+  let rawLyrics = $state<LyricLine[]>([]);
+  let activeLyricIndex = $state<number>(-1);
+  let sozlerYukleniyor = $state(false);
+  let sozScrollContainer: HTMLDivElement | null = $state(null);
+  let mevcutDiller = $state<AvailableLanguage[]>([]);
+  let secilenDilYolu = $state<string>("");
+
+  $effect(() => {
+    if (sarki?.sozler_yolu) {
+      dilleriGetir(sarki.sozler_yolu);
+    } else {
+      rawLyrics = [];
+      mevcutDiller = [];
+    }
+  });
+
+  async function dilleriGetir(yol: string) {
+    try {
+      mevcutDiller = await invoke('mevcut_soz_dillerini_bul', { yol });
+      if (mevcutDiller.length > 0) {
+        const varolan = mevcutDiller.find(d => d.yol === yol);
+        secilenDilYolu = varolan ? varolan.yol : mevcutDiller[0].yol;
+        loadLyrics(secilenDilYolu);
+      }
+    } catch (e) {
+      secilenDilYolu = yol;
+      loadLyrics(yol);
+    }
+  }
+
+  function dilDegistir(yol: string) {
+    secilenDilYolu = yol;
+    loadLyrics(yol);
+  }
+
+  // KRİTİK DÜZELTME: playerState.suAnkiZaman reaktif olduğu için burayı tetikler
+  $effect(() => {
+    const currentTime = playerState.suAnkiZaman; // Reaktif tetikleyici
+
+    if (aktifSekme === 'sozler' && rawLyrics.length > 0) {
+      let newIndex = rawLyrics.findIndex(line => currentTime >= line.start && currentTime <= line.end);
+
+      if (newIndex === -1) {
+          let closest = -1;
+          for (let i = 0; i < rawLyrics.length; i++) {
+              if (currentTime > rawLyrics[i].start) closest = i;
+              else break;
+          }
+          newIndex = closest;
+      }
+
+      if (newIndex !== activeLyricIndex) {
+        activeLyricIndex = newIndex;
+        scrollToActiveLyric();
+      }
+    }
+  });
+
+  function parseTime(timeStr: string): number {
+    const parts = timeStr.replace(',', '.').split(':');
+    if (parts.length < 2) return 0;
+    let h = 0, m = 0, s = 0;
+    if (parts.length === 3) {
+      h = parseFloat(parts[0]); m = parseFloat(parts[1]); s = parseFloat(parts[2]);
+    } else {
+      m = parseFloat(parts[0]); s = parseFloat(parts[1]);
+    }
+    return (h * 3600) + (m * 60) + s;
+  }
+
+  async function loadLyrics(yol: string) {
+    if (!yol) return;
+    sozlerYukleniyor = true;
+    try {
+      const content = await invoke<string>('sarki_sozu_oku', { yol });
+      const blocks = content.replace(/\r\n/g, '\n').trim().split(/\n\s*\n/);
+      rawLyrics = blocks.map(block => {
+        const lines = block.split('\n').filter(l => l.trim());
+        if (lines.length >= 2) {
+          const timeLineIndex = lines[0].includes('-->') ? 0 : 1;
+          const timeMatch = lines[timeLineIndex].split(' --> ');
+          const text = lines.slice(timeLineIndex + 1).join(' ');
+          if (timeMatch.length === 2) {
+             return { start: parseTime(timeMatch[0]), end: parseTime(timeMatch[1]), text };
+          }
+        }
+        return null;
+      }).filter(l => l !== null) as LyricLine[];
+    } catch (err) {
+      rawLyrics = [];
+    } finally {
+      sozlerYukleniyor = false;
+    }
+  }
+
+  async function scrollToActiveLyric() {
+    await tick();
+    if (sozScrollContainer && activeLyricIndex !== -1) {
+      const activeEl = sozScrollContainer.children[activeLyricIndex] as HTMLElement;
+      if (activeEl) {
+        activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }
 </script>
 
-<aside 
-  class="{sagMenuAcik ? 'flex absolute right-0 top-0 bottom-0 h-full shadow-[-20px_0_50px_rgba(0,0,0,0.5)] z-50' : 'hidden xl:flex'} 
-  w-80 shrink-0 bg-(--bg-surface)/95 backdrop-blur-xl flex-col z-10 border-l border-(--border) relative overflow-hidden transition-all duration-500"
->
+<aside class="{sagMenuAcik ? 'flex absolute right-0 top-0 bottom-0 h-full shadow-[-20px_0_50px_rgba(0,0,0,0.5)] z-50' : 'hidden xl:flex'} w-80 shrink-0 bg-(--bg-surface)/95 backdrop-blur-xl flex-col z-10 border-l border-(--border) relative overflow-hidden transition-all duration-500">
   
   {#if playerState.suAnOynuyorMu}
-    <div 
-      class="absolute inset-0 opacity-10 blur-[120px] -z-10 transition-opacity duration-1000 mix-blend-screen"
-      style="background: radial-gradient(circle at top right, var(--accent), transparent 70%);"
-    ></div>
+    <div class="absolute inset-0 opacity-10 blur-[120px] -z-10 transition-opacity duration-1000 mix-blend-screen"
+      style="background: radial-gradient(circle at top right, var(--accent), transparent 70%);"></div>
   {/if}
 
   <div class="p-6 flex flex-col h-full z-10 relative">
-    
     <div class="flex items-center justify-between mb-8 border-b border-(--border) pb-2 relative shrink-0">
       <div class="flex gap-4 relative">
         {#each ['detay', 'siradaki', 'sozler'] as sekme}
-          <button 
-            type="button"
-            onclick={() => aktifSekme = sekme as any}
-            class="text-[9px] font-black tracking-[0.2em] uppercase transition-all pb-2 -mb-2.5 relative
-            {aktifSekme === sekme ? 'text-(--accent)' : 'text-(--text-dim) hover:text-(--text-main)'}"
-          >
+          <button type="button" onclick={() => aktifSekme = sekme as any} 
+            class="text-[9px] font-black tracking-[0.2em] uppercase transition-all pb-2 -mb-2.5 relative 
+            {aktifSekme === sekme ? 'text-(--accent)' : 'text-(--text-dim) hover:text-(--text-main)'}">
             {sekme === 'detay' ? 'DETAY' : sekme === 'siradaki' ? 'KUYRUK' : 'SÖZLER'}
             {#if aktifSekme === sekme}
               <div class="absolute bottom-0 left-0 w-full h-0.5 bg-(--accent) rounded-t-md shadow-[0_0_10px_var(--accent-glow)]" in:fade></div>
@@ -58,20 +160,20 @@
 
       {#if sagMenuAcik}
         <button 
-          type="button"
+          type="button" 
           onclick={onClose} 
-          class="xl:hidden p-1.5 rounded-lg text-(--text-dim) hover:bg-(--bg-card) hover:text-(--accent) transition-all active:scale-95 -mr-2"
-          aria-label="Kapat"
+          aria-label="Paneli Kapat"
+          class="xl:hidden p-1.5 rounded-lg text-(--text-dim) hover:bg-(--bg-card) hover:text-(--accent) transition-all -mr-2"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       {/if}
     </div>
     
-    <div class="flex-1 overflow-y-auto custom-scrollbar pr-1 relative">
+    <div class="flex-1 overflow-y-auto custom-scrollbar relative pr-1">
       
       {#if aktifSekme === 'detay'}
-        <div in:fly={{ x: -10, duration: 300 }} out:fade={{ duration: 150 }} class="absolute w-full pb-6 pr-1">
+        <div in:fly={{ x: -10, duration: 300 }} out:fade={{ duration: 150 }} class="absolute w-full pb-6">
           {#if sarki}
             <div class="w-full aspect-square bg-(--bg-card) rounded-2xl mb-6 shadow-2xl overflow-hidden border border-(--border) relative group">
                 {#if sarki.kapak_yolu}
@@ -82,9 +184,10 @@
                   </div>
                 {/if}
                 <button 
-                  onclick={duzenleModaliAc}
-                  class="absolute top-4 right-4 p-2.5 bg-black/50 backdrop-blur-md text-white rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:scale-110 active:scale-90 border border-white/10"
+                  onclick={duzenleModaliAc} 
+                  aria-label="Metadatayı Düzenle"
                   title="Metadatayı Düzenle"
+                  class="absolute top-4 right-4 p-2.5 bg-black/50 backdrop-blur-md text-white rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:scale-110 active:scale-90 border border-white/10"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                 </button>
@@ -95,56 +198,36 @@
               <p class="text-(--accent) font-bold text-[11px] uppercase tracking-[0.15em] opacity-90">{sarki.sarkici}</p>
               
               <div class="flex flex-wrap gap-2 mt-4">
-                {#if sarki.tarz}
-                  <span class="px-2 py-0.5 bg-(--bg-card) border border-(--border) rounded-md text-[8px] font-black text-(--text-dim) uppercase tracking-widest">{sarki.tarz}</span>
-                {/if}
-                {#if sarki.yil}
-                  <span class="px-2 py-0.5 bg-(--accent-sec)/10 border border-(--accent-sec)/20 rounded-md text-[8px] font-black text-(--accent-sec) uppercase tracking-widest">{sarki.yil}</span>
-                {/if}
+                {#if sarki.tarz}<span class="px-2 py-0.5 bg-(--bg-card) border border-(--border) rounded-md text-[8px] font-black text-(--text-dim) uppercase tracking-widest">{sarki.tarz}</span>{/if}
+                {#if sarki.yil}<span class="px-2 py-0.5 bg-(--accent-sec)/10 border border-(--accent-sec)/20 rounded-md text-[8px] font-black text-(--accent-sec) uppercase tracking-widest">{sarki.yil}</span>{/if}
               </div>
             </div>
             
             <div class="mt-8 space-y-4">
               <div class="text-[9px] font-black text-(--text-dim) tracking-[0.3em] uppercase border-b border-(--border) pb-2">SİSTEM KAYITLARI</div>
-              
-              <div class="font-mono text-[10px] leading-relaxed p-4 bg-black/20 rounded-xl border border-(--border) text-(--text-dim) overflow-hidden">
-                <div class="flex gap-2 mb-1">
-                    <span class="text-(--accent) opacity-50">#</span>
-                    <span class="text-white/40 uppercase tracking-tighter">Dosya Yolu:</span>
+              <div class="font-mono text-[10px] p-4 bg-black/20 rounded-xl border border-(--border) text-(--text-dim) space-y-4">
+                <div>
+                    <span class="text-(--accent) opacity-50 block mb-1"># DOSYA YOLU:</span>
+                    <div class="truncate opacity-60">{sarki.yol}</div>
                 </div>
-                <div class="truncate opacity-60 mb-3">{sarki.yol}</div>
-
-                <div class="flex gap-2 mb-1">
-                    <span class="text-(--accent) opacity-50">#</span>
-                    <span class="text-white/40 uppercase tracking-tighter">İşlem Notu:</span>
+                <div>
+                    <span class="text-(--accent) opacity-50 block mb-1"># İŞLEM NOTU:</span>
+                    <div class="text-(--text-main)/80 italic line-clamp-4">{sarki.notlar || 'Veri girişi yok...'}</div>
                 </div>
-                {#if sarki.notlar}
-                    <div class="text-(--text-main)/80 italic line-clamp-4">{sarki.notlar}</div>
-                {:else}
-                    <div class="opacity-20 uppercase tracking-widest text-[8px]">Veri girişi yok...</div>
-                {/if}
               </div>
             </div>
-
           {:else}
-            <div class="flex flex-col items-center justify-center h-full opacity-20 py-32 text-center">
-              <svg class="w-12 h-12 mb-4 animate-pulse" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-              <p class="text-[9px] uppercase font-black tracking-[0.4em]">Sinyal Bekleniyor</p>
-            </div>
+            <div class="py-32 text-center opacity-20"><p class="text-[9px] uppercase font-black tracking-[0.4em]">Sinyal Bekleniyor</p></div>
           {/if}
         </div>
 
       {:else if aktifSekme === 'siradaki'}
-        <div in:fly={{ x: 10, duration: 300 }} out:fade={{ duration: 150 }} class="absolute w-full space-y-3 pb-6 pr-1">
-          <div class="text-[9px] font-black text-(--text-dim) tracking-[0.3em] uppercase mb-4 border-b border-(--border) pb-2">KUYRUK ANALİZİ</div>
+        <div in:fly={{ x: 10, duration: 300 }} out:fade={{ duration: 150 }} class="absolute w-full space-y-3 pb-6">
+          <div class="text-[9px] font-black text-(--text-dim) tracking-[0.3em] uppercase mb-4 border-b border-(--border) pb-2">SIRADAKİ ANALİZİ</div>
           {#if siradakiSarkilar.length > 0}
             <div class="flex flex-col gap-2">
               {#each siradakiSarkilar as item}
-                <button 
-                  type="button"
-                  onclick={() => sarkiCal(item)}
-                  class="w-full flex items-center gap-3 p-2 rounded-xl bg-(--bg-card)/40 hover:bg-(--bg-card-hover) border border-transparent hover:border-(--accent)/20 transition-all duration-300 group text-left"
-                >
+                <button onclick={() => sarkiCal(item)} class="w-full flex items-center gap-3 p-2 rounded-xl bg-(--bg-card)/40 hover:bg-(--bg-card-hover) border border-transparent hover:border-(--accent)/20 transition-all group text-left">
                   <div class="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-white/5 relative">
                     {#if item.kapak_yolu}
                       <img src={convertFileSrc(item.kapak_yolu)} alt="" class="w-full h-full object-cover" />
@@ -160,19 +243,50 @@
               {/each}
             </div>
           {:else}
-            <div class="py-24 text-center opacity-20 flex flex-col items-center justify-center border border-dashed border-(--border) rounded-2xl">
-              <p class="text-[8px] font-black uppercase tracking-[0.2em]">Kuyruk Sonu</p>
-            </div>
+            <div class="py-24 text-center opacity-20 border border-dashed border-(--border) rounded-2xl"><p class="text-[8px] font-black uppercase tracking-[0.2em]">Kuyruk Sonu</p></div>
           {/if}
         </div>
 
       {:else if aktifSekme === 'sozler'}
-        <div in:fly={{ y: 10, duration: 300 }} class="absolute w-full text-center py-20 pr-1">
-            <div class="w-12 h-12 bg-(--accent)/10 text-(--accent) rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
+        <div in:fade class="flex flex-col h-full absolute w-full pb-10">
+          {#if mevcutDiller.length > 1}
+            <div class="flex gap-2 mb-4 overflow-x-auto pb-2 shrink-0 no-scrollbar" in:slide>
+              {#each mevcutDiller as dilObj}
+                <button onclick={() => dilDegistir(dilObj.yol)}
+                  class="px-3 py-1 rounded-full text-[8px] font-black tracking-widest border transition-all shrink-0
+                  {secilenDilYolu === dilObj.yol ? 'bg-(--accent) border-(--accent) text-white shadow-lg shadow-(--accent)/20' : 'bg-white/5 border-white/10 text-white/40 hover:text-white'}">
+                  {dilObj.dil.toUpperCase()}
+                </button>
+              {/each}
             </div>
-            <h3 class="text-[10px] font-black uppercase tracking-widest text-(--text-main)">Söz Modülü</h3>
-            <p class="text-[9px] text-(--text-dim) mt-2 uppercase leading-relaxed px-6">Bu parça için senkronize veri akışı henüz tanımlanmadı.</p>
+          {/if}
+
+          {#if sozlerYukleniyor}
+            <div class="flex-1 flex flex-col items-center justify-center opacity-50 mt-10">
+                <div class="w-8 h-8 border-2 border-(--accent) border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p class="text-[9px] uppercase font-black tracking-[0.2em]">Veri Okunuyor...</p>
+            </div>
+          {:else if rawLyrics.length > 0}
+            <div class="flex-1 overflow-y-auto custom-scrollbar space-y-8 text-center px-4 py-32 relative mask-fade" bind:this={sozScrollContainer}>
+               {#each rawLyrics as line, index}
+                 <p class="transition-all duration-700 ease-out leading-relaxed
+                    {index === activeLyricIndex ? 'text-(--text-main) text-xl font-black scale-105 opacity-100 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]' : 
+                     index < activeLyricIndex ? 'text-(--text-dim) text-sm font-bold opacity-15 scale-95 blur-[1px]' : 
+                     'text-(--text-dim) text-md font-bold opacity-40 hover:opacity-100'}"
+                 >
+                    {line.text}
+                 </p>
+               {/each}
+            </div>
+          {:else}
+            <div class="flex-1 flex flex-col items-center justify-center text-center py-20 opacity-20">
+                <div class="w-12 h-12 bg-(--accent)/10 text-(--accent) rounded-full flex items-center justify-center mx-auto mb-4 border border-(--accent)/20">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
+                </div>
+                <h3 class="text-[10px] font-black uppercase tracking-widest text-(--text-main)">Senkronize Veri Yok</h3>
+                <p class="text-[9px] mt-2 uppercase leading-relaxed px-6 tracking-tighter">Bu parça için dijital veri akışı henüz tanımlanmadı.</p>
+            </div>
+          {/if}
         </div>
       {/if}
       
@@ -181,10 +295,19 @@
 </aside>
 
 <style>
-  .custom-scrollbar::-webkit-scrollbar { width: 3px; }
+  .custom-scrollbar::-webkit-scrollbar { width: 2px; }
   .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
   .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--accent); }
   
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  
+  .mask-fade {
+    mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+  }
+
+  p { transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1); }
+
   button { outline: none; }
 </style>
