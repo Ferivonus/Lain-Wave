@@ -703,7 +703,7 @@ fn clear_discord_status(state: tauri::State<'_, DiscordState>) -> Result<(), Str
         .0
         .lock()
         .map_err(|_| "Discord işlem kilitlendi!".to_string())?;
-    drpc.clear_activity().map_err(|e| e.to_string())?;
+    drpc.clear_activity().map_err(|e: discord_presence::DiscordError| e.to_string())?;
     Ok(())
 }
 
@@ -752,7 +752,6 @@ async fn playlist_sil(app: AppHandle, playlist_id: String) -> Result<(), String>
     .await
     .map_err(|e| format!("İşlem hatası: {}", e))?
 }
-
 
 #[tauri::command]
 async fn sarki_guncelle(
