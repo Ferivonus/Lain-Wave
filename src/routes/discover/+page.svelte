@@ -56,14 +56,12 @@
     "Podcast": '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>'
   };
 
-  // İNDİRME AYARLARI
   let ayarlarAcik = $state(false);
   let secilenTarz = $state("Pop");
   let secilenDil = $state("auto");
   let ytCeviriKullan = $state(true);
   let aiKullan = $state(true);
 
-  // İNDİRME DURUMU BİLGİSİ
   let downloadInfo = $state({ pct: 0, speed: "0KiB/s", eta: "00:00" });
 
   interface DownloadProgressPayload { percentage: number; speed: string; eta: string; }

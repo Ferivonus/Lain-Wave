@@ -12,7 +12,6 @@
   let aktifSekme = $state<'detay' | 'siradaki' | 'sozler'>('detay');
   let sarki = $derived(playerState.aktifSarki);
   
-  // --- KUYRUK MANTIĞI ---
   let siradakiSarkilar = $derived.by(() => {
     if (!sarki) return [];
     const index = playerState.sarkiListesi.findIndex(s => s.id === sarki.id);
@@ -26,7 +25,6 @@
     playerState.isEditModalOpen = true;
   }
 
-  // --- SÖZ (KARAOKE) MANTIĞI ---
   interface LyricLine { start: number; end: number; text: string; }
   interface AvailableLanguage { dil: string; yol: string; }
 
@@ -65,9 +63,8 @@
     loadLyrics(yol);
   }
 
-  // KRİTİK DÜZELTME: playerState.suAnkiZaman reaktif olduğu için burayı tetikler
   $effect(() => {
-    const currentTime = playerState.suAnkiZaman; // Reaktif tetikleyici
+    const currentTime = playerState.suAnkiZaman;
 
     if (aktifSekme === 'sozler' && rawLyrics.length > 0) {
       let newIndex = rawLyrics.findIndex(line => currentTime >= line.start && currentTime <= line.end);
@@ -267,12 +264,12 @@
                 <p class="text-[9px] uppercase font-black tracking-[0.2em]">Veri Okunuyor...</p>
             </div>
           {:else if rawLyrics.length > 0}
-            <div class="flex-1 overflow-y-auto custom-scrollbar space-y-8 text-center px-4 py-32 relative mask-fade" bind:this={sozScrollContainer}>
+            <div class="flex-1 overflow-y-auto custom-scrollbar scroll-smooth space-y-6 text-center px-4 py-[40vh] relative mask-fade" bind:this={sozScrollContainer}>
                {#each rawLyrics as line, index}
-                 <p class="transition-all duration-700 ease-out leading-relaxed
-                    {index === activeLyricIndex ? 'text-(--text-main) text-xl font-black scale-105 opacity-100 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]' : 
-                     index < activeLyricIndex ? 'text-(--text-dim) text-sm font-bold opacity-15 scale-95 blur-[1px]' : 
-                     'text-(--text-dim) text-md font-bold opacity-40 hover:opacity-100'}"
+                 <p class="transform-gpu transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] origin-center leading-relaxed text-base
+                    {index === activeLyricIndex ? 'text-(--text-main) font-black scale-125 opacity-100 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]' : 
+                     index < activeLyricIndex ? 'text-(--text-dim) font-bold opacity-20 scale-95 blur-[1px]' : 
+                     'text-(--text-dim) font-bold opacity-40 scale-100 hover:opacity-100 hover:scale-105'}"
                  >
                     {line.text}
                  </p>
@@ -294,6 +291,7 @@
   </div>
 </aside>
 
+
 <style>
   .custom-scrollbar::-webkit-scrollbar { width: 2px; }
   .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
@@ -307,7 +305,9 @@
     -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
   }
 
-  p { transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1); }
+  p { 
+    will-change: transform, opacity, filter; 
+  }
 
   button { outline: none; }
 </style>
