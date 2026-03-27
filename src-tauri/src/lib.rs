@@ -1095,7 +1095,7 @@ async fn youtube_indir(
         let id = format!("yt_{}", timestamp);
 
         let yt_dlp_hedef = songs_klasoru.join(format!("{}.%(ext)s", id));
-        let hedef_ses_yolu = songs_klasoru.join(format!("{}.wav", id));
+        let hedef_ses_yolu = songs_klasoru.join(format!("{}.flac", id));
         let hedef_kapak_yolu = songs_klasoru.join(format!("{}.jpg", id));
 
         let mut cmd = std::process::Command::new(&yt_dlp_path);
@@ -1105,7 +1105,7 @@ async fn youtube_indir(
 
         // Dinamik Argüman Oluşturma
         cmd.arg("--no-warnings").arg("--no-playlist").arg("--newline").arg("--progress").arg("--no-simulate").arg("--ignore-errors")
-            .arg("--cache-dir").arg(&cache_dir).arg("-f").arg("bestaudio/best").arg("-x").arg("--audio-format").arg("wav")
+            .arg("--cache-dir").arg(&cache_dir).arg("-f").arg("bestaudio/best").arg("-x").arg("--audio-format").arg("flac")
             .arg("--audio-quality").arg("0");
 
         // SADECE kullanıcı YouTube çevirisi istiyorsa altyazı indirme argümanlarını ekle
@@ -1207,7 +1207,7 @@ cmd.arg("--print").arg("%(title)s|*|%(uploader)s|*|%(duration)s").arg("-o").arg(
             kapak_yolu, 
             sozler_yolu: final_sozler_yolu, 
             tarz: Some(tarz),
-            kalite: Some("WAV (Kayıpsız)".to_string()), 
+            kalite: Some("FLAC (Kayıpsız)".to_string()), 
             sure, 
             dinlenme_sayisi: Some(0), 
             son_dinlenme_tarihi: None,
