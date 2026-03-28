@@ -20,8 +20,6 @@ use std::io::Write;
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Shortcut, ShortcutState};
 use whisper_rs::{FullParams, SamplingStrategy, WhisperContext, WhisperContextParameters};
 
-
-
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Sarki {
     pub id: String,
