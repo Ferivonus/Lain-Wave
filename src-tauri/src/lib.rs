@@ -1514,7 +1514,6 @@ fn whisper_altyazi_uret(
     Ok(())
 }
 
-
 pub fn run() {
     let drpc = DiscordClient::new(1483819416951984128);
     let discord_arc = Arc::new(Mutex::new(drpc));
