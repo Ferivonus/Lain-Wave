@@ -930,6 +930,7 @@ async fn yedek_al(app: tauri::AppHandle, hedef_yol: String) -> Result<(), String
         Ok(())
     }).await.map_err(|e| e.to_string())?
 }
+
 #[tauri::command]
 async fn yedekten_don(app: tauri::AppHandle, kaynak_yol: String) -> Result<(), String> {
     let db_arc = app.state::<DbState>().0.clone();
@@ -986,7 +987,6 @@ async fn yedekten_don(app: tauri::AppHandle, kaynak_yol: String) -> Result<(), S
         Ok(())
     }).await.map_err(|e| e.to_string())?
 }
-
 
 #[tauri::command]
 async fn sarki_sozu_oku(yol: String) -> Result<String, String> {
