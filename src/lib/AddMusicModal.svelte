@@ -49,7 +49,7 @@
 
     let secilenDil = $state("auto");
     let ytCeviriKullan = $state(true);
-    let aiKullan = $state(true);
+    let aiKullan = $state(false);
     let gelismisAyarlarAcik = $state(false);
 
     let sonEklenenSarkiId = $state<string | null>(null);
@@ -106,7 +106,7 @@
         listeyeEklendiMi = false;
         secilenDil = "auto";
         ytCeviriKullan = true;
-        aiKullan = true;
+        aiKullan = false;
         gelismisAyarlarAcik = false;
     }
 

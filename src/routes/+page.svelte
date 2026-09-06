@@ -75,8 +75,8 @@
                     <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                 </svg>
             </div>
-            <h3 class="text-2xl font-bold mb-2 uppercase tracking-tight">Sistem Kaydı Bulunamadı</h3>
-            <p class="text-(--text-dim) mb-8 max-w-md text-center font-medium">Arşivin henüz boş. Bilgisayarından veya dış kaynaklardan yeni parçalar aktararak kütüphaneni oluşturmaya başla.</p>
+            <h3 class="text-2xl font-bold mb-2 uppercase tracking-tight">Kayıtlı şarkı yok</h3>
+            <p class="text-(--text-dim) mb-8 max-w-md text-center font-medium">Bilgisayarına kayıtlı şarkı görünmüyor, eğer kaydetmek istiyorsan sol üstten "Müzik Ekle" butonunu tıklayabilirsin. Youtube üzerinden ya da bilgisayarından müzik eklemene yardımcı olur.</p>
             <button type="button" onclick={() => playerState.isAddMusicModalOpen = true} class="bg-(--accent) hover:opacity-90 text-white px-8 py-3 rounded-full font-black shadow-[0_10px_30px_var(--accent-glow)] transition-all hover:scale-105 active:scale-95 flex items-center gap-2 tracking-widest uppercase text-xs">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"></path></svg>
                 Müzik Ekle
